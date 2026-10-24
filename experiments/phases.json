@@ -1,0 +1,139 @@
+{
+  "project": "pi05-libero-repro",
+  "updated": "2026-10-22",
+  "suite_required": [
+    "libero_spatial",
+    "libero_object",
+    "libero_goal",
+    "libero_10"
+  ],
+  "episodes_per_suite": 500,
+  "phases": [
+    {
+      "id": "D0",
+      "name": "本地可复现版本锚定",
+      "goal": "本地源码、资源、验证工具与 Git 提交构成可回溯的起点",
+      "checks": [
+        {
+          "id": "D0-1",
+          "label": "Git 版本锚点存在",
+          "type": "git_commit"
+        },
+        {
+          "id": "D0-2",
+          "label": "源码与基线逐文件一致（140 + 1116）",
+          "type": "source_baseline"
+        },
+        {
+          "id": "D0-3",
+          "label": "本地归一化统计副本校验通过",
+          "type": "norm_stats_local"
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "name": "服务器实验目录就绪",
+      "goal": "远程唯一实验目录存在，代码与本地逐字节一致",
+      "checks": [
+        {
+          "id": "D1-1",
+          "label": "SSH 可达（公钥认证）",
+          "type": "ssh_reachable"
+        },
+        {
+          "id": "D1-2",
+          "label": "已执行同步并记录 git 版本",
+          "type": "synced"
+        },
+        {
+          "id": "D1-3",
+          "label": "内容级核验无差异",
+          "type": "verified"
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "name": "运行环境与资产就绪",
+      "goal": "固定镜像、权重、归一化统计、GPU 四项同时满足",
+      "checks": [
+        {
+          "id": "D2-1",
+          "label": "两套固定镜像 ID 匹配",
+          "type": "images"
+        },
+        {
+          "id": "D2-2",
+          "label": "pi05_libero 权重与 norm_stats 哈希匹配",
+          "type": "checkpoint"
+        },
+        {
+          "id": "D2-3",
+          "label": "GPU 可用",
+          "type": "gpu"
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "name": "闭环冒烟（四套件各 1 episode）",
+      "goal": "指令→推理→仿真→成功判定全链路跑通，有产物可查",
+      "checks": [
+        {
+          "id": "D3-1",
+          "label": "四个套件均有成功冒烟记录",
+          "type": "smoke_suites"
+        },
+        {
+          "id": "D3-2",
+          "label": "冒烟记录带产物路径与命令",
+          "type": "smoke_evidence"
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "name": "官方四套件完整评估",
+      "goal": "每套件 10 任务 × 50 rollout，共 2000 episode，协议固定",
+      "checks": [
+        {
+          "id": "D4-1",
+          "label": "每套件 episode 覆盖 ≥ 500",
+          "type": "eval_coverage"
+        },
+        {
+          "id": "D4-2",
+          "label": "评估指标落盘为 run 记录",
+          "type": "eval_metrics"
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "name": "从 pi05_base 的训练复现（可选）",
+      "goal": "补齐基础权重后复现微调，记录 LoRA/全量配置与显存占用",
+      "checks": [
+        {
+          "id": "D5-1",
+          "label": "pi05_base 基础权重就位",
+          "type": "base_weights"
+        },
+        {
+          "id": "D5-2",
+          "label": "存在训练类 run 记录（含 loss 与步数）",
+          "type": "train_run"
+        }
+      ]
+    }
+  ],
+  "public_mapping": {
+    "D0": "infra",
+    "D1": "infra",
+    "D2": "infra",
+    "D3": "P1.0",
+    "D4": "P1.1",
+    "D5": "P1.2"
+  },
+  "naming_note": "D0-D5 是工程门禁（部署/环境/冒烟/评估/训练），P1.x 是研究阶段编号；D3 对应 P1.0，D4 对应 P1.1，D5 对应 P1.2。"
+}

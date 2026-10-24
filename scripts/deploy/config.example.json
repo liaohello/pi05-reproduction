@@ -1,0 +1,89 @@
+{
+  "project": "pi05-reproduction",
+  "contract_version": 2,
+  "ssh": {
+    "host": {
+      "env": "PI05_REMOTE_HOST"
+    },
+    "port": {
+      "env": "PI05_REMOTE_PORT",
+      "type": "int",
+      "default": 22
+    },
+    "user": {
+      "env": "PI05_REMOTE_USER"
+    },
+    "key": {
+      "env": "PI05_SSH_KEY_PATH",
+      "default": "~/.ssh/id_ed25519"
+    },
+    "connect_timeout": 20
+  },
+  "remote": {
+    "label": "remote-gpu-server",
+    "root": {
+      "env": "PI05_REMOTE_ROOT"
+    },
+    "runs_dir": {
+      "env": "PI05_RUNS_DIR"
+    },
+    "artifact_dir": {
+      "env": "PI05_ARTIFACT_DIR"
+    },
+    "log_dir": {
+      "env": "PI05_LOG_DIR"
+    }
+  },
+  "assets": {
+    "checkpoint": {
+      "env": "PI05_CKPT"
+    },
+    "norm_stats": {
+      "env": "PI05_NORM_STATS"
+    },
+    "norm_stats_sha256": "b3a44bb2810436fb62917decaea58bd4d9110255df527dea21e8fd40c960bd84",
+    "tokenizer": {
+      "env": "PI05_TOKENIZER"
+    },
+    "lerobot_data": {
+      "env": "PI05_LEROBOT_DATA",
+      "default": ""
+    },
+    "hdf5_data": {
+      "env": "PI05_HDF5_DATA",
+      "default": ""
+    }
+  },
+  "images": {
+    "openpi-server:latest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "openpi-client:latest": "sha256:5dc5543f91a61a109181de1e1f1a50e771e40aaa1058207d1d5a3fab2bfb377a"
+  },
+  "sync": {
+    "excludes": [
+      ".git/",
+      ".venv/",
+      "__pycache__/",
+      "*.pyc",
+      ".pytest_cache/",
+      "scripts/deploy/config.local.json",
+      "scripts/deploy/config.json",
+      "experiments/.state/",
+      "experiments/private/",
+      "reports/private/",
+      "reports/raw/",
+      "logs/",
+      "*.log",
+      "runs/",
+      "cache/",
+      "home/",
+      "*.tmp",
+      ".DS_Store",
+      "security-reports/",
+      "third_party/lock/"
+    ]
+  },
+  "local": {
+    "min_free_gb": 2,
+    "source_manifest": "third_party/lock/manifest.json"
+  }
+}
