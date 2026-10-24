@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import common  # noqa: E402
 
-cfg = common.load_config()
+cfg = common.load_config_or_exit()
 values = {
     "PI05_REMOTE_HOST": cfg["ssh"]["host"],
     "PI05_REMOTE_PORT": str(cfg["ssh"]["port"]),

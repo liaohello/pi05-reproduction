@@ -49,7 +49,7 @@ and must not be quoted as inference speed.
 
 ## Evidence
 
-- Ledger entries: `experiments/ledger.jsonl` (4 rows, `kind=smoke`, `phase=D3`).
+- Ledger entries: `experiments/ledger.jsonl` (5 rows, `kind=smoke`, `phase=D3`): the four original suite smoke episodes and one migration regression rerun.
 - Public video: `reports/assets/pi05_libero_smoke_grid.mp4` (2×2 grid, 512×600, 14 s, 558 KB).
   Each quadrant is one suite; shorter episodes hold their last frame.
 - Raw per-episode videos and `evaluation.json` files stay on the experiment machine, outside Git.

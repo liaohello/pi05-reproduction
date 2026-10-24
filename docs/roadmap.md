@@ -59,3 +59,9 @@
 | GPU 与其他人共享（观测到 99% 利用率） | 评估时长膨胀、时延指标不可用 | 评估前检查显存与利用率，报告里注明共享状态 |
 | 第三方源码无上游 commit | 版本无法用 git 固定 | 内容哈希 + 镜像 digest，见 `third_party/PROVENANCE.md` |
 | 视频与 JSON 泄露部署信息 | 公开仓库出现隐私问题 | `scripts/security/scan.sh` + 人工复核 |
+
+## 后续开发记录
+
+- 修复 `scripts/verify/source_lock.py` 的首次引导：在缺少 gitignored manifest 时，`--server`
+  当前会提前退出，因此文档给出的首次生成命令不可执行。后续应增加明确的 manifest 导出入口，
+  并分别读取 server 与 client 镜像来核对 OpenPI 和 LIBERO 文件。此项本轮只记录，不修改实现。

@@ -1,9 +1,9 @@
 """Run reproducible LIBERO episodes against a running OpenPI websocket policy.
 
-Derived from OpenPI's examples/libero/main.py (Apache-2.0, Physical Intelligence).
-Modifications: single-task selection, explicit seeding, JSON reporting with timing
-fields, success-named per-episode video capture, and no reliance on the example's
-CLI defaults. See THIRD_PARTY_LICENSES.md for the licence obligations.
+Adapted from Physical Intelligence's OpenPI examples/libero/main.py.
+This file is licensed under Apache-2.0; see third_party/licenses/Apache-2.0.txt.
+Modifications: single-task selection, explicit seeding, JSON timing reports,
+success-named per-episode video capture, and independent CLI defaults.
 """
 import argparse
 import collections
