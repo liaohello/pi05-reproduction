@@ -52,7 +52,7 @@ def sha256(path: Path) -> str:
 
 class Ctx:
     def __init__(self) -> None:
-        self.cfg = common.load_config()
+        self.cfg = common.load_config_or_exit()
         self.phase_def = json.loads(PHASES.read_text(encoding="utf-8"))
         self.runs = self._load_runs()
         self.preflight = json.loads(PREFLIGHT.read_text(encoding="utf-8")) if PREFLIGHT.is_file() else {}
@@ -222,7 +222,7 @@ def build(ctx: Ctx) -> dict:
 def render_console(report: dict) -> None:
     marks = {"DONE": "DONE  ", "IN_PROGRESS": "进行中", "BLOCKED": "阻塞  ", "PENDING": "未开始"}
     print(f"π0.5 + LIBERO 复现追踪 · {report['ts']}")
-    print(f"服务器：{common.label(common.load_config())}")
+    print(f"服务器：{common.label(ctx.cfg)}")
     print("-" * 78)
     print(f"{'阶段':<5}{'名称':<28}{'状态':<8}{'门禁':<8}")
     for phase in report["phases"]:

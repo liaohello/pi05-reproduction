@@ -12,6 +12,7 @@ import json
 import os
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,6 +74,15 @@ def load_config() -> dict:
         "sync": raw.get("sync", {"excludes": []}),
         "local": raw.get("local", {"min_free_gb": 2}),
     }
+
+
+def load_config_or_exit() -> dict:
+    """Load config, or print one actionable line and exit 2 (public-repo friendly)."""
+    try:
+        return load_config()
+    except ConfigError as exc:
+        print(f"[config] {exc}", file=sys.stderr)
+        raise SystemExit(2)
 
 
 def key_path(cfg: dict) -> Path:

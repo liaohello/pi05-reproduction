@@ -96,7 +96,7 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="预览变化")
     args = parser.parse_args()
 
-    cfg = common.load_config()
+    cfg = common.load_config_or_exit()
     problem = precheck(cfg)
     if problem:
         print(f"[BLOCKED] {problem}")

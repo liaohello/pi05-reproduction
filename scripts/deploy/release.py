@@ -60,7 +60,7 @@ def main() -> int:
     parser.add_argument("--purge-runs", action="store_true", help="同时删除远程 runs/ 运行产物")
     args = parser.parse_args()
 
-    cfg = common.load_config()
+    cfg = common.load_config_or_exit()
     if not common.key_path(cfg).is_file():
         print(f"[BLOCKED] 缺少私钥 {common.key_path(cfg)}")
         return 2

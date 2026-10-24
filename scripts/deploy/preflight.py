@@ -204,7 +204,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="只打印 JSON")
     args = parser.parse_args()
 
-    cfg = common.load_config()
+    cfg = common.load_config_or_exit()
     checker = Checker()
     local_ok = check_local(cfg, checker)
     if args.remote:
