@@ -55,9 +55,12 @@
 
 | 检查 | 结果 |
 | --- | --- |
-| `scripts/security/scan.sh` | 见提交前扫描输出 |
-| `scripts/run.sh preflight`（指向内部机器） | 迁移后回归通过 |
-| `scripts/run.sh smoke`（单套件单任务） | 迁移后回归通过，脚本路径与台账写入均正常 |
+| `scripts/security/scan.sh` | PASS，0 命中（gitleaks 未安装，仅模式扫描生效） |
+| `./scripts/run.sh preflight` | PASS 5 / WARN 1；源码锁 140 + 1,116 文件、聚合哈希与迁移前一致 |
+| `./scripts/run.sh preflight-remote` | PASS 12 / INFO 1；镜像 digest、checkpoint、norm_stats、GPU 全部匹配 |
+| `./scripts/run.sh deploy` + `verify` | `VERIFY PASSED`，远端工作目录与本地逐字节一致 |
+| `./scripts/run.sh smoke` | 迁移后重跑 `libero_spatial` task 0：1/1 成功，台账新增 1 条脱敏记录 |
+| 干净克隆 | 38 个受控文件，无机器配置时输出单行提示并以 2 退出 |
 | 许可证 | 见 `THIRD_PARTY_LICENSES.md` |
 
 ## 没有迁入但需要注意
