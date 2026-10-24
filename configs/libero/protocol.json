@@ -1,0 +1,33 @@
+{
+  "protocol_version": 1,
+  "policy_config": "pi05_libero",
+  "checkpoint_id": "pi05_libero",
+  "seed": 7,
+  "replan_steps": 10,
+  "settle_steps": 10,
+  "resize_size": 224,
+  "render_size": 256,
+  "camera_rotation_degrees": 180,
+  "action_mode": "relative_end_effector",
+  "control_frequency_hz": 20,
+  "max_steps": {
+    "libero_spatial": 220,
+    "libero_object": 280,
+    "libero_goal": 300,
+    "libero_10": 520
+  },
+  "smoke": {
+    "task_ids": [0],
+    "episodes_per_task": 1
+  },
+  "benchmark": {
+    "tasks_per_suite": 10,
+    "rollouts_per_task": 50,
+    "episodes_total": 2000
+  },
+  "notes": [
+    "Success is decided by the LIBERO task predicate, not by the policy.",
+    "replan_steps=10 differs from the upstream example default of 5; both are recorded per run.",
+    "Episodes start from the task's recorded initial state, index = episode number."
+  ]
+}
