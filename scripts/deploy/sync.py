@@ -58,8 +58,13 @@ def ensure_remote_dirs(cfg: dict) -> None:
 
 
 def build_rsync(cfg: dict, *, check: bool, dry_run: bool) -> list[str]:
-    cmd = [
-        "rsync", "-a", "--delete", "--itemize-changes", "--stats",
+    # The remote workdir is shared.  Deployment is add/update only: never pass --delete
+    # to a real rsync run.  The check path still asks rsync for a *dry-run* deletion
+    # report so remote-only files are visible, but nothing is removed.
+    argv = ["rsync", "-a", "--itemize-changes", "--stats"]
+    if check or dry_run:
+        argv.insert(2, "--delete")
+    cmd = argv + [
         "-e", common.rsync_ssh(cfg),
     ]
     if check:

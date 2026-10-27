@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E2",
+  "claim": "engineering 100-update chain, not formal training",
+  "paths": {
+    "run_root_env": "SO101_E2_RUN_DIR",
+    "train_view_env": "SO101_TRAIN_VIEW",
+    "base_checkpoint_env": "SO101_PI05_CHECKPOINT",
+    "tokenizer_cache_env": "OPENPI_DATA_HOME",
+    "openpi_source_env": "OPENPI_SOURCE_ROOT"
+  },
+  "initialisation": {
+    "source": "pi05_libero JAX task checkpoint",
+    "loader": "OpenPI CheckpointWeightLoader",
+    "allowed_new_parameters": ["LoRA adapter parameters"],
+    "forbidden": [
+      "randomly initialised backbone",
+      "broad partial load that silently drops shape mismatches",
+      "silent model substitution"
+    ],
+    "internal_action_dim": 32,
+    "state_action_dim": 12
+  },
+  "model": {
+    "type": "pi05",
+    "pi05": true,
+    "action_dim": 32,
+    "action_horizon": 10,
+    "max_token_len": 200,
+    "discrete_state_input": false,
+    "dtype": "bfloat16",
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m_lora",
+    "lora_target": "attention and feed-forward adapters in both Gemma blocks",
+    "freeze_rule": "whole backbone frozen (PaliGemma LLM + SigLIP vision encoder, bfloat16); trainable target is exactly the 20 LoRA tensors plus action_in_proj, action_out_proj, time_mlp_in and time_mlp_out",
+    "freeze_note": "this is deliberately stricter than OpenPI's gemma_2b_lora convenience filter, which leaves the 400M SigLIP encoder trainable"
+  },
+  "data": {
+    "train_episodes": 16,
+    "validation_episodes": 4,
+    "normalisation": "train split only",
+    "input_keys": {
+      "state": "observation.state",
+      "cameras": {
+        "base_0_rgb": "observation.images.central",
+        "left_wrist_0_rgb": "observation.images.left_wrist",
+        "right_wrist_0_rgb": "observation.images.right_wrist"
+      },
+      "actions": "action",
+      "prompt": "task"
+    },
+    "image_processing": "OpenPI ResizeImages 224x224 with pad; uint8 HWC input",
+    "action_chunk": "10 consecutive control frames inside one episode; tails that would cross an episode boundary are excluded"
+  },
+  "optimisation": {
+    "seed": 42,
+    "global_batch_size": 1,
+    "micro_batch_size": 1,
+    "gradient_accumulation": 1,
+    "num_train_steps": 100,
+    "optimizer": "AdamW",
+    "gradient_clip_norm": 1.0,
+    "lr_schedule": "cosine",
+    "warmup_steps": 10,
+    "peak_lr": 0.00005,
+    "decay_steps": 100,
+    "decay_lr": 0.00005,
+    "ema_decay": null,
+    "fsdp_devices": 1,
+    "dtype": "bfloat16",
+    "xla_preallocate": false
+  },
+  "checkpoint": {
+    "save_interval": 50,
+    "keep_period": 1,
+    "max_to_keep": 1,
+    "contents": ["params", "train_state", "assets/norm_stats"],
+    "step_note": "Orbax directory names are loop indices; TrainState.step is authoritative and is recorded separately",
+    "resume_limits": [
+      "RNG and data-loader cursor are not saved by this OpenPI version",
+      "restore verifies params, optimizer state and TrainState.step only; it is not sample-exact replay"
+    ]
+  },
+  "resume": {
+    "num_train_steps": 101,
+    "expect_min_train_state_step": 100,
+    "minimum_additional_updates": 1
+  },
+  "memory_plans": [
+    {
+      "id": "lora_single_gpu",
+      "status": "primary",
+      "description": "LoRA adapters, frozen bf16 backbone, batch 1, one RTX 4090"
+    }
+  ],
+  "instrumentation": {
+    "record": ["compile_time_s", "updates_completed", "loss", "grad_norm", "param_norm", "gpu_peak_mib", "wall_time_s"],
+    "parameter_delta": "compare common tensors against pi05_libero and trainable tensors between step checkpoints"
+  }
+}

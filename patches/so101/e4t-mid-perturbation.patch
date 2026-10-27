@@ -1,0 +1,886 @@
+--- src/bimanual/control/motion.py
++++ src/bimanual/control/motion.py
+@@ -739,7 +739,11 @@
+             if self.contact_monitor is not None:
+                 bilateral = contacts.bilateral_grasp(model, data, self.plan.object_id,
+                                                      stage.arm)[0]
+-                requiring = "release" not in stage.name
++                # ``grasp_exempt`` is set only when an exogenous mid-episode
++                # disturbance deliberately opened the gripper; every penetration,
++                # force and support budget above still applies unchanged.
++                requiring = ("release" not in stage.name
++                             and not bool(getattr(self, "grasp_exempt", False)))
+                 loss = self.contact_monitor.grasp_check(
+                     object_id=self.plan.object_id, bilateral_contacts=(1 if bilateral else 0),
+                     time_s=float(data.time), requiring_grasp=requiring)
+--- src/bimanual/control/mid_perturbation.py
++++ src/bimanual/control/mid_perturbation.py
+@@ -0,0 +1,611 @@
++"""Continuous mid-episode physical perturbations for expert data collection.
++
++The injector is called during the ordinary MuJoCo integration loop.  It never
++resets the scene and never places the object in a target tray.  Two mechanisms
++are reported separately:
++
++* ``bounded_velocity_impulse`` changes the free-joint linear velocity for the
++  following integration.  This is a generalized impulse: ``delta_v = J / m``.
++* ``explicit_state_displacement`` applies a tagged bounded qpos/qvel change at
++  the recorded substep.
++
++The original episode and the later replay must apply the same object, frame,
++substep and velocity/position delta.  After an original run the injector records
++the exact event; replay uses that event and does not infer the trigger from a
++stage name.
++"""
++from dataclasses import dataclass, field
++import copy
++import math
++
++import mujoco
++import numpy as np
++
++from . import contacts
++from .motion import (MotionPlan, MotionStage, _joint_stage, cartesian_actions, carry_stages,
++                     park_stages, stage_wait)
++
++
++SCHEMA_VERSION = 1
++CATEGORY_STAGE_KEYS = {
++    "A": ("_approach", "_descend"),
++    "B": ("_close", "_lift"),
++    "C": ("carry_", "_lower", "_release"),
++}
++
++
++def _table_settled(object_id):
++    """Check a payload has come to rest on the table support."""
++    def check(live):
++        return contacts.object_settled(
++            live.model, live.data, object_id, {"table"},
++            float(live.config["sorting"].get("linear_speed_m_s", 0.02)),
++            float(live.config["sorting"].get("angular_speed_rad_s", 0.2)))
++    return check
++
++
++def _support_metadata(env, object_id: str) -> dict:
++    """Certified 'the payload may rest on its support' stage metadata.
++
++    ``place_stages`` already declares this pair for its lower/release/withdraw
++    stages, with the same support budget (two times the payload tolerance).  The
++    recovery release reuses that frozen convention instead of inventing a
++    relaxed contact budget of its own.
++    """
++    return {"allowed_object": object_id,
++            "support_geoms": sorted({"table", "floor"}),
++            "support_penetration_tolerance_m":
++                float(env.config["grasp"]["payload_penetration_tolerance_m"]) * 2}
++
++
++def drop_site_is_clear(env, certificate, object_id: str, arm: str, xy) -> bool:
++    """True when this table point is inside the arm's pick region and touches nothing.
++
++    Used both to decide where the recovery release sets a payload down and to
++    decide whether an exogenous gripper opening may fire at this instant: the
++    payload must be over clear table, not over a tray or another cube.
++    """
++    from ..tasks.sorting import regions
++
++    cube = float(env.config["sorting"]["cube_size_m"])
++    region = regions.pick_region(env.config, arm)
++    trays = [regions.tray_center(env.config, color) for color in ("red", "blue")]
++    inner = regions.tray_inner_half(env.config)
++    inner = max(inner) if hasattr(inner, "__len__") else float(inner)
++    others = [contacts.object_pose(env.model, env.data, name)[0]
++              for name in env.task.names if name != object_id]
++    xy = (float(xy[0]), float(xy[1]))
++    if not region.contains(xy, margin=cube / 2):
++        return False
++    if any(max(abs(xy[0] - center[0]), abs(xy[1] - center[1])) < inner + cube for center in trays):
++        return False
++    if any(max(abs(xy[0] - other[0]), abs(xy[1] - other[1])) < cube for other in others):
++        return False
++    return True
++
++
++def _recovery_drop_xy(env, certificate, object_id: str, arm: str, position):
++    """Choose a table-supported, reachable and unoccupied set-down point.
++
++    The perturbed payload is often hanging over a tray when the grasp is lost.
++    Releasing there would drop it into the tray - which the guard rightly reads
++    as an obstacle contact and the success predicate would wrongly read as a
++    completed transfer.  Only certified pick geometry is used: the pick region
++    of this arm, its certified pick points, the tray inner half-extents and the
++    other cubes' footprints.  No penetration, force or clearance budget changes.
++    """
++    seen, candidates = set(), []
++    certified = [] if certificate is None else [list(point[:2]) for point in certificate.points(arm)]
++    for point in [list(position[:2])] + certified:
++        key = (round(float(point[0]), 4), round(float(point[1]), 4))
++        if key in seen:
++            continue
++        seen.add(key)
++        candidates.append((float(point[0]), float(point[1])))
++    limit = float(env.config["grasp"].get("recovery_max_drop_shift_m", 0.06))
++    candidates.sort(key=lambda xy: (xy[0] - position[0]) ** 2 + (xy[1] - position[1]) ** 2)
++    for xy in candidates:
++        if ((xy[0] - position[0]) ** 2 + (xy[1] - position[1]) ** 2) ** 0.5 > limit:
++            continue
++        if drop_site_is_clear(env, certificate, object_id, arm, xy):
++            return [float(xy[0]), float(xy[1])]
++    return None
++
++
++def build_held_object_release_plan(env, object_id: str, arm: str, certificate=None):
++    """Safely return a still-held perturbed object before the expert re-plans.
++
++    The normal pick plan begins by opening an empty gripper.  That is not a valid
++    action when a mid-episode impulse leaves the object still clamped.  This
++    bounded recovery raises the payload, opens above the table and waits for it
++    to settle; only then is the original expert generator restarted.
++    """
++    position, _ = contacts.object_pose(env.model, env.data, object_id)
++    profile = env.config["grasp"]
++    table_z = env.config["scene"]["table"]["surface_z"]
++    cube = float(env.config["sorting"]["cube_size_m"])
++    release_z = table_z + cube / 2 + float(profile["release_clearance_m"])
++    drop_xy = _recovery_drop_xy(env, certificate, object_id, arm, position)
++    if drop_xy is None:
++        from .errors import MotionFailure
++
++        raise MotionFailure("placement_failed",
++                            f"no certified, unoccupied table drop site for {object_id} during recovery")
++    drop_xy = np.array(drop_xy, dtype=float)
++    clear = carry_stages(env, arm, object_id,
++                         [float(drop_xy[0]), float(drop_xy[1]),
++                          table_z + float(profile["hover_height_m"]) + cube / 2],
++                         seconds=1.5, label=f"recovery_clear_{object_id}")
++
++    def object_to_site(live):
++        site = live.data.site_xpos[live.robot.grasp_ids[arm]].copy()
++        object_now, _ = contacts.object_pose(live.model, live.data, object_id)
++        return site - object_now
++
++    def build_lower(live):
++        target = np.array([drop_xy[0], drop_xy[1], release_z], dtype=float) + object_to_site(live)
++        return cartesian_actions(live, arm, [target], seconds=1.0,
++                                 gripper=float(profile["closed_percent"]),
++                                 name=f"recovery_lower_{object_id}")[0]
++
++    def reached_support(live):
++        object_now, _ = contacts.object_pose(live.model, live.data, object_id)
++        bottom = float(object_now[2]) - cube / 2
++        # Stricter than the certified placement check (8 mm): the recovery opens the
++        # jaws itself, so the payload is set within a few millimetres of the support
++        # to keep the impact inside the existing support penetration budget.
++        return (bottom <= table_z + 0.003, {"object_bottom_z": bottom, "support_z": table_z})
++
++    lower = MotionStage(name=f"recovery_lower_{object_id}", arm=arm, seconds=1.0,
++                        build=build_lower, failure_reason="ik_unreachable",
++                        allow_payload=True, early_check=reached_support, deadline_s=20.0,
++                        metadata=_support_metadata(env, object_id))
++
++    base = env.last_action.copy()
++    goal = np.asarray(base, dtype=float).copy()
++    goal[5 if arm == "left" else 11] = float(profile["open_percent"])
++    release = _joint_stage(env, f"recovery_release_open_{object_id}", arm, goal,
++                           float(profile["hold_seconds"]),
++                           allow_payload=True, failure_reason="placement_failed",
++                           settle_frames=int(0.5 * env.config["runtime"]["control_hz"]),
++                           metadata=_support_metadata(env, object_id))
++
++    settle = stage_wait(env, f"recovery_release_settle_{object_id}", arm, 1.5,
++                        _table_settled(object_id),
++                        failure_reason="timeout", deadline_s=8.0,
++                        metadata=_support_metadata(env, object_id))
++    return MotionPlan(arm=arm, object_id=object_id,
++                      stages=[*clear, lower, release, settle,
++                              *park_stages(env, arm, label=f"recovery_park_{object_id}")],
++                      label=f"recovery_release_{object_id}")
++
++
++def build_dropped_object_settle_plan(env, object_id: str, arm: str):
++    """Hold the gripper open and park while an escaped payload lands.
++
++    A slip leaves the cube in free fall.  Re-planning against an airborne pose is
++    not IK-reachable, and closing the fingers again mid-fall would let the arm
++    re-catch the payload instead of recovering from the escape.  The arm therefore
++    keeps the hand open, waits for the cube to rest on the table, and parks before
++    the expert restarts its approach.
++    """
++    profile = env.config["grasp"]
++    opening = np.asarray(env.last_action, dtype=float).copy()
++    opening[5 if arm == "left" else 11] = float(profile["open_percent"])
++    frames = max(1, int(round(1.5 * env.config["runtime"]["control_hz"])))
++
++    def build(live):
++        return [opening.copy() for _ in range(frames)]
++
++    settling = MotionStage(name=f"recovery_settle_{object_id}", arm=arm, seconds=1.5, build=build,
++                           check=_table_settled(object_id), failure_reason="timeout",
++                           allow_payload=True, settle_frames=frames, deadline_s=12.0,
++                           metadata=_support_metadata(env, object_id))
++    # The hand waits for the payload to land before it travels home; parking first
++    # sweeps the open fingers through the cube that has just escaped (measured 3.0 mm
++    # band contact in the v16 pilots), which is exactly what the guard rejects.
++    return MotionPlan(arm=arm, object_id=object_id,
++                      stages=[settling, *park_stages(env, arm,
++                                                     label=f"recovery_park_{object_id}")],
++                      label=f"recovery_settle_{object_id}")
++
++
++class PerturbationReplan(Exception):
++    """Non-terminal control-frame boundary requesting a fresh expert plan."""
++
++    def __init__(self, event):
++        super().__init__(f"expert replan after {event['category']} perturbation")
++        self.event = event
++
++
++def arm_wrist_dofadr(model, arm: str) -> int:
++    """Address of the carrying arm's wrist dof, by the frozen joint naming rule."""
++    for name in (f"{arm}_wrist_flex", f"{arm}_wrist_roll"):
++        joint_id = int(model.joint(name).id)
++        if joint_id >= 0:
++            return int(model.jnt_dofadr[joint_id])
++    for index in range(int(model.njnt)):
++        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, index) or ""
++        if arm in name and "wrist" in name:
++            return int(model.jnt_dofadr[index])
++    raise ValueError(f"no wrist joint found for arm {arm!r}")
++
++
++def joint_addresses(model, object_name):
++    joint_id = model.joint(f"{object_name}_free").id
++    return int(model.jnt_qposadr[joint_id]), int(model.jnt_dofadr[joint_id])
++
++
++def object_state(model, data, object_name):
++    qpos_address, qvel_address = joint_addresses(model, object_name)
++    return {
++        "position": np.asarray(data.qpos[qpos_address:qpos_address + 3], dtype=float).copy(),
++        "quaternion": np.asarray(data.qpos[qpos_address + 3:qpos_address + 7], dtype=float).copy(),
++        "velocity": np.asarray(data.qvel[qvel_address:qvel_address + 3], dtype=float).copy(),
++        "angular_velocity": np.asarray(data.qvel[qvel_address + 3:qvel_address + 6], dtype=float).copy(),
++    }
++
++
++def _finite_vector(value, size, name):
++    array = np.asarray(value, dtype=float)
++    if array.shape != (size,) or not np.isfinite(array).all():
++        raise ValueError(f"{name} must be a finite vector of length {size}")
++    return array
++
++
++def apply_recorded_delta(model, data, event):
++    """Apply one exact event delta and return its measured post-state."""
++    mechanism = event["mechanism"]
++    object_name = event["object"]
++    before = object_state(model, data, object_name)
++    qpos_address, qvel_address = joint_addresses(model, object_name)
++    delta_velocity = _finite_vector(event["delta_velocity_m_s"], 3, "delta_velocity_m_s")
++    if mechanism == "bounded_velocity_impulse":
++        data.qvel[qvel_address:qvel_address + 3] += delta_velocity
++        delta_position = np.zeros(3, dtype=float)
++    elif mechanism == "explicit_state_displacement":
++        delta_position = _finite_vector(event["delta_position_m"], 3, "delta_position_m")
++        data.qpos[qpos_address:qpos_address + 3] += delta_position
++        data.qvel[qvel_address:qvel_address + 3] += delta_velocity
++    elif mechanism == "arm_bump_impulse":
++        # The payload stays gripped; the disturbance is a bounded generalized
++        # impulse on the carrying arm's own wrist dof, so the cube and the jaws
++        # move together and no robot-payload penetration budget is touched.
++        delta_velocity = np.zeros(3, dtype=float)
++        delta_position = np.zeros(3, dtype=float)
++        dof = arm_wrist_dofadr(model, event.get("arm") or "")
++        data.qvel[dof] += float(event.get("arm_delta_velocity_rad_s", 0.0))
++    else:
++        raise ValueError(f"unknown perturbation mechanism {mechanism!r}")
++    mujoco.mj_forward(model, data)
++    after = object_state(model, data, object_name)
++    actual = {
++        "delta_position_m": (after["position"] - before["position"]).tolist(),
++        "delta_velocity_m_s": (after["velocity"] - before["velocity"]).tolist(),
++    }
++    return before, after, actual, delta_position, delta_velocity
++
++
++@dataclass
++class Schedule:
++    """Pre-registered perturbation schedule."""
++    schema_version: int
++    episode_id: str
++    category: str
++    mechanism: str
++    trigger_stage_contains: str
++    trigger_after_s: float
++    trigger_substep: int
++    target_object: str
++    delta_position_m: list
++    delta_velocity_m_s: list
++    rng_seed: int
++    plan_sha256: str
++    gripper_open_fraction: float = 1.0
++    gripper_hold_frames: int = 30
++    arm_delta_velocity_rad_s: float = 0.0
++
++    @classmethod
++    def from_dict(cls, value):
++        if int(value["schema_version"]) != SCHEMA_VERSION:
++            raise ValueError("unsupported perturbation schedule schema")
++        return cls(
++            schema_version=int(value["schema_version"]),
++            episode_id=str(value["episode_id"]),
++            category=str(value["category"]),
++            mechanism=str(value["mechanism"]),
++            trigger_stage_contains=str(value["trigger_stage_contains"]),
++            trigger_after_s=float(value["trigger_after_s"]),
++            trigger_substep=int(value["trigger_substep"]),
++            target_object=str(value["target_object"]),
++            delta_position_m=[float(x) for x in value["delta_position_m"]],
++            delta_velocity_m_s=[float(x) for x in value["delta_velocity_m_s"]],
++            rng_seed=int(value["rng_seed"]),
++            plan_sha256=str(value["plan_sha256"]),
++            gripper_open_fraction=float(value.get("gripper_open_fraction", 1.0)),
++            gripper_hold_frames=int(value.get("gripper_hold_frames", 30)),
++            arm_delta_velocity_rad_s=float(value.get("arm_delta_velocity_rad_s", 0.0)),
++        )
++
++    def as_dict(self):
++        return {
++            "schema_version": self.schema_version, "episode_id": self.episode_id,
++            "category": self.category, "mechanism": self.mechanism,
++            "trigger_stage_contains": self.trigger_stage_contains,
++            "trigger_after_s": self.trigger_after_s, "trigger_substep": self.trigger_substep,
++            "target_object": self.target_object, "delta_position_m": self.delta_position_m,
++            "delta_velocity_m_s": self.delta_velocity_m_s, "rng_seed": self.rng_seed,
++            "plan_sha256": self.plan_sha256,
++            "gripper_open_fraction": self.gripper_open_fraction,
++            "gripper_hold_frames": self.gripper_hold_frames,
++            "arm_delta_velocity_rad_s": self.arm_delta_velocity_rad_s,
++        }
++
++
++def gripper_actuator_index(model, arm: str) -> int:
++    """Locate this arm's gripper position actuator by the frozen naming rule."""
++    direct = int(model.actuator(f"{arm}_gripper_position").id)
++    if direct >= 0:
++        return direct
++    for index in range(int(model.nu)):
++        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, index) or ""
++        if arm in name and "gripper" in name:
++            return int(index)
++    raise ValueError(f"no gripper actuator found for arm {arm!r}")
++
++
++def apply_gripper_release(model, data, *, arm, open_fraction, open_rad, closed_rad):
++    """Knock the gripper open for a bounded window so the payload can escape.
++
++    The disturbance acts on the robot's own command path, so the cube is never
++    teleported inside the jaws: it stays where physics puts it and falls out
++    under gravity and contact.
++    """
++    index = gripper_actuator_index(model, arm)
++    before = float(data.ctrl[index])
++    target = float(closed_rad) + float(open_fraction) * (float(open_rad) - float(closed_rad))
++    data.ctrl[index] = target
++    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, index) or f"actuator_{index}"
++    return {"actuator": name, "index": index, "ctrl_before_rad": before,
++            "ctrl_after_rad": float(data.ctrl[index]), "target_rad": target}
++
++
++class EpisodePerturbationInjector:
++    """Inject one pre-registered event during live expert integration."""
++
++    def __init__(self, schedule, drop_zone=None):
++        self.schedule = Schedule.from_dict(schedule) if isinstance(schedule, dict) else schedule
++        self.drop_zone = drop_zone
++        self.triggered = False
++        self.replan_requested = False
++        self.event = None
++        self.grasp_exempt = False
++        self._slip_target = None
++        self._slip_hold_until_frame = None
++        self._candidate_stage = None
++        self._candidate_started = None
++
++    def _hold_slip(self, model, data, control_frame):
++        """Keep the knocked-open command for the pre-registered window."""
++        if self._slip_hold_until_frame is None or int(control_frame) > self._slip_hold_until_frame:
++            return
++        index, target = self._slip_target
++        data.ctrl[index] = target
++
++    def stage_matches(self, stage_name):
++        if not stage_name:
++            return False
++        key = self.schedule.trigger_stage_contains
++        allowed = CATEGORY_STAGE_KEYS.get(self.schedule.category, ())
++        if not any(marker in key for marker in allowed):
++            raise ValueError("perturbation trigger is not in its registered category stage set")
++        return key in str(stage_name)
++
++    def after_substep(self, model, data, *, stage_name, stage_started, object_id, substep,
++                      control_frame, plan_arm, gripper_limits=None):
++        self._hold_slip(model, data, control_frame)
++        if self.triggered or stage_name is None or stage_started is None:
++            return
++        if not self.stage_matches(stage_name):
++            self._candidate_stage = None
++            return
++        if self._candidate_stage != stage_name:
++            self._candidate_stage = stage_name
++            self._candidate_started = stage_started
++        elapsed = float(data.time) - float(self._candidate_started)
++        if elapsed + 1e-9 < self.schedule.trigger_after_s:
++            return
++        if int(substep) != self.schedule.trigger_substep:
++            return
++        if self.schedule.mechanism == "gripper_release_slip" and self.drop_zone is not None:
++            # Wait for a moment when the payload hangs over clear table; firing over
++            # a tray would let the disturbance itself finish the task.
++            if not self.drop_zone(object_id, plan_arm):
++                return
++
++        target = self.schedule.target_object
++        if target == "current":
++            if not object_id:
++                raise ValueError("current perturbation target has no active object")
++            target = object_id
++        event = {
++            "schema_version": SCHEMA_VERSION,
++            "type": "perturbation",
++            "episode_id": self.schedule.episode_id,
++            "category": self.schedule.category,
++            "mechanism": self.schedule.mechanism,
++            "target_plan_object": object_id,
++            "object": target,
++            "arm": plan_arm,
++            "stage": stage_name,
++            "control_frame": int(control_frame),
++            "substep": int(substep),
++            "sim_time_s": float(data.time),
++            "requested_delta_position_m": list(self.schedule.delta_position_m),
++            "requested_delta_velocity_m_s": list(self.schedule.delta_velocity_m_s),
++            "arm_delta_velocity_rad_s": float(self.schedule.arm_delta_velocity_rad_s),
++            "rng_seed": self.schedule.rng_seed,
++            "plan_sha256": self.schedule.plan_sha256,
++        }
++        if self.schedule.mechanism == "gripper_release_slip":
++            if not gripper_limits:
++                raise ValueError("gripper_release_slip requires the arm's gripper radian limits")
++            closed_rad, open_rad = gripper_limits
++            grip = apply_gripper_release(model, data, arm=plan_arm,
++                                         open_fraction=self.schedule.gripper_open_fraction,
++                                         open_rad=open_rad, closed_rad=closed_rad)
++            self._slip_target = (int(grip["index"]), float(grip["target_rad"]))
++            self._slip_hold_until_frame = int(control_frame) + int(self.schedule.gripper_hold_frames)
++            self.grasp_exempt = True
++            before = after = object_state(model, data, target)
++            actual = {"delta_position_m": [0.0, 0.0, 0.0], "delta_velocity_m_s": [0.0, 0.0, 0.0]}
++            delta_position = np.zeros(3, dtype=float)
++            delta_velocity = np.zeros(3, dtype=float)
++            event["gripper_release"] = grip
++            event["slip_hold_frames"] = int(self.schedule.gripper_hold_frames)
++            event["grasp_broken"] = None
++        else:
++            grip = None
++            before, after, actual, delta_position, delta_velocity = apply_recorded_delta(
++                model, data, {
++                    "mechanism": self.schedule.mechanism, "object": target, "arm": plan_arm,
++                    "delta_position_m": self.schedule.delta_position_m,
++                    "delta_velocity_m_s": self.schedule.delta_velocity_m_s,
++                    "arm_delta_velocity_rad_s": self.schedule.arm_delta_velocity_rad_s,
++                })
++            if self.schedule.mechanism == "arm_bump_impulse":
++                dof = arm_wrist_dofadr(model, plan_arm)
++                event["arm_dof"] = int(dof)
++                event["arm_qvel_after_rad_s"] = float(data.qvel[dof])
++        event.update({
++            "before_position_m": before["position"].tolist(),
++            "after_position_m": after["position"].tolist(),
++            "delta_position_m": delta_position.tolist(),
++            "delta_velocity_m_s": delta_velocity.tolist(),
++            "actual_delta_position_m": actual["delta_position_m"],
++            "actual_delta_velocity_m_s": actual["delta_velocity_m_s"],
++        })
++        self.event = event
++        self.triggered = True
++        self.replan_requested = True
++
++    def take_replan(self):
++        if self.replan_requested:
++            self.replan_requested = False
++            return PerturbationReplan(self.event)
++        return None
++
++
++class ReplayPerturbationInjector:
++    """Apply the event recorded by an original episode at its exact frame."""
++
++    def __init__(self, event, control_hz, physics_hz):
++        self.event = copy.deepcopy(event)
++        self.control_frame = int(self.event["control_frame"])
++        self.substep = int(self.event["substep"])
++        self.control_hz = int(control_hz)
++        self.physics_hz = int(physics_hz)
++        self.applied = False
++        self.applied_at = None
++        self.error = None
++        self._substep = 0
++        self._hold_until_frame = None
++
++    def callback(self, model, data, *, control_frame, substep_callback_count):
++        if self._hold_until_frame is not None and int(control_frame) <= self._hold_until_frame:
++            release = self.event.get("gripper_release") or {}
++            if release:
++                data.ctrl[int(release["index"])] = float(release["target_rad"])
++        if self.applied or control_frame != self.control_frame:
++            return
++        self._substep = int(substep_callback_count)
++        if self._substep != self.substep:
++            return
++        if self.event.get("mechanism") == "gripper_release_slip":
++            release = self.event["gripper_release"]
++            index, target = int(release["index"]), float(release["target_rad"])
++            before_ctrl = float(data.ctrl[index])
++            data.ctrl[index] = target
++            self._hold_until_frame = int(control_frame) + int(self.event.get("slip_hold_frames", 5))
++            snapshot = object_state(model, data, self.event["object"])
++            before = after = snapshot
++            actual = {"delta_position_m": [0.0, 0.0, 0.0], "delta_velocity_m_s": [0.0, 0.0, 0.0]}
++            self.error = {"actuator": release["actuator"],
++                          "ctrl_before_rad": before_ctrl, "ctrl_target_rad": target,
++                          "max_position_delta_error_m": 0.0,
++                          "max_velocity_delta_error_m_s": 0.0,
++                          "substep_count_error": 0}
++        else:
++            before, after, actual, _, _ = apply_recorded_delta(model, data, self.event)
++        self.applied = True
++        self.applied_at = {
++            "control_frame": int(control_frame), "substep": int(self._substep),
++            "sim_time_s": float(data.time),
++            "before_position_m": before["position"].tolist(),
++            "after_position_m": after["position"].tolist(),
++            "actual_delta_position_m": actual["delta_position_m"],
++            "actual_delta_velocity_m_s": actual["delta_velocity_m_s"],
++        }
++        if self.error is None:
++            expected = np.asarray(self.event.get("actual_delta_position_m", [0, 0, 0]), dtype=float)
++            observed = np.asarray(actual["delta_position_m"], dtype=float)
++            velocity_expected = np.asarray(self.event.get("actual_delta_velocity_m_s", [0, 0, 0]), dtype=float)
++            velocity_observed = np.asarray(actual["delta_velocity_m_s"], dtype=float)
++            self.error = {
++                "max_position_delta_error_m": float(np.max(np.abs(expected - observed))),
++                "max_velocity_delta_error_m_s": float(np.max(np.abs(velocity_expected - velocity_observed))),
++                "substep_count_error": int(self._substep - int(substep_callback_count)),
++            }
++
++
++def event_is_valid(event, *, frame_xy_displacement_m=None,
++                   minimum_xy_displacement_m=0.004, maximum_xy_displacement_m=0.035,
++                   minimum_impulse_speed_m_s=0.05):
++    """Validate the injected impulse/state delta and its observed frame effect.
++
++    ``frame_xy_displacement_m`` is measured from the independent trace before and
++    after the perturbed control frame.  A generalized impulse is legitimately
++    recorded as a velocity change first, so requiring an immediate qpos jump would
++    reject physically valid impulses; the trace check supplies the bounded motion.
++    """
++    if not event:
++        return False, "no perturbation event"
++    delta = np.asarray(event.get("actual_delta_position_m", [0, 0, 0]), dtype=float)
++    speed = float(np.linalg.norm(np.asarray(event.get("actual_delta_velocity_m_s", [0, 0, 0]), dtype=float)))
++    if not np.isfinite(delta).all() or not math.isfinite(speed):
++        return False, "non-finite perturbation delta"
++    if float(delta[2]) < -0.015:
++        return False, "perturbation moved the object more than 15 mm downward"
++    mechanism = event.get("mechanism")
++    if mechanism == "bounded_velocity_impulse":
++        if speed < minimum_impulse_speed_m_s:
++            return False, f"bounded velocity impulse too small ({speed:.6f} m/s)"
++    elif mechanism == "arm_bump_impulse":
++        kick = float(event.get("arm_delta_velocity_rad_s", 0.0))
++        if abs(kick) < 0.05:
++            return False, f"arm bump impulse too small ({kick:.4f} rad/s)"
++    elif mechanism == "explicit_state_displacement":
++        xy = float(np.linalg.norm(delta[:2]))
++        if xy < minimum_xy_displacement_m:
++            return False, f"explicit state displacement too small ({xy:.6f} m)"
++        if xy > maximum_xy_displacement_m:
++            return False, f"explicit state displacement too large ({xy:.6f} m)"
++    elif mechanism == "gripper_release_slip":
++        release = event.get("gripper_release") or {}
++        if not release:
++            return False, "slip event carries no gripper release record"
++        if float(release.get("ctrl_after_rad", 0.0)) <= float(release.get("ctrl_before_rad", 0.0)):
++            return False, "gripper command did not open"
++        if not event.get("slip_hold_frames"):
++            return False, "slip event has no bounded hold window"
++    else:
++        return False, f"unknown perturbation mechanism {mechanism!r}"
++    if frame_xy_displacement_m is not None:
++        observed = float(frame_xy_displacement_m)
++        if not math.isfinite(observed):
++            return False, "non-finite frame displacement"
++        if observed < minimum_xy_displacement_m:
++            return False, f"object did not move by at least {minimum_xy_displacement_m * 1000:.1f} mm in the perturbed frame"
++        if observed > maximum_xy_displacement_m:
++            return False, f"object motion exceeded the bounded {maximum_xy_displacement_m * 1000:.1f} mm range"
++    return True, "valid bounded mid-episode perturbation"
+--- src/bimanual/recording/episode.py
++++ src/bimanual/recording/episode.py
+@@ -10,6 +10,7 @@
+ 
+ from ..control import contacts
+ from ..control.errors import MotionFailure
++from ..control.mid_perturbation import EpisodePerturbationInjector, PerturbationReplan
+ from ..control.motion import MotionExecutor
+ from ..experts.sorting import SortingExpert
+ from ..tasks.sorting.scene_sampling import SceneSpec
+@@ -28,13 +29,17 @@
+     wall_time_s: float
+     frames: int
+     output: str | None = None
++    perturbation_event: dict | None = None
++    perturbation_replans: list = field(default_factory=list)
+     detail: dict = field(default_factory=dict)
+ 
+     def as_dict(self):
+         return {"success": self.success, "failure_reason": self.failure_reason, "profile": self.profile,
+                 "seed": self.seed, "sorted_count": self.sorted_count, "transfers": self.transfers,
+                 "sim_time_s": self.sim_time_s, "wall_time_s": self.wall_time_s,
+-                "frames": self.frames, "output": self.output, **self.detail}
++                "frames": self.frames, "output": self.output,
++                "perturbation_event": self.perturbation_event,
++                "perturbation_replans": self.perturbation_replans, **self.detail}
+ 
+ 
+ class EpisodeRunner:
+@@ -45,6 +50,8 @@
+         self.recovery = None
+         self.soft_contacts = []
+         self.contact_monitor_errors = []
++        self.perturbation_event = None
++        self.perturbation_replans = []
+ 
+     def _ensure_recovery(self):
+         if self.recovery is not None:
+@@ -58,10 +65,15 @@
+         return self.recovery
+ 
+     # -- execution --------------------------------------------------------
+-    def execute_plan(self, plan, recorder, executor_state, sink=None):
++    def execute_plan(self, plan, recorder, executor_state, sink=None, *, perturbation=None):
+         while True:
+             try:
+                 executor = MotionExecutor(self.env, plan)
++                # A recovery plan exists only because an exogenous disturbance
++                # opened the hand, so the payload is expected to leave the grasp;
++                # every contact, penetration, force and tracking rule still applies.
++                if str(plan.label).startswith("recovery_"):
++                    executor.grasp_exempt = True
+                 break
+             except MotionFailure as failure:
+                 recovered = self._recover(plan, failure, recorder)
+@@ -84,8 +96,31 @@
+                 # actually issued this frame; ``apply_action`` is pure, so the
+                 # value handed to the sink is exactly what ``step`` executes.
+                 sink.frame(self.env.observe(), self.env.robot.apply_action(self.env.data, action))
++            def combined_guard(model, data, _executor=executor, _perturbation=perturbation):
++                if _perturbation is not None and getattr(_perturbation, "grasp_exempt", False):
++                    _executor.grasp_exempt = True
++                _executor.guard(model, data)
++                if _perturbation is not None:
++                    _perturbation.after_substep(
++                        model, data,
++                        stage_name=_executor.current_stage_name,
++                        stage_started=_executor.stage_started,
++                        object_id=_executor.plan.object_id,
++                        substep=_executor.substeps,
++                        control_frame=self.env.elapsed_steps,
++                        plan_arm=_executor.plan.arm,
++                        gripper_limits=(float(self.config["robot"]["gripper_closed_rad"]),
++                                        float(self.config["robot"]["gripper_open_rad"])),
++                    )
+             try:
+-                self.env.step(action, substep_callback=executor.guard)
++                self.env.step(action, substep_callback=combined_guard)
++                if perturbation is not None:
++                    replan = perturbation.take_replan()
++                    if replan is not None:
++                        self.perturbation_event = perturbation.event
++                        if recorder is not None:
++                            recorder.event(perturbation.event)
++                        raise replan
+             except MotionFailure as failure:
+                 failure.substeps = executor.substeps
+                 failure.evidence = {**(failure.evidence or {}), "partial_frame": True}
+@@ -183,6 +218,8 @@
+         # perception tracker; nothing leaks between episodes of one runner.
+         self.recovery = None
+         self.recovery_attempt = 0
++        self.perturbation_event = None
++        self.perturbation_replans = []
+         self.scene = scene
+         self.soft_contacts = []
+         self.contact_monitor_errors = []
+@@ -196,6 +233,18 @@
+         expert = SortingExpert(self.config, scene, self.certificate)
+         failure = None
+         executor_state = []
++        perturbation_schedule = (scene.extra or {}).get("perturbation")
++
++        def _drop_zone(object_id, arm):
++            from ..control.mid_perturbation import drop_site_is_clear
++
++            if not object_id:
++                return False
++            position, _ = contacts.object_pose(self.env.model, self.env.data, object_id)
++            return drop_site_is_clear(self.env, self.certificate, object_id, arm, position[:2])
++
++        perturbation = (EpisodePerturbationInjector(perturbation_schedule, _drop_zone)
++                        if perturbation_schedule else None)
+         try:
+             generator = expert.episode(self.env)
+             while True:
+@@ -203,7 +252,45 @@
+                     plan = next(generator)
+                 except StopIteration:
+                     break
+-                self.execute_plan(plan, recorder, executor_state, sink)
++                try:
++                    self.execute_plan(plan, recorder, executor_state, sink,
++                                      perturbation=perturbation)
++                except PerturbationReplan as replan:
++                    if len(self.perturbation_replans) >= 1:
++                        raise
++                    self.perturbation_replans.append(replan.event)
++                    if recorder is not None:
++                        recorder.event({"type": "expert_replan", "reason": "perturbation",
++                                        "perturbation": replan.event,
++                                        "pending_objects": [
++                                            name for name, status in
++                                            self.env.task.object_statuses(self.env.model, self.env.data).items()
++                                            if not status["sorted"]]})
++                    from ..control.mid_perturbation import (
++                        build_dropped_object_settle_plan, build_held_object_release_plan)
++                    event = replan.event
++                    if event and event.get("object") and event.get("arm"):
++                        held, held_evidence = contacts.bilateral_grasp(
++                            self.env.model, self.env.data, event["object"], event["arm"])
++                        if held and event.get("mechanism") != "gripper_release_slip":
++                            if recorder is not None:
++                                recorder.event({"type": "expert_recovery_release",
++                                                "object": event["object"], "arm": event["arm"],
++                                                "evidence": held_evidence})
++                            release_plan = build_held_object_release_plan(
++                                self.env, event["object"], event["arm"], self.certificate)
++                            self.execute_plan(release_plan, recorder, executor_state, sink,
++                                              perturbation=None)
++                        else:
++                            if recorder is not None:
++                                recorder.event({"type": "expert_recovery_settle",
++                                                "object": event["object"], "arm": event["arm"],
++                                                "evidence": held_evidence})
++                            settle_plan = build_dropped_object_settle_plan(
++                                self.env, event["object"], event["arm"])
++                            self.execute_plan(settle_plan, recorder, executor_state, sink,
++                                              perturbation=None)
++                    generator = expert.episode(self.env)
+             result = self._stabilize(recorder, expert, sink)
+         except MotionFailure as error:
+             failure = error
+@@ -225,6 +312,7 @@
+             transfers=[event.as_dict() for event in expert.coordinator.events],
+             sim_time_s=float(self.env.data.time), wall_time_s=wall,
+             frames=recorder.frames if recorder else 0,
++            perturbation_event=self.perturbation_event, perturbation_replans=self.perturbation_replans,
+             output=str(output_dir) if output_dir else None,
+             detail={"attempt": attempt, "status": status,
+                     "contact_mode": (self.config.get("contact_policy") or {}).get("mode", "strict"),
+--- src/bimanual/recording/task_replay.py
++++ src/bimanual/recording/task_replay.py
+@@ -16,6 +16,7 @@
+ from ..config import project_root
+ from ..sim.environment import BimanualEnv
+ from ..tasks.sorting.scene_sampling import SceneSpec
++from ..control.mid_perturbation import ReplayPerturbationInjector
+ from .protocol_audit import ProtocolReplay
+ 
+ 
+@@ -42,6 +43,14 @@
+         times = trace["time"]
+         objects = [f"cube_{index}" for index in range(4)]
+         protocol = ProtocolReplay(config, scene, log["events"])
++        perturbation_event = next((row for row in _all_events(directory)
++                                   if row.get("type") == "perturbation"), None)
++        injector = None
++        perturbation_verification = None
++        if perturbation_event:
++            injector = ReplayPerturbationInjector(
++                perturbation_event, int(config["runtime"]["control_hz"]),
++                int(config["runtime"]["physics_hz"]))
+         if video:
+             import av
+             writer = av.open(str(directory / "replay.mp4"), mode="w")
+@@ -59,7 +68,17 @@
+                 body = env.model.body(name).id
+                 worst_object = max(worst_object,
+                                    float(np.max(np.abs(env.data.xpos[body] - positions[index, object_index]))))
+-            env.step(action)
++            substeps = int(trace["substeps"][index]) if "substeps" in trace.files else int(env.substeps)
++            callback_counter = [0]
++
++            def perturbation_callback(model, data, _frame=index, _injector=injector, _counter=callback_counter):
++                _counter[0] += 1
++                if _injector is not None:
++                    _injector.callback(model, data, control_frame=_frame,
++                                       substep_callback_count=_counter[0])
++
++            env.step(action, substeps=substeps,
++                     substep_callback=perturbation_callback if injector else None)
+             if writer:
+                 frame = av.VideoFrame.from_ndarray(env.render("central"), format="rgb24")
+                 for packet in stream.encode(frame):
+@@ -92,12 +111,19 @@
+         # A profile without transfers has no handoff chain to match.
+         protocol_matches = (not scene.expected_transfers) or (protocol_ok == reported_success)
+         passed = drift_ok and replay_success == reported_success and protocol_matches
++        if injector is not None:
++            perturbation_verification = {
++                "event": perturbation_event, "applied": bool(injector.applied),
++                "applied_at": injector.applied_at, "delta_error": injector.error,
++            }
++            passed = passed and bool(injector.applied) and (injector.error or {}).get(
++                "max_position_delta_error_m", 1.0) < 0.001
+         report = {"passed": passed, "reported_success": reported_success,
+                   "replay_success": replay_success, "transfers_complete": bool(info.get("transfers_complete")),
+                   "max_public_state_error": worst_state, "max_object_position_error_m": worst_object,
+                   "max_clock_error_s": worst_clock,
+                   "full_final_qpos_error": qpos_error, "full_final_qvel_error": qvel_error,
+-                  "frames": int(len(actions)), "video": str(directory / "replay.mp4") if video else None,
++                  "frames": int(len(actions)), "video": str(directory / "replay.mp4") if video else None, "perturbation": perturbation_verification,
+                   "protocol": audit, "log_conflicts": log["conflicts"],
+                   "transfer_evidence": transfers}
+         (directory / "replay.json").write_text(json.dumps(report, indent=2, default=str) + "\n",
+@@ -125,6 +151,20 @@
+     return events
+ 
+ 
++def _all_events(directory):
++    path = Path(directory) / "events.jsonl"
++    events = []
++    if path.is_file():
++        for line in path.read_text(encoding="utf-8").splitlines():
++            if not line.strip():
++                continue
++            try:
++                events.append(json.loads(line))
++            except json.JSONDecodeError:
++                pass
++    return events
++
++
+ def _handoff_log(directory):
+     """The primary log, plus a consistency check against the summary copy."""
+     events = _handoff_events(directory)

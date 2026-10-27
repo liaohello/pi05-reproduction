@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E4-T",
+  "claim": "one state-on pi0.5 LoRA fine-tune from pi05_libero with offline action curves; not task-quality acceptance",
+  "resource_policy": {
+    "utilisation_is_not_an_admission_gate": true,
+    "required_free_memory_mib": "measured probe peak + 1500 MiB margin",
+    "jax_preallocate": false,
+    "memory_fraction": "computed from the selected device's free memory; never hardcoded at 0.95",
+    "containers": "exact-name registry only; no broad prefix/label cleanup",
+    "training_and_evaluation_may_use_different_gpus": true,
+    "parallel_evaluation_reads_only_completed_checkpoints": true
+  },
+  "initialisation": {
+    "base_checkpoint": "pi05_libero",
+    "loader": "OpenPI CheckpointWeightLoader",
+    "resume_previous_so101_checkpoint": false,
+    "state_mode": "on",
+    "architecture": "pi05",
+    "internal_action_dim": 32,
+    "state_action_dim": 12,
+    "action_horizon": 10,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m_lora",
+    "freeze_rule": "Gemma LLM + SigLIP backbone frozen; LoRA and four action/time projections trainable"
+  },
+  "data": {
+    "view_episodes": 50,
+    "train": 40,
+    "validation": 10,
+    "clean": 25,
+    "recovery": 25,
+    "statistics": "40 train episodes only",
+    "cross_event_window_exclusion": "training and evaluation windows whose 10-step action crosses the recorded perturbation frame are excluded",
+    "sample_weighting": "clean/recovery 50/50; recovery categories equal; episodes equal within a category"
+  },
+  "sampling_plan": {
+    "mode": "balanced_categories",
+    "group_weights": {
+      "clean": 0.5,
+      "A": 0.25,
+      "C": 0.25
+    },
+    "amendment_v1": {
+      "created": "2026-10-26",
+      "pre_registered_weights": {
+        "clean": 0.5,
+        "A": 0.16666666666666666,
+        "B": 0.16666666666666666,
+        "C": 0.16666666666666666
+      },
+      "reason": "category B contributes zero episodes to this round (e4t_protocol.json perturbations.mechanism_amendment_v21 withdrew the gripper-command slip because its physical replay diverges), so a weight on B would sample an empty group",
+      "rule": "the pre-registered clean:recovery = 1:1 balance is kept and the recovery half is split equally between the two categories that exist",
+      "frozen_before_the_first_optimizer_update": true
+    },
+    "episode_equal_within_group": true
+  },
+  "optimisation": {
+    "seed": 42,
+    "primary_batch_size": 8,
+    "data_loader_workers": 8,
+    "data_loader_workers_note": "prefetch processes for the training loader only: the frozen sampling plan fixes the batch index sequence, so this changes throughput, not what any batch contains. The first run at workers=0 measured 1.2 s/update (30,000 updates would need 10.0 h against the then-registered 8 h training wall limit), which is why the knob is exposed instead of being left hard-coded at zero.",
+    "fallback_batch_sizes": [
+      4,
+      2,
+      1
+    ],
+    "memory_probes_maximum": 3,
+    "planned_updates": 30000,
+    "training_wall_limit_s": 32400,
+    "training_wall_limit_amendment_v1": {
+      "created": "2026-10-26",
+      "decided_by": "user, in this round",
+      "previous_value_s": 28800,
+      "new_value_s": 32400,
+      "reason": "measured steady throughput on the registered card is 1.054 s per optimizer update (540 updates in 569 s at step 2752), so 30,000 updates need 8.78 h and cannot finish inside the pre-registered 8 h wall limit",
+      "conflict": "the registered 30,000-update target and the registered 8 h training wall limit are mutually unsatisfiable on this hardware at batch 8",
+      "chosen_resolution": "keep the 30,000 updates, batch 8, the LR schedule, seed, sampling plan and checkpoint interval unchanged, and widen only the time guard to 9 h",
+      "unchanged": {
+        "planned_updates": 30000,
+        "primary_batch_size": 8,
+        "warmup_steps": 500,
+        "peak_lr": 5e-05,
+        "decay_steps": 30000,
+        "decay_lr": 5e-06,
+        "save_interval": 5000,
+        "seed": 42
+      },
+      "round_budget_check": "the 24 h round started 2026-10-25T17:20Z; a 9 h training segment starting ~06:05Z ends ~15:05Z and leaves the round inside its total budget",
+      "first_attempt_recorded_in": "runs/so101/e4t/workers0_attempt/NOTE.json and runs/so101/e4t/run_initial.json (wall_time_s 943.8, ~560 updates)"
+    },
+    "warmup_steps": 500,
+    "peak_lr": 5e-05,
+    "decay_steps": 30000,
+    "decay_lr": 5e-06,
+    "optimizer": "AdamW",
+    "gradient_clip_norm": 1.0,
+    "dtype": "bfloat16"
+  },
+  "checkpointing": {
+    "reference_step0": true,
+    "save_interval": 5000,
+    "step_axis": "TrainState.step",
+    "orbax_directory_offset": "directory name is loop index; actual TrainState.step is recorded by read_train_state.py",
+    "keep_period": 1,
+    "eval_checkpoints": [
+      0,
+      5000,
+      10000,
+      15000,
+      20000,
+      25000,
+      30000
+    ]
+  },
+  "validation_gate": {
+    "pre_registered_before_training": true,
+    "metric_aggregation_amendment_v1": {
+      "created": "2026-10-26",
+      "kind": "measurement correction before the final gate summary; no threshold changed",
+      "reason": "the first pass collapsed the three paired noise copies into their arithmetic mean, which is not a trajectory the sampler emits: it understates continuous error and turns one-frame gripper transitions into a ramp, so the discrete key-event timing cannot be measured at all (0/82 mean-trajectory crossings against 52/82 windows with a per-copy crossing). The registered rule also requires episodes, not windows, to receive equal weight inside a group.",
+      "primary_operator": "per sampled noise copy; mean over copies, then mean over windows inside an episode, then equal weight per episode; P95 over every elementwise joint error on the sampled trajectories",
+      "event_timing_operator": "each sampled trajectory paired independently with the ground-truth event of the same arm; maximum absolute frame offset over all pairs and copies",
+      "legacy_mean_of_copies_retained": true,
+      "thresholds_changed": false
+    },
+    "clean_active_joint_macro_mae_deg": 2.0,
+    "recovery_post_event_active_joint_macro_mae_deg": 2.0,
+    "clean_active_joint_p95_deg": 5.0,
+    "recovery_post_event_active_joint_p95_deg": 5.0,
+    "gripper_mae_pct": 3.0,
+    "key_event_timing_tolerance_control_frames": 3,
+    "key_event_timing_tolerance_ms": 60.0,
+    "activity_definition": "ground-truth action max absolute per-frame change >= 0.02 deg or gripper change >= 0.05 percentage points",
+    "activity_joint_deg_per_frame": 0.02,
+    "activity_gripper_pct_per_frame": 0.05,
+    "activity_threshold_provenance": "moved out of the literal in scripts/so101/evaluate_e4t_openloop.py into this file; the floor is checked against the per-frame expert action deltas of the 40 train episodes in experiments/so101/e4t-activity-calibration.json",
+    "gripper_open_threshold_percent": 25.0,
+    "gripper_closed_threshold_percent": 10.0,
+    "must_beat_initialization": true,
+    "must_beat_hold_baseline": true,
+    "must_beat_train_mean_baseline": true,
+    "static_only_success_is_insufficient": true,
+    "fk_tcp_error_mib": "not reported: the pinned OpenPI model has no SO101 FK interface and this round performs no physics rollout"
+  },
+  "best_checkpoint": {
+    "selection_data": "validation only",
+    "primary_objective": "macro MAE over clean and post-disturbance recovery active windows; the two groups receive equal weight, episodes within each group equal",
+    "first_filter": "gripper and event-timing metric must pass",
+    "tie_break": "earlier TrainState.step",
+    "claim": "diagnostic checkpoint selection on a validation set that has already informed the protocol; it is not an independent final test"
+  },
+  "privacy": {
+    "no_real_host_or_private_path": true,
+    "raw_commands_and_logs_private": true,
+    "public_artifacts_sanitised": true
+  },
+  "revision_history": [
+    {
+      "sha256": "2ff109c8094c8717… (recorded in experiments/so101/e4t-data.json)",
+      "used_by": "the sampling plan freeze and the start of the 30,000-update run"
+    },
+    {
+      "sha256": "a6609f84bf0a95be696fba74e834a4c226fba92dd17bb1ae87c66949a7e3974c",
+      "changed": [
+        "data_loader_workers_note arithmetic corrected (1.2 s/update over 30,000 updates is 10.0 h, not 9.6 h)",
+        "training_wall_limit_s amended 28800 -> 32400 with the measured-rate justification"
+      ],
+      "unchanged": [
+        "planned_updates 30000, batch 8, warmup 500, peak 5e-5, decay 30000 to 5e-6, save_interval 5000, seed 42, every validation_gate threshold, the sampling plan weights and the checkpoint list"
+      ]
+    },
+    {
+      "sha256": "pending (written after the final gate summary)",
+      "changed": [
+        "validation_gate.metric_aggregation_amendment_v1: primary metrics are computed per sampled noise copy with episode-equal group aggregation; per-copy key-event timing replaces the mean-of-copies trajectory",
+        "the legacy mean-of-copies numbers are retained beside the corrected ones for audit"
+      ],
+      "unchanged": [
+        "every validation_gate threshold, the frozen 50-episode view, the 40/10 split, the run config snapshot and every checkpoint"
+      ]
+    }
+  ]
+}

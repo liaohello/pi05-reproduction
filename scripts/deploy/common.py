@@ -47,6 +47,16 @@ def _load_raw() -> dict:
     raise ConfigError("no deploy config found: scripts/deploy/config.example.json")
 
 
+def load_assets() -> dict:
+    """Resolve only the asset entries of the deploy config.
+
+    The training and open-loop evaluation launchers run on the GPU host, where the ssh section is
+    irrelevant and its host variables are deliberately not exported.
+    """
+    raw = _load_raw()["assets"]
+    return {key: _resolve(value, f"assets.{key}") for key, value in raw.items()}
+
+
 def load_config() -> dict:
     raw = _load_raw()
     ssh = raw["ssh"]

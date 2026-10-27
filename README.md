@@ -43,6 +43,16 @@ Step counts: `libero_spatial` 77, `libero_object` 138, `libero_goal` 115, `liber
 Fixed protocol: `seed=7`, `replan_steps=10`, 10 settle steps, 256×256 rendering, 224 policy input,
 camera rotated 180°. Details and caveats: [`reports/phase1-inference-smoke.md`](reports/phase1-inference-smoke.md).
 
+## SO101 training code for review
+
+The SO101 training, data-adaptation and evaluation code is now available under
+[`scripts/so101/`](scripts/so101/), with training parameters in
+[`configs/so101/`](configs/so101/). Start with the
+[training code review guide](docs/so101-code-review.md) for the entry points and host-side tests.
+The training entry calls the external OpenPI trainer with this repository's model configuration
+and data loader. New SO101 experiment records and figures are pending separate human review.
+LIBERO Phase 1 completion remains unchanged.
+
 ## Repository layout
 
 ```

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "purpose": "closed-loop engineering diagnostic of the E2 checkpoint on frozen scenes",
+  "checkpoint": {
+    "run_env": "SO101_E2_RUN_DIR",
+    "train_state_step": 100,
+    "train_state_step_note": "E3 evaluated the 100-update checkpoint (Orbax step 99, TrainState.step 100); the resumed TrainState.step 101 checkpoint is E2 recovery evidence, not the E3 subject",
+    "require_explicit": true,
+    "fallback_to_other_models": false
+  },
+  "statistics": {
+    "source": "E2 checkpoint assets/so101/norm_stats.json",
+    "computed_from": "E1 train episodes only",
+    "must_match_e1_manifest_sha256": true
+  },
+  "smoke": {
+    "episodes": 1,
+    "seed": 9000,
+    "note": "full short closed loop on a scene not used for training or evaluation tuning"
+  },
+  "diagnostic": {
+    "episodes": 20,
+    "seed_range": [9100, 9119],
+    "attempts_per_scene": 1,
+    "manifest_written_before_rollout": true,
+    "success_predicate": "external SortingTask.evaluate",
+    "timeout_s": 120.0,
+    "record": ["summary.json", "trace.npz", "events.jsonl", "scene.json"],
+    "video": false,
+    "denominator": 20,
+    "no_scene_substitution": true,
+    "no_checkpoint_substitution": true
+  },
+  "invalid_rule": {
+    "definition": "policy server unreachable or no action produced before the first env.step",
+    "handling": "record invalid_infrastructure, retry the same frozen scene once, keep both attempts; if the retry also fails the scene is reported invalid and excluded from the 20-scene denominator with the denominator restated",
+    "mid_episode_policy_error": "counts as a failure in the denominator"
+  },
+  "actions": {
+    "dim": 12,
+    "semantics": "absolute joint targets, left six then right six",
+    "checks": ["finite", "shape (12,)", "unit/order verified against protocol", "clipped by PolicyRunner before env.step"],
+    "chunk_horizon": 10,
+    "replan_steps": 10
+  },
+  "reporting": {
+    "success_count": true,
+    "wilson_95_interval": true,
+    "failure_categories": true,
+    "not_a_benchmark": true,
+    "no_fabricated_threshold": true
+  }
+}

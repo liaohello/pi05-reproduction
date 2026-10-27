@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase_scope": ["E0", "E1", "E2", "E3"],
+  "task": {
+    "name": "direct_sorting",
+    "instruction": "Sort the red cubes into the red tray and the blue cubes into the blue tray.",
+    "source": "external dual-SO101 MuJoCo project, scripted physical expert",
+    "transfer_protocol": false
+  },
+  "source_binding": {
+    "external_root_env": "SO101_SOURCE_ROOT",
+    "external_python_env": "SO101_PYTHON",
+    "profile": "configs/profiles/collection_50hz_three_camera.yaml",
+    "fingerprint_tool": "scripts/so101/source_fingerprint.py"
+  },
+  "control": {
+    "physics_hz": 500,
+    "control_hz": 50,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 120.0,
+    "nominal_realtime_claim": false
+  },
+  "observation": {
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "rgb": {
+      "dtype": "uint8",
+      "layout": "HWC",
+      "height": 480,
+      "width": 640,
+      "policy_resize": [224, 224],
+      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
+    },
+    "state": {
+      "key": "observation.state",
+      "shape": [12],
+      "order": [
+        "left_shoulder_pan.pos",
+        "left_shoulder_lift.pos",
+        "left_elbow_flex.pos",
+        "left_wrist_flex.pos",
+        "left_wrist_roll.pos",
+        "left_gripper.pos",
+        "right_shoulder_pan.pos",
+        "right_shoulder_lift.pos",
+        "right_elbow_flex.pos",
+        "right_wrist_flex.pos",
+        "right_wrist_roll.pos",
+        "right_gripper.pos"
+      ],
+      "units": [
+        "degree", "degree", "degree", "degree", "degree", "percent",
+        "degree", "degree", "degree", "degree", "degree", "percent"
+      ],
+      "timing": "measured joint state immediately before the action is issued"
+    }
+  },
+  "action": {
+    "key": "action",
+    "shape": [12],
+    "semantics": "absolute joint-position target, left six then right six",
+    "units": [
+      "degree", "degree", "degree", "degree", "degree", "percent",
+      "degree", "degree", "degree", "degree", "degree", "percent"
+    ],
+    "label_rule": "clamped actuator target actually applied at that control frame; never the next measured state",
+    "chunk_horizon": 10,
+    "replan_steps": 10
+  },
+  "collection": {
+    "profile": "direct",
+    "direct_seed_range": [8100, 8199],
+    "target_successes": 20,
+    "maximum_attempts": 100,
+    "diagnostics": true,
+    "split": {
+      "train": 16,
+      "validation": 4,
+      "unit": "episode",
+      "rule": "successful episodes in collection order: first 16 train, last 4 validation"
+    },
+    "normalisation": "computed from train episodes only",
+    "success_predicate": "external SortingTask.evaluate: tray geometry, support/contact, robot clearance, velocity and sustained stability",
+    "failure_policy": "every attempt and failure reason is kept; a failed attempt never becomes a demonstration"
+  },
+  "evaluation": {
+    "purpose": "fixed 20-scene engineering diagnostic, not a benchmark",
+    "seed_range": [9100, 9119],
+    "episodes": 20,
+    "attempts_per_scene": 1,
+    "scene_freeze": "SceneSpec and SHA-256 written before any policy rollout",
+    "not_used_for": ["training", "hyper-parameter tuning", "normalisation statistics"],
+    "timeout_s": 120.0,
+    "record_trace": true,
+    "record_video": false,
+    "success_predicate": "external SortingTask.evaluate, independent of the policy",
+    "report": "success count / 20 with Wilson 95% interval and failure categories"
+  },
+  "claims": {
+    "engineering_chain": "SO101 20-demo -> 100-update pi0.5 parameter update -> checkpoint restore -> new-checkpoint rollout",
+    "explicitly_not": [
+      "a benchmark success rate",
+      "formal training or task-quality acceptance",
+      "LIBERO P1.1 / P1.2 completion",
+      "real-robot validation"
+    ]
+  }
+}

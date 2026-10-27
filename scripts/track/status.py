@@ -51,10 +51,10 @@ def sha256(path: Path) -> str:
 
 
 class Ctx:
-    def __init__(self) -> None:
-        self.cfg = common.load_config_or_exit()
+    def __init__(self, *, runs: list[dict] | None = None, cfg: dict | None = None) -> None:
+        self.cfg = common.load_config_or_exit() if cfg is None else cfg
         self.phase_def = json.loads(PHASES.read_text(encoding="utf-8"))
-        self.runs = self._load_runs()
+        self.runs = self._load_runs() if runs is None else list(runs)
         self.preflight = json.loads(PREFLIGHT.read_text(encoding="utf-8")) if PREFLIGHT.is_file() else {}
         self.last_sync = json.loads(LAST_SYNC.read_text(encoding="utf-8")) if LAST_SYNC.is_file() else {}
 
@@ -71,7 +71,12 @@ class Ctx:
         return {}
 
     def runs_of(self, kind: str) -> list[dict]:
-        return [r for r in self.runs if r.get("kind") == kind]
+        """LIBERO gate input. Legacy records without scope count as LIBERO."""
+        return [r for r in self.runs
+                if r.get("kind") == kind and r.get("scope", "libero") == "libero"]
+
+    def runs_of_scope(self, scope: str) -> list[dict]:
+        return [r for r in self.runs if r.get("scope", "libero") == scope]
 
 
 def evaluate(ctx: Ctx, kind: str) -> tuple[str, str]:
@@ -207,22 +212,37 @@ def build(ctx: Ctx) -> dict:
                        "total": len(checks), "status": status})
 
     done = sum(1 for p in phases if p["status"] == "DONE")
+    libero_runs = [r for r in ctx.runs if r.get("scope", "libero") == "libero"]
     metrics = {
-        "runs": len(ctx.runs),
+        "runs": len(libero_runs),
         "smoke": len(ctx.runs_of("smoke")),
         "eval": len(ctx.runs_of("eval")),
         "train": len(ctx.runs_of("train")),
-        "episodes": sum(r.get("episodes", 0) for r in ctx.runs),
-        "successes": sum(r.get("successes", 0) for r in ctx.runs),
+        "episodes": sum(r.get("episodes", 0) for r in libero_runs),
+        "successes": sum(r.get("successes", 0) for r in libero_runs),
     }
-    return {"ts": now(), "phases": phases, "metrics": metrics,
-            "done": done, "total": len(phases), "runs": sorted(ctx.runs, key=lambda r: r["ts"], reverse=True)}
+    so101_runs = ctx.runs_of_scope("so101")
+    so101 = {
+        "runs": len(so101_runs),
+        "phases": {
+            phase: {
+                "runs": sum(1 for r in so101_runs if r.get("phase") == phase),
+                "successes": sum(1 for r in so101_runs
+                                 if r.get("phase") == phase and r.get("status") == "success"),
+            }
+            for phase in ("E0", "E1", "E2", "E3")
+        },
+        "last": sorted(so101_runs, key=lambda r: r["ts"], reverse=True)[:5],
+    }
+    return {"ts": now(), "phases": phases, "metrics": metrics, "so101": so101,
+            "done": done, "total": len(phases),
+            "runs": sorted(libero_runs, key=lambda r: r["ts"], reverse=True)}
 
 
 def render_console(report: dict) -> None:
     marks = {"DONE": "DONE  ", "IN_PROGRESS": "进行中", "BLOCKED": "阻塞  ", "PENDING": "未开始"}
     print(f"π0.5 + LIBERO 复现追踪 · {report['ts']}")
-    print(f"服务器：{common.label(ctx.cfg)}")
+    print(f"服务器：{common.label(common.load_config())}")
     print("-" * 78)
     print(f"{'阶段':<5}{'名称':<28}{'状态':<8}{'门禁':<8}")
     for phase in report["phases"]:
@@ -243,6 +263,10 @@ def render_console(report: dict) -> None:
     print(f"run 记录 {m['runs']} 条（冒烟 {m['smoke']} / 评估 {m['eval']} / 训练 {m['train']}），"
           f"累计 episode {m['episodes']}，成功 {m['successes']}")
     print(f"阶段完成 {report['done']}/{report['total']}")
+    so101 = report.get("so101", {})
+    phases_text = "  ".join(f"{phase} run={value['runs']} 成功记录={value['successes']}"
+                            for phase, value in so101.get("phases", {}).items())
+    print(f"SO101 工程分支（独立 scope，不计入上述门禁）：run {so101.get('runs', 0)} 条；{phases_text}")
 
 
 def render_md(report: dict) -> str:
@@ -275,6 +299,20 @@ def render_md(report: dict) -> str:
                          f"{run.get('episodes', 0)} | {sr if sr is not None else '-'} | "
                          f"{run['status']} | `{run['run_id']}` |")
         lines.append("")
+    so101 = report.get("so101", {})
+    lines += ["## SO101 工程分支（独立 scope）", "",
+              "以下记录不参与上面的 LIBERO 门禁，也不会改变 D0–D5 状态。", "",
+              "| 阶段 | run 记录 | 成功记录 |", "| --- | --- | --- |"]
+    for phase, value in so101.get("phases", {}).items():
+        lines.append(f"| {phase} | {value['runs']} | {value['successes']} |")
+    if so101.get("last"):
+        lines += ["", "| 时间 | 阶段 | 类型 | episodes | 成功 | 状态 | run_id |",
+                  "| --- | --- | --- | --- | --- | --- | --- |"]
+        for run in so101["last"]:
+            lines.append(f"| {run['ts'][:19]} | {run.get('phase')} | {run['kind']} | "
+                         f"{run.get('episodes', 0)} | {run.get('successes', 0)} | "
+                         f"{run['status']} | `{run['run_id']}` |")
+    lines.append("")
     return "\n".join(lines)
 
 

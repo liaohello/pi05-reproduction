@@ -1,0 +1,3 @@
+# Host-side unit tests only; training uses the external OpenPI runtime.
+numpy==2.5.4
+pillow==13.0.0
