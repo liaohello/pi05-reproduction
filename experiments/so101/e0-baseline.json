@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "phase": "E0",
+  "claim": "source binding, parameter-loading check and record-scope isolation; no policy result",
+  "repository_head_before_edits": "f577eac",
+  "external_source": {
+    "source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+    "source_files": 109,
+    "expert_sha256": "200dcd12513a31af15a1dc915526fd79b319924c2cb3ead2ae85f4e0e6e7421e",
+    "expert_files": 33,
+    "config_sha256": "1ada3f568aae4da606946287657ce2b7248dcaf676bb129297adbc7aadfab859",
+    "config_files": 26,
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "python": "3.12",
+    "packages": {
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6",
+      "PyYAML": "6.0.3",
+      "Pillow": "12.3.0",
+      "lerobot": "0.6.1",
+      "torch": "2.11.0+cpu",
+      "av": "15.1.0",
+      "pyarrow": "25.0.1"
+    }
+  },
+  "runtime": {
+    "image": "openpi-server:latest",
+    "image_digest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "image_openpi_source_sha256": "d8ee60bcf03530a14986374a5a33e00915929368cfe5f9fa613ebbd8ee02c186",
+    "image_openpi_source_files": 55,
+    "host_openpi_source_sha256": "20a1b543a434fc2c4b3496253a4865754d4cb96a0c00323fbadaea027ff2a658",
+    "host_source_note": "host tree differs slightly and is not the runtime; the image digest is authoritative",
+    "python": "3.11.9",
+    "jax": "0.5.3",
+    "jaxlib": "0.5.3",
+    "flax": "0.10.2",
+    "optax": "0.2.4",
+    "orbax_checkpoint": "0.11.13",
+    "torch": "2.7.1",
+    "lerobot": "0.1.0",
+    "numpy": "1.26.4"
+  },
+  "checkpoint": {
+    "id": "pi05_libero",
+    "files": 16,
+    "bytes": 12439085481,
+    "aggregate_sha256": "7c81971fafcdbc677b0e8fd25b3bffd3d624abe4635323784f1918abdcef6f15",
+    "tensors": 51,
+    "params_tree_sha256": "bd475f88ac7e9e9134e1283ca1eff5001159701556578b48e1c68b5f97c33aa3",
+    "internal_action_dim": 32,
+    "action_in_proj_kernel": {"shape": [32, 1024], "sha256": "d0b355f427e7c88e3f57683ed328e64b4020819ce9e425053084d5bb9ea0d435"},
+    "action_out_proj_kernel": {"shape": [1024, 32], "sha256": "6a2270ace6ca0fb49a24ccfdcf9aa776e012f77db4b6447cc4916ef79873b8c2"}
+  },
+  "parameter_load": {
+    "model_tensors": 71,
+    "common_tensors": 51,
+    "missing_lora_tensors": 20,
+    "missing_non_lora_tensors": 0,
+    "shape_mismatches": 0,
+    "only_in_base": [],
+    "passed": true,
+    "lora_init": "normal(stddev=0.01), attention and feed-forward adapters in both Gemma blocks"
+  },
+  "tokenizer": {
+    "bytes": 4264023,
+    "sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6",
+    "cache_note": "not bundled in the image; copied into a writable OPENPI_DATA_HOME for offline runs"
+  },
+  "record_isolation": {
+    "unit_tests": 3,
+    "passed": 3,
+    "d5_train_records_after_e0": 0,
+    "scope_field": "so101",
+    "libero_gate_inputs": "scope=libero only"
+  },
+  "security_scan": {"result": "PASS", "findings": 0}
+}

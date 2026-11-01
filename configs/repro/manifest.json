@@ -1,0 +1,126 @@
+{
+  "schema": "pi05-repro-manifest/1",
+  "updated": "2026-10-27",
+  "comment": "Single source of truth for reproduction pins on the LIBERO inference path. Every acquisition is either a pinned digest/sha256 or an explicit null. SO101 upstream pins stay in third_party/provenance-so101.md. scripts/repro/repro.py reads this file only; nothing here is deployment-specific.",
+  "images": [
+    {
+      "name": "openpi-server",
+      "tag": "openpi-server:latest",
+      "digest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+      "registry_env": "PI05_REGISTRY",
+      "public_mirror": null,
+      "contents": "OpenPI source tree at /opt/openpi",
+      "status": "pinned"
+    },
+    {
+      "name": "openpi-client",
+      "tag": "openpi-client:latest",
+      "digest": "sha256:5dc5543f91a61a109181de1e1f1a50e771e40aaa1058207d1d5a3fab2bfb377a",
+      "registry_env": "PI05_REGISTRY",
+      "public_mirror": null,
+      "contents": "LIBERO source and assets tree",
+      "status": "pinned"
+    }
+  ],
+  "sources": [
+    {
+      "name": "openpi",
+      "target": "third_party/openpi",
+      "files": 140,
+      "bytes": 1606857,
+      "aggregate_sha256_prefix": "e9a694731905fb9d22a56ca5267d71a8",
+      "aggregate_status": "prefix_only",
+      "archive_url": null,
+      "archive_sha256": null,
+      "upstream_commit": null,
+      "acquisition": "release archive; no verifiable git commit",
+      "status": "blocked"
+    },
+    {
+      "name": "libero",
+      "target": "third_party/openpi/third_party/libero",
+      "files": 1116,
+      "bytes": 443644276,
+      "aggregate_sha256_prefix": "e6d16c4a17b0a56708bb550273b321ef",
+      "aggregate_status": "prefix_only",
+      "archive_url": null,
+      "archive_sha256": null,
+      "upstream_commit": "8f1084e3132a39270c3a13ebe37270a43ece2a01",
+      "acquisition": "image export",
+      "status": "blocked"
+    }
+  ],
+  "assets": [
+    {
+      "name": "norm_stats",
+      "path": "configs/libero/norm_stats.json",
+      "sha256": "b3a44bb2810436fb62917decaea58bd4d9110255df527dea21e8fd40c960bd84",
+      "env": null,
+      "redistributable": true,
+      "status": "in_repo"
+    },
+    {
+      "name": "pi05_libero-checkpoint",
+      "path": null,
+      "sha256": null,
+      "env": "PI05_CKPT",
+      "bytes": 13314398618,
+      "redistributable": false,
+      "status": "blocked",
+      "note": "upstream weight terms; must be obtained by the operator"
+    },
+    {
+      "name": "paligemma-tokenizer",
+      "path": null,
+      "sha256": null,
+      "env": "PI05_TOKENIZER",
+      "redistributable": false,
+      "status": "blocked"
+    },
+    {
+      "name": "lerobot-dataset",
+      "path": null,
+      "sha256": null,
+      "env": "PI05_LEROBOT_DATA",
+      "bytes": 34909429760,
+      "redistributable": false,
+      "status": "blocked",
+      "note": "training only; not needed for inference reproduction"
+    },
+    {
+      "name": "raw-hdf5",
+      "path": null,
+      "sha256": null,
+      "env": "PI05_HDF5_DATA",
+      "bytes": 107374182400,
+      "redistributable": false,
+      "status": "blocked",
+      "note": "collection source; not needed for inference reproduction"
+    }
+  ],
+  "versions": {
+    "inference": {
+      "python": "3.11.9",
+      "jax": "0.5.3",
+      "jaxlib": "0.5.3",
+      "flax": "0.10.2",
+      "optax": "0.2.4",
+      "torch": "2.7.1"
+    },
+    "simulation": {
+      "python": "3.8.20",
+      "mujoco": "3.2.3",
+      "robosuite": "1.4.1",
+      "numpy": "1.22.4",
+      "torch": "1.11.0+cu113"
+    },
+    "so101": {
+      "python": "3.12",
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6",
+      "lerobot": "0.6.1",
+      "av": "15.1.0",
+      "torch": "2.11.0+cpu"
+    }
+  }
+}

@@ -22,6 +22,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import openpi_so101  # noqa: E402
+import model_scope  # noqa: E402
 sys.path.insert(0, str(HERE))
 import so101_common as common  # noqa: E402
 import openpi.training.checkpoints as _checkpoints  # noqa: E402
@@ -48,6 +49,21 @@ class ResettablePolicy:
         return {**self._policy.metadata, **self._server_metadata}
 
 
+def _saved_config_paths(checkpoint: Path, run_config: Path | None,
+                        config_initial: Path | None) -> tuple[Path | None, Path | None]:
+    """Find the nearest training sidecars when a checkpoint is served directly."""
+    if config_initial is None:
+        candidates = ([run_config.parent / "config_initial.json"] if run_config else [])
+        candidates += [parent / "config_initial.json"
+                       for parent in (checkpoint, *checkpoint.parents)]
+        config_initial = next((path for path in candidates if path.is_file()), None)
+    if run_config is None and config_initial is not None:
+        candidate = config_initial.parent / "run_config.json"
+        if candidate.is_file():
+            run_config = candidate
+    return run_config, config_initial
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, required=True,
@@ -56,6 +72,8 @@ def main() -> int:
     parser.add_argument("--state-mode", choices=("off", "on"), default=None)
     parser.add_argument("--run-config", type=Path, default=None,
                         help="saved training run config; state mode and train view come from it")
+    parser.add_argument("--config-initial", type=Path, default=None,
+                        help="optional saved OpenPI config_initial.json for model scope")
     parser.add_argument("--skip-metadata-write", action="store_true",
                         help="serve without writing a sidecar into the checkpoint directory")
     parser.add_argument("--port", type=int, default=8123)
@@ -64,9 +82,14 @@ def main() -> int:
 
     logging.basicConfig(level=logging.INFO, force=True)
     checkpoint = args.checkpoint.expanduser().resolve()
+    args.run_config, args.config_initial = _saved_config_paths(
+        checkpoint, args.run_config, args.config_initial)
     run_config = {}
     if args.run_config is not None:
         run_config = common.load_json(args.run_config)
+    config_initial = (common.load_json(args.config_initial)
+                      if args.config_initial is not None else {})
+    scope = model_scope.resolve_model_scope(run_config, config_initial)
     state_mode = run_config.get("state_mode", args.state_mode or "off")
     if args.state_mode is not None and args.state_mode != state_mode:
         raise SystemExit("explicit --state-mode differs from the saved run config")
@@ -78,6 +101,7 @@ def main() -> int:
     config = openpi_so101.make_train_config(
         mode="serve", run_root=checkpoint.parent, train_view=train_view,
         base_checkpoint=checkpoint, exp_name=exp_name, state_mode=state_mode,
+        **scope,
     )
     data_config = config.data.create(config.assets_dirs, config.model)
     norm_stats = _checkpoints.load_norm_stats(checkpoint / "assets", data_config.asset_id)
@@ -108,6 +132,7 @@ def main() -> int:
         "cameras": list(openpi_so101.CAMERAS.values()),
         "engineering_chain_only": True,
         "state_mode": state_mode,
+        "model_scope": scope,
         "run_config": str(args.run_config) if args.run_config else None,
         "run_config_sha256": (hashlib.sha256(Path(args.run_config).read_bytes()).hexdigest()
                               if args.run_config else None),

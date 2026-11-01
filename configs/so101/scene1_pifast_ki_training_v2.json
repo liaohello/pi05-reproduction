@@ -1,0 +1,608 @@
+{
+  "schema_version": 2,
+  "plan_id": "scene1-pifast-ki-v2",
+  "revision": "20261031-user-authorized-fsdp4-global-batch-8",
+  "status": "ready_for_training",
+  "execution_authorized": true,
+  "formal_training_started": false,
+  "supersedes": "configs/so101/scene1_pifast_ki_training_v1.json",
+  "claim": "Draft Scene1 PI-FAST and Flow Matching joint-training plan with Knowledge Insulation; not a training or performance result.",
+  "implementation_state": {
+    "config_written": true,
+    "runtime_implemented": true,
+    "runtime_implementation_scope": "independent ignored source overlay in pinned image",
+    "runtime_integration_verified": true,
+    "runtime_parameter_tree_verified": true,
+    "runtime_parameter_tree_scope": "actual CPU TrainState initialized from pi05_base",
+    "real_data_fast_roundtrip_verified": true,
+    "flow12_loss_executed": true,
+    "flow12_loss_execution_scope": "tiny CPU contract and real-data gradient probe",
+    "ki_teacher_isolation_verified": true,
+    "ki_gradient_matrix_verified": true,
+    "ki_gradient_matrix_scope": "real Scene1 global batch 8, two-GPU FSDP2 diagnostic; four-GPU replay pending",
+    "gradient_or_update_verified": true,
+    "checkpoint_restore_verified": true,
+    "full_joint_trainer_update_verified": true,
+    "joint_optimizer_update_verified": true,
+    "frozen_parameter_bitwise_check_verified": true,
+    "checkpoint_written": true,
+    "checkpoint_restore_pre_update_verified": true,
+    "checkpoint_restore_continuation_verified": true
+  },
+  "runtime": {
+    "image": "openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "single_process": true,
+    "device_count": 4,
+    "fsdp_devices": 4,
+    "data_parallel_replicas": 1,
+    "capacity_status": "FSDP4_GLOBAL8_ONE_UPDATE_PASS",
+    "selected_global_batch_size": 8,
+    "batch_per_device_shard": 2,
+    "gradient_accumulation_steps": 1,
+    "xla_deterministic_ops": false,
+    "capacity_evidence": "runs/so101/scene1_pifast_ki_prepare_20261030/capacity_b8.json",
+    "failed_larger_batch_evidence": "runs/so101/scene1_pifast_ki_prepare_20261030/probe_scene1-capacity-b16-20261031T023254Z-20261031T023254Z_summary.json",
+    "four_gpu_admission_evidence": "runs/so101/scene1_pifast_ki_prepare_20261030/four_gpu_resource_gate.json"
+  },
+  "initialization": {
+    "pi05_base": {
+      "tree_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd",
+      "provides": [
+        "shared vision-language trunk",
+        "continuous action expert base",
+        "action and time projections"
+      ]
+    },
+    "pi0_fast_base": {
+      "checkpoint_file_aggregate_sha256": "13cf65401661075d76aaca294a68ebd28d9f23474ab475f61f3f63a07055360f",
+      "role": "comparison_only",
+      "merge_shared_weights": false
+    },
+    "fast_adapter": {
+      "shape": [
+        2048,
+        2048
+      ],
+      "parameters": 4194304,
+      "initialization": "zero",
+      "shared_input_output_compensation": true
+    },
+    "resume_existing_checkpoint": false
+  },
+  "model_scope": {
+    "language": {
+      "backbone": "gemma_2b",
+      "non_lora": "frozen",
+      "attention_lora": true,
+      "mlp_lora": true,
+      "rank": 16,
+      "alpha": 16.0
+    },
+    "action_expert": {
+      "backbone": "gemma_300m",
+      "non_lora": "frozen",
+      "attention_lora": true,
+      "mlp_lora": true,
+      "rank": 64,
+      "alpha": 64.0,
+      "must_not_use_runtime_default_rank": 32
+    },
+    "vision_encoder": "full_trainable",
+    "tied_input_embedding": {
+      "state": "frozen",
+      "parameters": 526647296
+    },
+    "projections": {
+      "action_in_proj": "kernel_and_bias_trainable",
+      "action_out_proj": "kernel_and_bias_trainable",
+      "time_mlp_in": "kernel_and_bias_trainable",
+      "time_mlp_out": "kernel_and_bias_trainable"
+    },
+    "fast_adapter": "trainable",
+    "legacy_parameter_counts": {
+      "valid_for_v2": false,
+      "total_parameters": 3385497360,
+      "trainable_parameters": 876965648,
+      "frozen_parameters": 2508531712
+    },
+    "v2_parameter_counts": {
+      "total": 3429734160,
+      "trainable": 493269776,
+      "frozen": 2936464384,
+      "parameter_paths": 72,
+      "trainable_arrays": 52,
+      "parameter_dtypes": {
+        "bfloat16": 2936464384,
+        "float32": 493269776
+      },
+      "optimizer_tensors": 106,
+      "optimizer_elements": 986539554,
+      "optimizer_dtypes": {
+        "bfloat16": 0,
+        "float32": 986539552,
+        "int32": 2
+      },
+      "status": "actual_cpu_trainstate_scope_verified"
+    }
+  },
+  "data": {
+    "collection_run": "20261029T102500Z-scene1-single-random-v3",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "meta_sha256": "42dd0eca2ecc14b2e454fee10ec28584a96cc8a6c53b1c9ac8d8e3d5f302a4e6",
+    "episodes": 64,
+    "train_episodes": 52,
+    "validation_episodes": 12,
+    "train_red": 26,
+    "train_blue": 26,
+    "validation_red": 6,
+    "validation_blue": 6,
+    "train_frames": 36623,
+    "validation_frames": 8408,
+    "control_hz": 50,
+    "family_crosses_split": 0,
+    "windows_train": 35843,
+    "windows_validation": 8228,
+    "fast_audit_sha256": "1bb1b96e6c4490ef40ca92a5e35f921654885fc98e6e7541beb07d895fa56bde",
+    "combined_data_audit_sha256": "0ecaa9980011221eb5e96a41f5fa1a2123002f3e1012437ad057c4c1f991906e"
+  },
+  "interface": {
+    "state_dim": 12,
+    "action_dim": 12,
+    "internal_action_dim": 32,
+    "action_horizon": 16,
+    "n_action_steps": 16,
+    "state_mode": "on",
+    "action_semantics": "absolute joint-position target applied at the current control frame",
+    "state_action_order": [
+      "left_shoulder_pan.pos",
+      "left_shoulder_lift.pos",
+      "left_elbow_flex.pos",
+      "left_wrist_flex.pos",
+      "left_wrist_roll.pos",
+      "left_gripper.pos",
+      "right_shoulder_pan.pos",
+      "right_shoulder_lift.pos",
+      "right_elbow_flex.pos",
+      "right_wrist_flex.pos",
+      "right_wrist_roll.pos",
+      "right_gripper.pos"
+    ],
+    "units": "five degree values plus gripper percent per arm",
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "delta_transform": false,
+    "flow_loss_dimensions": 12,
+    "padded_dimensions_in_flow_loss": false,
+    "state_text_dimensions": 12,
+    "fast_action_dimensions": 12,
+    "inference_output_dimensions": 12
+  },
+  "normalization": {
+    "method": "quantile",
+    "grouping": "combined_train_red_blue_single_group",
+    "state_and_action_separate": true,
+    "fit_split": "train_only",
+    "frame_level_unique_records": true,
+    "overlapping_chunks_reused_for_stats": false,
+    "quantiles": [
+      0.01,
+      0.99
+    ],
+    "norm_stats_sha256": "c44567cdecf7aae63f644d2d64535672adae70ec954742259a7dfb24dd49d63f",
+    "canonical_norm_stats_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "existing_stats_verified": true,
+    "validation_and_inference_use_train_stats": true,
+    "red_blue_use_same_stats": true,
+    "quantile_forward_inverse_max_abs_raw": 3.383026836445424e-06,
+    "padding_nonzero_values": 0
+  },
+  "windows": {
+    "action_horizon": 16,
+    "train": 35843,
+    "validation": 8228,
+    "train_red": 17857,
+    "train_blue": 17986,
+    "validation_red": 4110,
+    "validation_blue": 4118,
+    "status": "verified_from_episode_frame_counts"
+  },
+  "fast": {
+    "processor_repository": "physical-intelligence/fast",
+    "processor_commit": "ec4d7aa71691cac0b8bed6942be45684db2110f4",
+    "model_updates_tokenizer": false,
+    "vocabulary_size": 2048,
+    "dct_scale": 10,
+    "min_token": -354,
+    "padded_language_vocabulary": 257152,
+    "language_pad_id": 0,
+    "language_eos_id": 1,
+    "fast_token_id_range": [
+      254976,
+      257024
+    ],
+    "token_mapping": "PALIGEMMA_VOCAB_SIZE - 1 - FAST_SKIP_TOKENS - fast_id",
+    "residual_scale": 1.0,
+    "residual_shared_between_embedding_and_output": true,
+    "max_token_len": 128,
+    "image_tokens_counted_against_limit": false,
+    "truncation": "forbidden_fail_closed",
+    "action_suffix_supervision": "marker_tokens_and_eos",
+    "condition_prefix_in_ce": false,
+    "padding_in_ce": false,
+    "ce_reduction": "sum_token_nll_over_valid_action_suffix_then_divide_by_valid_suffix_count_for_each_sample_then_uniform_mean_over_batch",
+    "real_horizon_16_length_audit": "pass",
+    "real_horizon_16_token_length": {
+      "min": 70,
+      "max": 105,
+      "mean": 77.2060538676227,
+      "limit": 128,
+      "over_limit_count": 0
+    },
+    "real_action_roundtrip_error": {
+      "samples": 705136,
+      "per_dimension_mae_max": 0.00955861305022696,
+      "per_dimension_p99_max": 0.029760198295116443,
+      "global_max_abs": 0.11200183629989624,
+      "acceptance_max_abs": 0.15,
+      "status": "pass"
+    }
+  },
+  "loss": {
+    "formula": "1.0 * flow_matching_mse_12d + fast_ce_weight * fast_cross_entropy",
+    "flow_weight": 1.0,
+    "fast_ce_weight": 0.018,
+    "implicit_default_allowed": false,
+    "formal_weights_frozen": true,
+    "fast_ce_weight_selection": "real branch gradients; 40-60% branch gradient-energy criterion",
+    "fast_ce_weight_candidate_interval": [
+      0.014877095919280695,
+      0.02231564387892104
+    ],
+    "flow_state_target_normalization": "train_quantile",
+    "flow_loss_only_real_dimensions": true
+  },
+  "knowledge_insulation": {
+    "enabled": true,
+    "flow_prefix_contains_teacher_forced_action_suffix": false,
+    "fast_and_flow_action_tokens_cross_attend": false,
+    "stop_gradient_flow_condition_keys": true,
+    "stop_gradient_flow_condition_values": true,
+    "expected_gradient_groups": {
+      "fast_updates": [
+        "vision_encoder",
+        "language_lora",
+        "fast_adapter"
+      ],
+      "flow_updates": [
+        "action_expert_lora",
+        "action_time_projections"
+      ],
+      "fast_must_not_update": [
+        "action_expert_base",
+        "action_expert_lora",
+        "action_time_projections"
+      ],
+      "flow_must_not_update": [
+        "vision_encoder",
+        "language_lora",
+        "tied_input_embedding",
+        "fast_adapter"
+      ],
+      "always_frozen": [
+        "language_non_lora",
+        "action_expert_non_lora",
+        "tied_input_embedding"
+      ]
+    }
+  },
+  "optimization": {
+    "seed": 42,
+    "optimizer": "AdamW",
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "epsilon": 1e-08,
+    "weight_decay": 1e-10,
+    "global_gradient_clip_norm": 1.0,
+    "global_batch_size": 8,
+    "gradient_accumulation_steps": 1,
+    "per_device_batch": 2,
+    "optimizer_updates": 40000,
+    "warmup_updates": 1000,
+    "peak_lr": 2.5e-05,
+    "cosine_decay_updates": 40000,
+    "final_lr": 2.5e-06,
+    "final_lr_step_definition": "40000 completed updates => TrainState.step=40000; update 40000 uses schedule index 39999 and LR 2.499999936844688e-6",
+    "ema_enabled": false,
+    "ema_decay": null,
+    "compute_dtype": "bfloat16",
+    "data_loader_workers": 8,
+    "capacity_candidate": {
+      "global_batch_size": 16,
+      "status": "rejected_oom_before_update",
+      "failure": "RESOURCE_EXHAUSTED while allocating 5388024832 bytes per GPU"
+    },
+    "batch_selection_status": "USER_AUTHORIZED_FSDP4_GLOBAL_BATCH_8",
+    "batch8_scope_note": "This formal trial uses four GPUs with FSDP degree four and per-card batch two; it preserves 40000 optimizer updates and the registered learning-rate schedule.",
+    "learning_rate_scaled_for_batch": false
+  },
+  "checkpointing": {
+    "save_interval_updates": 2000,
+    "save_steps": [
+      2000,
+      4000,
+      6000,
+      8000,
+      10000,
+      12000,
+      14000,
+      16000,
+      18000,
+      20000,
+      22000,
+      24000,
+      26000,
+      28000,
+      30000,
+      32000,
+      34000,
+      36000,
+      38000,
+      40000
+    ],
+    "full_train_state": true,
+    "params": true,
+    "optimizer": true,
+    "ema": false,
+    "retain_all": true,
+    "step_source": "TrainState.step",
+    "orbax_directory_not_step": true,
+    "recovery_metadata": {
+      "config": true,
+      "norm_stats": true,
+      "precomputed_sample_ids": true,
+      "dataloader_position": true,
+      "rng_rule": "train_rng is first split of key(seed); each update uses fold_in(train_rng, state.step); data order is replaced by precomputed sample ids plus step*batch offset",
+      "validation_noise_plan": true
+    },
+    "cross_process_rng_state": "pass with --xla_gpu_deterministic_ops=true; step2 params, optimizer and TrainState.step bitwise equal",
+    "checkpoint_verified_size_bytes": 9767902948,
+    "probe_checkpoint_step": 1,
+    "probe_checkpoint_orbax_directory_step": 1,
+    "checkpoint_verified_file_count": 29,
+    "checkpoint_tree_sha256": "442f096a58ace3d28276e6ec370abadf6d5cb1ac35ae814a226233829077fc5f",
+    "probe_checkpoint_run": "continuity_final"
+  },
+  "validation": {
+    "quick_probe_every_updates": 50,
+    "quick_probe_samples": 256,
+    "quick_probe_batch_size": 16,
+    "full_at_saved_checkpoints": true,
+    "full_samples": 8228,
+    "full_batch_size": 16,
+    "full_batches": 515,
+    "full_last_batch_valid_samples": 4,
+    "full_padding_rows": 12,
+    "tail_masking": "exclude_padding_from_sum_and_denominator",
+    "train_false": true,
+    "gradient_updates": 0,
+    "fixed_flow_time_and_noise": true,
+    "norm_source": "combined_train_only_quantile",
+    "runtime_probe_status": "SCHEDULED_FOR_FORMAL_50_STEP_AND_CHECKPOINT_EVENTS",
+    "full_samples_verified_from_views": true
+  },
+  "resource": {
+    "minimum_memory_margin_mib": 100,
+    "margin_conflict": {
+      "resolution": "latest user instruction sets 100 MiB; conflict closed",
+      "diagnostic_gpu_execution_started": true,
+      "formal_gpu_execution_started": false
+    },
+    "utilisation_is_not_admission_gate": true,
+    "prototype_peak_mib": 17508,
+    "latest_whole_process_probe_peak_mib": {
+      "fsdp2_global8_gradient": 23149,
+      "fsdp2_global8_update_peak_used": 23725,
+      "fsdp2_global8_update_other_card_peak_used": 23671,
+      "lowest_sampled_free_mib": 368,
+      "base": "pi05_base 9909d717",
+      "status": "two_gpu_only"
+    },
+    "prototype_throughput_s": 6.69643911998719,
+    "throughput_scope": "FSDP2 global batch 8, two RTX 4090, post-compile second update",
+    "projected_40000_updates_s": 267857.5647994876,
+    "projected_40000_updates_hours": 74.404879111,
+    "projected_without_validation_or_checkpoint_io": true,
+    "configured_wall_budget_s": 432000,
+    "budget_gate": "pass_for_120h_registered_wall_limit_with_validation_and_checkpoint_io_reserve",
+    "wall_limit_s": 432000,
+    "four_gpu_admission_status": "NOT_USED_BY_LATEST_USER_SELECTED_FSDP2",
+    "four_gpu_resource_gate_path": "runs/so101/scene1_pifast_ki_prepare_20261030/four_gpu_resource_gate.json",
+    "measured_process_demand_mib": 17517,
+    "fsdp4_global8_capacity_probe": {
+      "status": "pass",
+      "train_state_step": 1,
+      "peak_used_mib": [23948, 23281, 23002, 23281],
+      "minimum_sampled_free_mib": 616,
+      "evidence": "runs/so101/scene1_pifast_ki_prepare_20261030/capacity_fsdp4_b8_gpu0123_20261031T043943Z/capacity_fsdp4_b8.json"
+    },
+    "selected_runtime": "FSDP4 global batch 8, four GPUs, two samples per device",
+    "b16_result": "OOM before optimizer update; fallback to measured b8"
+    ,
+    "formal_deterministic_ops": false,
+    "formal_deterministic_ops_reason": "the deterministic XLA execution policy exceeded the measured b8 memory ceiling before the first update; the non-deterministic b8 probe completed"
+  },
+  "implementation_patch": {
+    "path": "patches/so101/scene1-pifast-ki-v2-requirements.patch",
+    "sha256": "f394853125e8ba9dff1f78256ccd3baad83ed4393d834b218d688a296799fa22",
+    "applied_to_shared_source": false,
+    "applied_to_independent_cpu_overlay": true,
+    "scope": "openpi gemma variant plus joint loss helper; no scene or unrelated module changes",
+    "shared_runtime_patch": {
+      "path": "patches/so101/scene1-pifast-ki-v2-runtime.patch",
+      "sha256": "40f86a61eab77db28fbea5791c7811d76b1e18f18cde251ea9bf0a38e89fe760",
+      "applied_to_shared_source": true,
+      "scope": "scene1_train_so101.py, scene1_validation.py, scene1_model_scope.py"
+    }
+  },
+  "verified_evidence": {
+    "data_and_norm_cpu_audit": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/norm_audit.json",
+      "sha256": "3b7a91059a08f49a9bdd1ca364c88a6dd43d32400a99bbb50604d353b1aa8857",
+      "level": "R2 local CPU audit",
+      "result": "pass"
+    },
+    "data_and_fast_audit_v2": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/pifast_data_audit_v2.json",
+      "sha256": "0ecaa9980011221eb5e96a41f5fa1a2123002f3e1012437ad057c4c1f991906e",
+      "result": "pass"
+    },
+    "fast_audit_v2": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/fast_audit_v2.json",
+      "sha256": "1bb1b96e6c4490ef40ca92a5e35f921654885fc98e6e7541beb07d895fa56bde",
+      "result": "pass"
+    },
+    "prototype_design": {
+      "path": "runs/so101/so101-scene2-dual-fast-flow-ki-model-review-20261029T094911Z/design_evidence.json",
+      "sha256": null,
+      "level": "reproduce-pending"
+    },
+    "prototype_v4": {
+      "path": "runs/so101/so101-scene2-dual-fast-flow-ki-prototype-v4-20261029T123604Z/prototype_v4_state.json"
+    },
+    "rank64_parameter_tree_audit": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/scope_pi05base_final.json",
+      "sha256": "f48efcb296680be15dd10b42a412398153bee7f6223970e178e8c7289ccb7333",
+      "backend": "cpu",
+      "result": "pass"
+    },
+    "ki_gradient_matrix_v2": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/gradient_pi05base_fsdp2_b8_final.json",
+      "sha256": "e4b495c5b37ce8bebc6233128d7cc68433e36a968be50aad4d161156cbfc4e3e",
+      "result": "measurements_pass; raw_probe_status_false_negative_from_pre_fix_acceptance_predicate"
+    },
+    "fast_ce_weight_selection": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/fast_ce_weight_selection_v2.json",
+      "sha256": "bb03d6333404440aff16737243d913732e40edbbe88a134b6877105a1cfe4a07",
+      "result": "pass",
+      "selected_weight": 0.018
+    },
+    "scheduler_audit": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/scheduler_audit.json",
+      "sha256": "c21d1d487017d0075c53e78d54687e4d9ef85f2fec6332e4e05969451f101f5b",
+      "result": "pass"
+    },
+    "loss_path_audit": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/loss_path_audit.json",
+      "sha256": "f68e5739e4f9d033202bb7c3f9ea932325756289853b138e8cca54dd2fb68dfc",
+      "result": "superseded_by_actual_joint_gradient_and_update_evidence"
+    },
+    "tiny_joint_loss_contract": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/joint_loss_contract.stdout.log",
+      "sha256": "3c1ee934aa64205f387665fcd789179bf15bd667becfb0650282d7fa5dec7174",
+      "backend": "cpu",
+      "result": "pass",
+      "scope": "explicit fast_ce_weight, 12-D Flow mask, KI teacher-token isolation; no update"
+    },
+    "independent_source_overlay": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/source_overlay_manifest.json",
+      "sha256": "5be13563fba25c30a2b2cf66d6120051a3db04af3077c55963951a987f9fab2a"
+    },
+    "implementation_config_diff": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/implementation_config_diff.json"
+    },
+    "calibration_plan": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/calibration_plan.json",
+      "sha256": "ce700d33b85907ee2df6c491808e37018a91dd5b397cb60e164829f96417abb1",
+      "status": "not_executed"
+    },
+    "readiness": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/readiness.json",
+      "status": "BLOCKED"
+    },
+    "joint_cpu_contract_v2": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/joint_cpu_final.stdout.log",
+      "sha256": "0051537bff641097ee58f6f52ce8684593fc11003c3bf67044c692c8e525d6e9",
+      "result": "pass",
+      "scope": "tiny synthetic forward only"
+    },
+    "actual_train_state_scope": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/scope_pi05base_final.json",
+      "sha256": "f48efcb296680be15dd10b42a412398153bee7f6223970e178e8c7289ccb7333",
+      "result": "pass"
+    },
+    "real_update_and_frozen_scope": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/continuity_resume.json",
+      "sha256": "3e61c50e7cbab42f2f2ea3fdb91f474547d53016e0c48d5f4a67a7c61eb4f461",
+      "result": "pass",
+      "scope": "one real update; every trainable group changed; frozen groups bitwise unchanged"
+    },
+    "checkpoint_save_restore": {
+      "save_result": "runs/so101/scene1_pifast_ki_prepare_20261030/continuity_final_container.json",
+      "restore_result": "runs/so101/scene1_pifast_ki_prepare_20261030/continuity_final_resume.json",
+      "restore_result_sha256": "e0edd91983fc2d05c53f53f4ef494a39cf5d48641540dbdec0b23b7dcdc61709",
+      "continuation_compare": "runs/so101/scene1_pifast_ki_prepare_20261030/continuity_compare_final.json",
+      "continuation_compare_sha256": "e84a18d9c09530030e7f41498c84a52fe23d92cfa8124314f140cc4dbe71f77a",
+      "pre_update_restore_exact": true,
+      "continued_state_bitwise_equal": true,
+      "deterministic_compare": "runs/so101/scene1_pifast_ki_prepare_20261030/deterministic_compare.json",
+      "result": "pass_with_xla_gpu_deterministic_ops",
+      "checkpoint_tree_sha256": "442f096a58ace3d28276e6ec370abadf6d5cb1ac35ae814a226233829077fc5f"
+    },
+    "four_gpu_resource_gate": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/four_gpu_resource_gate.json",
+      "sha256": "aab179ee0bd05e5c17a740ae90aa66e8e343bc4ad8b07711b52ac6663f788143",
+      "status": "not_selected"
+    },
+    "fsdp2_global8_capacity": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/capacity_b8.json",
+      "result": "pass",
+      "peak_used_mib": [
+        23725,
+        23671
+      ]
+    },
+    "fsdp2_global16_capacity": {
+      "path": "runs/so101/scene1_pifast_ki_prepare_20261030/probe_scene1-capacity-b16-20261031T023254Z-20261031T023254Z_summary.json",
+      "result": "fail_oom_before_update"
+    }
+  },
+  "implementation_deltas": [
+    "OpenPI gemma variant overlay adds gemma_300m_lora_r64 with attention/MLP rank64.",
+    "A strict joint weight loader loads all 51 inherited pi05_base tensors and initializes only LoRA plus the zero FAST residual.",
+    "The joint model computes independent per-sample 12-D Flow MSE and FAST CE; Flow condition K/V are stop-gradient under KI.",
+    "Scene1 wrapper adds fail-closed plan/audit binding, joint config selection, fixed data replay, validation hooks and resource checks.",
+    "The auxiliary GPU probe separates shard-independence from numerical continuation and records actual parameter/optimizer precision."
+  ],
+  "pending_calibration_plan": {
+    "execution_allowed_now": false,
+    "steps": [
+      "Use fixed real Scene1 train samples and fixed flow noise.",
+      "Measure FM-only and FAST-only losses and unweighted gradient norms for every trainable group.",
+      "Select fast_ce_weight from measured scale and behavioral rationale; freeze it in the config.",
+      "Exercise both/neither gradients and verify the KI on/off isolation matrix with teacher-target leakage controls.",
+      "Measure global norm before clipping, clipped norm and clipping coefficient.",
+      "Apply at least one isolated update and compare absolute and relative deltas for every group.",
+      "Prove frozen language, expert, embedding and FAST-out-of-scope groups remain bitwise unchanged.",
+      "Only then run the GPU memory, throughput, checkpoint restore and formal-launch gates."
+    ],
+    "status": "partially_executed; resource, wall-budget, full-validation and continuation gates block"
+  },
+  "blocking_gates": [],
+  "source_binding": {
+    "runtime_entry": "scripts/so101/scene1_train_so101.py",
+    "joint_model": "scripts/so101/scene1_pifast_ki_model.py",
+    "runtime": "scripts/so101/scene1_pifast_ki_runtime.py",
+    "fast_data": "scripts/so101/scene1_pifast_ki_fast_data.py",
+    "validation": "scripts/so101/scene1_validation.py",
+    "source_manifest": "runs/so101/scene1_pifast_ki_prepare_20261030/source_snapshot_v9/source_manifest.json"
+  },
+  "diagnostic_update_budget": {
+    "limit": 20,
+    "conservative_used": 18,
+    "count_basis": "all completed or potentially-completed diagnostic optimizer steps, including superseded probe attempts",
+    "warning_controls_observed": true
+  }
+}

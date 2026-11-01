@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-T1-loader-equivalence",
+  "question": "does raising the training loader's num_workers change what the model is trained on?",
+  "measurement": "the first 60 optimizer steps of the two runs are compared line by line; each line is (step, grad_norm, loss, param_norm) printed by the training loop with log_interval=1",
+  "workers_zero_run": {
+    "log_sha256": "15f7375c0532b78c8f006a94f65a408be92cbac0eb91af8c137fd3e509132b6d",
+    "steps_logged": 60,
+    "num_workers": 0,
+    "rate_it_per_s": "1.2 s/update measured over ~560 steps",
+    "archived_under": "runs/so101/e4t/workers0_attempt/"
+  },
+  "workers_eight_run": {
+    "log_sha256": "f1638a27520af78e2cda0a49e82188f7cf6b47fff5cafeee739cc884c7ff0b09",
+    "steps_logged": 60,
+    "num_workers": 8,
+    "gpu_utilisation_percent_at_180_steps": 100
+  },
+  "first_sixty_steps_identical": true,
+  "diff_lines": [],
+  "conclusion": "identical loss/gradient/parameter trajectory for the first 60 updates, so the frozen sampler sequence fixes batch contents and num_workers only changes how fast batches arrive",
+  "steps_zero_to_five": [
+    "Step 0: grad_norm=2.9311, loss=0.9792, param_norm=1833.2808",
+    "Step 1: grad_norm=14.4051, loss=1.7648, param_norm=1833.2808",
+    "Step 2: grad_norm=5.9869, loss=1.4385, param_norm=1833.2808",
+    "Step 3: grad_norm=10.5540, loss=1.4615, param_norm=1833.2808",
+    "Step 4: grad_norm=8.6295, loss=1.8553, param_norm=1833.2808",
+    "Step 5: grad_norm=1.3017, loss=0.5760, param_norm=1833.2808"
+  ],
+  "claim": "configuration equivalence check; not a training result"
+}

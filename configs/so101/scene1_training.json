@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "scene1",
+  "claim": "single-block data and CPU-only base/freeze/norm preflight; 20k JAX training and offline evaluation not executed (no GPU occupied per user instruction)",
+  "runtime_binding": {
+    "image": "openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "base_checkpoint_sha256": "10db7f0bd9a2c006d1c35f15ae1941041a76fb7c98b9ecf7e5a46bfe25540f8b",
+    "sentencepiece_asset_sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6",
+    "openpi_source_sha256": "e600d5c44a8b00fb3e1fb5c5a9234649182d3b11465f3824b2eab2ea8e76931c",
+    "openpi_source_status": "measured_in_pinned_image_21867_py_files"
+  },
+  "resource_policy": {
+    "utilisation_is_not_an_admission_gate": true,
+    "measured_per_card_demand_mib": null,
+    "memory_margin_mib": 100,
+    "required_free_memory_mib": null,
+    "measured_jax_memory_fraction": null,
+    "jax_preallocate": false,
+    "probe_status": "not_run_no_gpu_occupation",
+    "other_jobs_are_never_stopped": true,
+    "containers": "exact-name registry only; full id, name, run-id and owner recorded"
+  },
+  "initialisation": {
+    "base_checkpoint": "official pi05_libero",
+    "loader": "OpenPI CheckpointWeightLoader",
+    "resume_previous_so101_checkpoint": false,
+    "state_mode": "on",
+    "architecture": "pi05",
+    "internal_action_dim": 32,
+    "state_action_dim": 12,
+    "action_horizon": 10,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m",
+    "freeze_rule": "freeze .*llm.* except .*llm.*_1.* (action expert) and except .*lora.*; SigLIP image tower and action/time projections trainable",
+    "trainable_groups_candidate": {
+      "language_backbone": "Gemma 2B original weights frozen; attention/MLP LoRA trainable",
+      "action_expert": "Gemma 300M full kernel and bias trainable",
+      "vision_encoder": "SigLIP/PaliGemma image tower fully trainable",
+      "projections": "action_in_proj, action_out_proj, time_mlp_in, time_mlp_out full kernel and bias trainable"
+    },
+    "scope_status": "measured_in_this_run: language_backbone 0 trainable, LoRA 10 tensors rank 16, action_expert 427932672, vision 414803696, projections 2165792",
+    "lora": {
+      "attn": {
+        "rank": 16,
+        "alpha": 16.0
+      },
+      "ffn": {
+        "rank": 16,
+        "alpha": 16.0
+      },
+      "status": "verified_rank_16_in_pinned_image_parameter_tree"
+    },
+    "measured_trainable_parameters": 872771344,
+    "measured_frozen_parameters": 2508531712,
+    "measured_total_parameters": 3381303056
+  },
+  "devices": {
+    "gpu_count_candidate": 4,
+    "fsdp_devices_candidate": 4,
+    "global_batch_size": 8,
+    "per_device_batch_shard": 2,
+    "global_batch_interpretation": "8 unique samples total, not 32",
+    "selection_status": "not_run_no_gpu_occupation"
+  },
+  "data": {
+    "view": "runs/so101/scene1_view_v1",
+    "view_status": "exported_and_audited",
+    "view_episodes": 64,
+    "train": 52,
+    "validation": 12,
+    "statistics": "52 train episodes only; recomputed for this line",
+    "sample_weighting": "clean episodes equal; eligible windows equal within each episode",
+    "perturbations_enabled": false,
+    "family_split": "scene family never crosses train/validation",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "norm_stats_sha256": "c44567cdecf7aae63f644d2d64535672adae70ec954742259a7dfb24dd49d63f",
+    "frames_total": 45031,
+    "train_frames": 36623,
+    "episodes_by_color": {
+      "red": 32,
+      "blue": 32
+    },
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797"
+  },
+  "sampling_plan": {
+    "mode": "balanced_categories",
+    "group_weights": {
+      "clean": 1.0
+    },
+    "episode_equal_within_group": true
+  },
+  "optimisation": {
+    "seed": 42,
+    "primary_batch_size": 8,
+    "data_loader_workers": 8,
+    "allow_batch_fallback": false,
+    "allow_update_override": false,
+    "planned_updates": 20000,
+    "warmup_steps": 500,
+    "peak_lr": 5e-05,
+    "decay_steps": 20000,
+    "decay_lr": 5e-06,
+    "optimizer": "AdamW",
+    "gradient_clip_norm": 1.0,
+    "dtype": "bfloat16",
+    "training_wall_limit_s": 100800
+  },
+  "checkpointing": {
+    "reference_step0": true,
+    "save_interval": 5000,
+    "step_axis": "TrainState.step",
+    "keep_period": 1,
+    "eval_checkpoints": [
+      0,
+      5000,
+      10000,
+      15000,
+      20000
+    ]
+  },
+  "validation_gate": {
+    "status": "candidate_pending_first_checkpoint",
+    "pre_registered_before_formal_training": true,
+    "absolute_thresholds": null,
+    "must_beat_initialisation": true,
+    "must_beat_train_mean_baseline": true,
+    "static_only_success_is_insufficient": true,
+    "loader_equivalence_required": true,
+    "inverse_action_pipeline_required": true,
+    "closed_loop": "reserved; only after offline acceptance and protocol scope confirmation",
+    "note": "absolute action and event-timing thresholds are frozen after the first checkpoint and before evaluating the remaining checkpoints; no clean60 threshold is inherited",
+    "activity_joint_deg_per_frame": 0.02,
+    "activity_gripper_pct_per_frame": 0.05,
+    "gripper_open_threshold_percent": 25.0,
+    "gripper_closed_threshold_percent": 10.0,
+    "threshold_provenance": "scene1 candidate analytical floors; frozen before evaluating checkpoints, not copied from clean60"
+  },
+  "privacy": {
+    "no_real_host_or_private_path": true,
+    "raw_commands_and_logs_private": true,
+    "public_artifacts_sanitised": true
+  },
+  "run": {
+    "directory": "runs/so101/scene1_single_random_v1/training",
+    "directory_policy": "launcher creates a unique child directory named by run-id",
+    "exp_name": "scene1_20k_state_on_b8",
+    "collection_protocol": "configs/so101/scene1_single_random_protocol.json",
+    "require_explicit_clean_contract": false,
+    "require_ready_manifest": false,
+    "status": "deferred"
+  },
+  "status": "deferred_no_gpu_occupation",
+  "executed": false,
+  "preflight": {
+    "base_load_audit": {
+      "passed": true,
+      "target_tensors": 61,
+      "source_tensors": 51,
+      "trainable_tensors": 52
+    },
+    "parameter_tree": {
+      "total_tensors": 61,
+      "total_parameters": 3381303056,
+      "trainable_parameters": 872771344,
+      "frozen_parameters": 2508531712
+    },
+    "freeze_audit": {
+      "passed": true,
+      "language_backbone_trainable": 0,
+      "language_lora_tensors": 10,
+      "lora_rank": 16,
+      "action_expert_trainable": 427932672,
+      "vision_trainable": 414803696,
+      "projections_trainable": 2165792
+    },
+    "norm_loader_audit": {
+      "passed": true,
+      "loader_episodes": 52,
+      "loader_action_error": 5.62e-08,
+      "loader_state_error": 4.02e-08,
+      "inverse_roundtrip_max_error": 1.42e-14,
+      "padding_error": 0.0,
+      "internal_action_dim": 32,
+      "image_pipeline_error": 0.0
+    },
+    "device_probe": "not_run: no GPU occupied per user instruction",
+    "save_restore": "not_run: no GPU occupied per user instruction"
+  }
+}

@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase_scope": [
+    "scene1-pilot",
+    "scene1-data",
+    "scene1-train",
+    "scene1-offline"
+  ],
+  "protocol_id": "scene1_single_random_v1",
+  "status": "data_complete_training_deferred_no_gpu_occupation",
+  "task": {
+    "name": "single_block_place",
+    "instruction_template": "Put the {color} block into the {color} tray.",
+    "instruction_values": {
+      "red": "Put the red block into the red tray.",
+      "blue": "Put the blue block into the blue tray."
+    },
+    "objects_per_episode": 1,
+    "source": "external dual-SO101 MuJoCo project, scripted physical expert",
+    "transfer_protocol": false,
+    "handover_between_arms": false,
+    "active_arm_rule": {
+      "red": "left",
+      "blue": "right",
+      "rationale": "the red tray is sampled on y>0 and the blue tray on y<0; the same-side arm is the only certified direct placement arm",
+      "other_arm": "home park pose for the whole episode; no handover and no second-arm motion"
+    }
+  },
+  "source_binding": {
+    "external_root_env": "SO101_SOURCE_ROOT",
+    "external_python_env": "SO101_PYTHON",
+    "profile": "configs/profiles/scene1_single_random_50hz_three_camera.yaml",
+    "fingerprint_tool": "scripts/so101/source_fingerprint.py",
+    "source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+    "source_files": 109,
+    "expert_sha256": "200dcd12513a31af15a1dc915526fd79b319924c2cb3ead2ae85f4e0e6e7421e",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "snapshot_policy": "independent copy under the ignored cache root; the shared checkout and other workstreams' snapshots are never modified",
+    "source_patch": {
+      "path": "patches/so101_scene1_single_random.patch",
+      "sha256": "47cdf5a00a5a80bafc24a6d86e75b6946e6f78a1349e6b8c672eea13278e5ec7",
+      "status": "present_and_replayable"
+    }
+  },
+  "control": {
+    "physics_hz": 500,
+    "control_hz": 50,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 60.0,
+    "nominal_realtime_claim": false
+  },
+  "observation": {
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "rgb": {
+      "dtype": "uint8",
+      "layout": "HWC",
+      "height": 480,
+      "width": 640,
+      "policy_resize": [
+        224,
+        224
+      ],
+      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
+    },
+    "state": {
+      "key": "observation.state",
+      "shape": [
+        12
+      ],
+      "order": [
+        "left_shoulder_pan.pos",
+        "left_shoulder_lift.pos",
+        "left_elbow_flex.pos",
+        "left_wrist_flex.pos",
+        "left_wrist_roll.pos",
+        "left_gripper.pos",
+        "right_shoulder_pan.pos",
+        "right_shoulder_lift.pos",
+        "right_elbow_flex.pos",
+        "right_wrist_flex.pos",
+        "right_wrist_roll.pos",
+        "right_gripper.pos"
+      ],
+      "units": [
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent"
+      ],
+      "timing": "measured joint state immediately before the action is issued"
+    }
+  },
+  "action": {
+    "key": "action",
+    "shape": [
+      12
+    ],
+    "semantics": "absolute joint-position target, left six then right six",
+    "units": [
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent"
+    ],
+    "label_rule": "clamped actuator target actually applied at that control frame; never the next measured state",
+    "chunk_horizon": 10,
+    "replan_steps": 10
+  },
+  "scene_layout": {
+    "object_count": 1,
+    "cube_edge_m": 0.025,
+    "cube_mass_kg": 0.012,
+    "color_balance": {
+      "red": 32,
+      "blue": 32,
+      "rule": "exactly balanced over the 64 accepted episodes; a color shortfall is never filled by relabelling a scene"
+    },
+    "block_xy": {
+      "source": "certified pick points for the active arm",
+      "jitter_m": 0.004,
+      "bounds_margin_m": 0.06,
+      "reject_inside_tray_keepout": true,
+      "per_scene_checks": [
+        "grasp IK at the sampled yaw",
+        "hover IK at the sampled yaw",
+        "approach and lift path screening with the other arm parked",
+        "tray/table/arm collision screening",
+        "projected footprint inside the table margin"
+      ]
+    },
+    "block_yaw": {
+      "distribution": "continuous uniform",
+      "domain_degrees": [
+        0.0,
+        72.0
+      ],
+      "domain_status": "frozen_after_pilot",
+      "domain_amendment": "the initial [0,90) domain was rejected by the pilot: 39 of 65 place-check failures were at yaw >=75 degrees, and no accepted scene exceeded 70.7 degrees. The continuous domain is narrowed to [0,72); no check, limit or success condition is relaxed",
+      "rationale": "the reference cube is square; the sampled domain is the measured place-feasible part of the square symmetry domain",
+      "per_scene_checks": [
+        "grasp IK",
+        "hover IK",
+        "approach screening",
+        "placement descent and withdrawal screening at the sampled yaw"
+      ]
+    },
+    "trays": {
+      "count": 2,
+      "orientation": "axis-aligned; positions random, orientation fixed",
+      "sampling": {
+        "red": {
+          "x_m": [
+            0.21,
+            0.27
+          ],
+          "y_m": [
+            0.22,
+            0.28
+          ]
+        },
+        "blue": {
+          "x_m": [
+            0.21,
+            0.27
+          ],
+          "y_m": [
+            -0.28,
+            -0.22
+          ]
+        }
+      },
+      "candidate_region_status": "frozen_after_pilot: x [0.21,0.27], red y [0.22,0.28], blue y [-0.28,-0.22]; measured displacement max 0.039691 m, 178/199 accepted scenes >0.01 m, 109/199 >0.02 m, 0/199 >0.04 m",
+      "constraints": [
+        "tray footprint inside the table by at least 0.02 m",
+        "tray-tray outer-edge gap at least 0.03 m",
+        "block sampled outside each tray keepout: tray inner half-size plus 0.02 m plus 0.04 m block-tray clearance",
+        "chosen centre-slot release, hover, descent and withdrawal IK and collision screening",
+        "the same-colour centre slot is the only placement target; the two-cube slot offsets are not used"
+      ],
+      "slot_rule": "place at the matching-colour tray centre slot; the two-cube slot offsets are retired for this single-block task because they put the opened gripper and the cube too close to the tray walls; record the centre-slot verdict"
+    },
+    "perturbations_enabled": false,
+    "visual_randomization_enabled": false,
+    "vary_positions_between_episodes": true,
+    "reuse_previous_episodes": false,
+    "duplicate_scene_policy": "a scene SHA-256 may appear once; a repeated draw is a rejected attempt, never a second episode"
+  },
+  "success_predicate": {
+    "id": "single_block_place_physical_v1",
+    "requires_all": [
+      "the block is inside the matching-color tray using its rotated footprint against the tray inner half-size",
+      "the block is supported by that tray's floor geom (red_tray_0 or blue_tray_0)",
+      "no contact between the block and either arm (released)",
+      "block linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
+      "the active arm and the other arm are at the registered home park pose within 2.0 degrees and 5.0 gripper percent",
+      "no contact between either arm and either tray",
+      "both TCP sites are at least 0.01 m from the block centre and from the tray outer volume in 3D (a TCP above a tray is clear; a TCP inside the tray volume is not)",
+      "all of the above hold continuously for at least 0.5 s"
+    ],
+    "not_sufficient": [
+      "expert return code",
+      "visual appearance in a camera",
+      "a single frame of support or containment"
+    ],
+    "failure_reasons": [
+      "object_out_of_bounds",
+      "wrong_tray",
+      "not_supported",
+      "robot_contact",
+      "not_stable",
+      "arm_not_clear",
+      "grasp_failed",
+      "payload_lost",
+      "ik_unreachable",
+      "path_collision",
+      "placement_failed",
+      "timeout",
+      "replay_mismatch"
+    ]
+  },
+  "scene_family": {
+    "definition": "family_key = (color, floor(block_x/0.0125), floor(block_y/0.0125), floor(tray_x/0.0125), floor(tray_y/0.0125), floor(yaw_degrees/15))",
+    "rule": "a family never crosses train/validation; a multi-episode family is assigned as one unit",
+    "split_algorithm": "per colour, greedily assign whole families to validation until 6 validation episodes per colour; skip a family that would exceed the per-colour quota; remaining families are train",
+    "frozen_before": "any normalisation statistic or training update"
+  },
+  "collection": {
+    "seed_registry": {
+      "pilot": [
+        15050,
+        15099
+      ],
+      "collection": [
+        15100,
+        15999
+      ],
+      "evaluation_reserved": [
+        16000,
+        16099
+      ],
+      "disjoint_from": {
+        "e1_8100_8199": "used",
+        "e4t_8220_8779": "used",
+        "e1_eval_9100_9119": "reserved",
+        "e4t_future_test_9300_9349": "reserved",
+        "clean60_12000_13199": "used/reserved",
+        "clean100_13200_13999": "used/reserved",
+        "clean60_eval_14000_14199": "reserved"
+      },
+      "pilot_policy": "a pilot scene is never reused as a demonstration; every executed pilot seed is recorded"
+    },
+    "pilot": {
+      "layout_ik": {
+        "seeds": 200,
+        "seed_start": 15050,
+        "episodes_saved": 0,
+        "acceptance_gate": "at least 0.80 of attempted seeds produce a fully checked scene; otherwise shrink the tray region or yaw domain and rerun",
+        "record": "per-seed tray positions, block XY/yaw, IK verdicts, collision verdicts, keepout verdicts, chosen slot"
+      },
+      "physical": {
+        "attempts": 8,
+        "target_successes": 6,
+        "acceptance_gate": "at least 6/8 successes, no contact-guard or limit violation, mean successful-episode wall time <= 120 s",
+        "yaw_gate": "at least 2 attempts with yaw in [30,60) degrees; if the 45-degree band fails more than once, freeze yaw to the certified discrete set and record the amendment",
+        "tray_gate": "at least 4 attempts with a sampled tray centre more than 0.01 m from the nominal centre",
+        "not_reused": true
+      }
+    },
+    "formal": {
+      "target_successes": 64,
+      "train": 52,
+      "validation": 12,
+      "maximum_attempts": 128,
+      "maximum_attempts_status": "frozen_after_pilot: 199/200 layout seeds accepted, first-draw 41.7%, and 8/8 physical pilot successes; 128 physical attempts is a hard stop",
+      "per_colour_target": {
+        "red": 32,
+        "blue": 32
+      },
+      "normalisation": "computed from the 52 train episodes only",
+      "failure_policy": "every attempt is retained with its SceneSpec, scene SHA-256, IK verdicts, active arm, executed frames and failure reason; a failed attempt never becomes a demonstration",
+      "diagnostics": true,
+      "repo_id": "local/so101_scene1_single_random_v1",
+      "observed": {
+        "collection_run": "20261029T102500Z-scene1-single-random-v3",
+        "physical_attempts": 78,
+        "successes": 64,
+        "red_successes": 32,
+        "blue_successes": 32,
+        "physical_failures": 14,
+        "layout_rejects": 2,
+        "wall_time_s": 6630.48,
+        "failure_reasons": {
+          "unexpected_contact": 9,
+          "ik_unreachable": 5
+        },
+        "failure_stages": {
+          "place_release": 9,
+          "place_withdraw": 2,
+          "direct_carry_cube_0": 3
+        },
+        "all_failures_blue": true,
+        "split": {
+          "train": 52,
+          "validation": 12,
+          "train_red": 26,
+          "train_blue": 26,
+          "validation_red": 6,
+          "validation_blue": 6,
+          "family_crosses": 0
+        }
+      },
+      "observed_failure_note": "all 14 physical failures were blue-arm: 9 high-yaw place_release contacts (60.3-69.0 degrees), 2 place_withdraw IK, 3 carry IK at low yaw with far block x; 2 blue scenes exhausted 400 sampler draws (place_checks/tray_keepout). No guard or limit was relaxed; the blue success yaw distribution is consequently truncated."
+    }
+  },
+  "evaluation": {
+    "offline": {
+      "required": true,
+      "acceptance_candidate": "action L1/MAE and gripper-event timing gates are registered after the first checkpoint; no threshold is inherited from clean60",
+      "loader_equivalence": "same real frames through the training loader and the inference observation path",
+      "inverse_action_check": "real recorded actions through the actual output pipeline; never reuse old normalisation",
+      "report": "red and blue separately, with failure distribution by block position band and tray layout band",
+      "status": "not_run_no_training_checkpoint"
+    },
+    "closed_loop": {
+      "status": "reserved_not_started",
+      "seed_range": [
+        16000,
+        16099
+      ],
+      "scenes": 12,
+      "attempts_per_scene": 1,
+      "timeout_s": 60.0,
+      "scene_freeze": "SceneSpec and SHA-256 written before any policy rollout",
+      "success_predicate": "the same physical single_block_place predicate, independent of the policy",
+      "allowed_after": "offline acceptance passes and this scope is confirmed",
+      "not_used_for": [
+        "training",
+        "hyper-parameter tuning",
+        "normalisation statistics"
+      ]
+    }
+  },
+  "training": {
+    "status": "deferred_by_user_no_gpu_occupation",
+    "updates": 20000,
+    "initialisation": {
+      "base": "official pi05_libero base checkpoint",
+      "forbidden": [
+        "clean60 checkpoint",
+        "clean100 checkpoint",
+        "other workstream checkpoints",
+        "other workstream normalisation statistics"
+      ]
+    },
+    "freeze_scope": {
+      "status": "to_be_reaudited_in_this_run",
+      "candidate": "language backbone frozen with attention/MLP LoRA trainable; action expert full; SigLIP full; action/time projection kernels and biases full",
+      "rule": "no inherited count is accepted; parameter names, shapes, dtypes and trainable flags are re-measured before the formal run"
+    },
+    "devices": {
+      "fsdp_devices": 4,
+      "global_batch_size": 8,
+      "per_device_shard": 2,
+      "global_batch_interpretation": "8 unique samples total, not 32",
+      "minimum_free_margin_mib": 100,
+      "free_memory_source": "measured memory.free on each selected device at admission",
+      "gpu_coordination": "shared registry; other workstreams' jobs are never stopped",
+      "container_registration": "full image digest, container name/id, run-id and owner are recorded before launch"
+    },
+    "checkpointing": {
+      "save_interval": 5000,
+      "final_save": true,
+      "restore_probe_required": true
+    },
+    "circuit_breaker": "host-side raw metrics; non-finite loss, allocation failure, host memory pressure or a lost device stops the run and is recorded",
+    "executed": false,
+    "preflight": {
+      "base_load_audit": {
+        "passed": true,
+        "target_tensors": 61,
+        "source_tensors": 51,
+        "trainable_tensors": 52
+      },
+      "parameter_tree": {
+        "total_tensors": 61,
+        "total_parameters": 3381303056,
+        "trainable_parameters": 872771344,
+        "frozen_parameters": 2508531712
+      },
+      "freeze_audit": {
+        "passed": true,
+        "language_backbone_trainable": 0,
+        "language_lora_tensors": 10,
+        "lora_rank": 16,
+        "action_expert_trainable": 427932672,
+        "vision_trainable": 414803696,
+        "projections_trainable": 2165792
+      },
+      "norm_loader_audit": {
+        "passed": true,
+        "loader_episodes": 52,
+        "loader_action_error": 5.62e-08,
+        "loader_state_error": 4.02e-08,
+        "inverse_roundtrip_max_error": 1.42e-14,
+        "padding_error": 0.0,
+        "internal_action_dim": 32,
+        "image_pipeline_error": 0.0
+      },
+      "device_probe": "not_run: no GPU occupied per user instruction",
+      "save_restore": "not_run: no GPU occupied per user instruction"
+    }
+  },
+  "claims": {
+    "engineering_chain": "64 successful single-block scripts-expert episodes -> audited train-only view and loader/norm/base/freeze preflight; the 20k training and offline policy evaluation are not executed because GPU occupancy was deferred by the user instruction",
+    "explicitly_not": [
+      "a benchmark success rate",
+      "proof of language-conditioned object selection: one block per scene and colour is confounded with the active arm",
+      "a dual-arm handover result",
+      "real-robot validation",
+      "the 20k training or any policy evaluation was executed in this round"
+    ]
+  },
+  "pilot_amendments": [
+    {
+      "item": "yaw domain",
+      "from": "continuous [0,90)",
+      "to": "continuous [0,72)",
+      "evidence": "39 of 65 place-check failures at yaw >=75 degrees; no accepted scene exceeded 70.7 degrees"
+    },
+    {
+      "item": "placement slot",
+      "from": "two-cube slots at +/-0.0245 m along tray y",
+      "to": "tray centre slot",
+      "evidence": "jaw/tray-wall contacts at place_release in 9/12 pilot attempts; centre slot maximises wall clearance for one block"
+    },
+    {
+      "item": "gripper open percent",
+      "from": "50",
+      "to": "35",
+      "evidence": "static sweep: 40-50% hits the tray wall at yaw 60-70; 35% clears all tested yaw and still straddles the 45-degree square footprint"
+    },
+    {
+      "item": "block-tray clearance",
+      "from": "0.01 m",
+      "to": "0.04 m",
+      "evidence": "pick_close cube/tray contacts when the block was 0.0176 m outside the tray inner wall"
+    },
+    {
+      "item": "arm clearance",
+      "from": "TCP 2D distance to tray rectangle",
+      "to": "TCP 3D distance to tray outer volume plus no robot-tray contact",
+      "evidence": "parked TCP was above a tray at 6 cm but projected inside its 2D rectangle; 3 failures were false negatives"
+    },
+    {
+      "item": "formal attempt cap",
+      "from": "pending",
+      "to": "128 physical attempts",
+      "evidence": "pilot 8/8 and layout 199/200; 2x the 64-success target as a hard stop"
+    }
+  ],
+  "pilot_results": {
+    "layout": {
+      "run": "runs/so101/scene1_layout_pilot_final_20261029",
+      "attempted": 200,
+      "accepted": 199,
+      "rejected": 1,
+      "acceptance_rate": 0.995,
+      "first_draw_accepted": 83,
+      "first_draw_rate": 0.4171,
+      "sampler_draws_total": 916,
+      "draw_results": {
+        "accepted": 199,
+        "hover_ik": 6,
+        "pick_region": 72,
+        "place_checks": 222,
+        "tray_keepout": 417
+      },
+      "yaw_degrees": {
+        "min": 0.008931,
+        "max": 71.073043,
+        "in_30_60": 76
+      },
+      "tray_displacement_m": {
+        "max": 0.039691,
+        "above_0.01": 178,
+        "above_0.02": 109,
+        "above_0.04": 0
+      },
+      "slot_counts": {
+        "center": 199
+      },
+      "unique_scene_sha256": true,
+      "certificate_sha256": "f5a858a018cc88eadb81a45466c1bea4e55f358e52bae605272482c8176ecd23"
+    },
+    "physical": {
+      "run": "runs/so101/scene1_physical_pilot_final_20261029",
+      "attempts": 8,
+      "successes": 8,
+      "red": 4,
+      "blue": 4,
+      "yaw_degrees": [
+        26.973,
+        49.696,
+        22.788,
+        45.572,
+        66.674,
+        49.53,
+        28.183,
+        16.073
+      ],
+      "yaw_in_30_60": 3,
+      "tray_displacement_above_0.01": 6,
+      "contact_monitor_errors": 0,
+      "soft_contacts": 0,
+      "frames_range": [
+        681,
+        768
+      ],
+      "wall_time_s_total": 174.357,
+      "note": "the pilot stopped at the 8-success target; all eight attempts succeeded"
+    }
+  },
+  "data_view": {
+    "path": "runs/so101/scene1_view_v1",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "norm_stats_sha256": "c44567cdecf7aae63f644d2d64535672adae70ec954742259a7dfb24dd49d63f",
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "episodes": 64,
+    "train": 52,
+    "validation": 12,
+    "frames_total": 45031,
+    "train_frames": 36623,
+    "episodes_by_color": {
+      "red": 32,
+      "blue": 32
+    },
+    "data_quality": {
+      "control_tick_s": 0.02,
+      "substeps_all_full": true,
+      "incomplete_frames": 0,
+      "max_state_error_vs_trace": 0.0,
+      "max_action_error_vs_trace": 0.0,
+      "camera_sync": true,
+      "video_duration_alignment": true,
+      "contact_monitor_errors": 0,
+      "soft_contacts": 0
+    },
+    "norm_audit": {
+      "passed": true,
+      "loader_episodes": 52,
+      "loader_action_error": 5.62e-08,
+      "loader_state_error": 4.02e-08,
+      "inverse_roundtrip_max_error": 1.42e-14,
+      "padding_error": 0.0,
+      "internal_action_dim": 32,
+      "image_pipeline_error": 0.0
+    }
+  }
+}

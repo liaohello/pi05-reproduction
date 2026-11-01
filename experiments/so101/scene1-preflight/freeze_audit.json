@@ -1,0 +1,76 @@
+{
+  "checks": {
+    "action_expert_trainable_parameters": 427932672,
+    "frozen_parameters": 2508531712,
+    "language_backbone_trainable_parameters": 0,
+    "language_lora_ranks": [
+      16
+    ],
+    "language_lora_tensors": 10,
+    "projection_components": {
+      "action_in_proj": [
+        "bias",
+        "kernel"
+      ],
+      "action_out_proj": [
+        "bias",
+        "kernel"
+      ],
+      "time_mlp_in": [
+        "bias",
+        "kernel"
+      ],
+      "time_mlp_out": [
+        "bias",
+        "kernel"
+      ]
+    },
+    "projection_trainable_parameters": 2165792,
+    "total_parameters": 3381303056,
+    "total_tensors": 61,
+    "trainable_parameters": 872771344,
+    "vision_encoder_trainable_parameters": 414803696
+  },
+  "claim": "freeze scope re-measured in this run; not inherited from clean60",
+  "groups": {
+    "action_expert": {
+      "frozen": 0,
+      "parameters": 427932672,
+      "tensors": 11,
+      "trainable": 427932672
+    },
+    "language_backbone": {
+      "frozen": 2508531712,
+      "parameters": 2508531712,
+      "tensors": 9,
+      "trainable": 0
+    },
+    "language_lora": {
+      "frozen": 0,
+      "parameters": 27869184,
+      "tensors": 10,
+      "trainable": 27869184
+    },
+    "other": {
+      "frozen": 0,
+      "parameters": 0,
+      "tensors": 0,
+      "trainable": 0
+    },
+    "projections": {
+      "frozen": 0,
+      "parameters": 2165792,
+      "tensors": 8,
+      "trainable": 2165792
+    },
+    "vision_encoder": {
+      "frozen": 0,
+      "parameters": 414803696,
+      "tensors": 23,
+      "trainable": 414803696
+    }
+  },
+  "passed": true,
+  "schema_version": 1,
+  "source": "pinned_image_parameter_tree"
+}

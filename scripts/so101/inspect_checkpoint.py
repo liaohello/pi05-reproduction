@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import openpi_so101  # noqa: E402
 import openpi.models.model as _model  # noqa: E402
+from model_scope import resolve_model_scope  # noqa: E402
 
 LORA = re.compile(r".*lora.*")
 
@@ -33,8 +34,12 @@ def _flatten(value) -> dict:
     return traverse_util.flatten_dict(value, sep="/")
 
 
-def _model_shapes():
-    model = openpi_so101.make_model_config()
+def _model_shapes(model_scope: dict | None = None, state_mode: str = "off"):
+    scope = model_scope or resolve_model_scope({})
+    model = openpi_so101.make_model_config(
+        state_mode,
+        paligemma_variant=scope["paligemma_variant"],
+        action_expert_variant=scope["action_expert_variant"])
     state = jax.eval_shape(lambda: nnx.state(model.create(jax.random.key(0))))
     return _flatten(state.to_pure_dict())
 
@@ -60,10 +65,13 @@ def _array_stats(array: np.ndarray) -> dict:
                 np.asarray(array, dtype=np.float32).tobytes()).hexdigest()}
 
 
-def _base_report(base: Path) -> tuple[dict, dict]:
+def _base_report(base: Path, run_config: dict | None = None) -> tuple[dict, dict]:
     params = _model.restore_params(base / "params", restore_type=np.ndarray)
     flat = _flatten(params)
-    shapes = _model_shapes()
+    run_config = run_config or {}
+    scope = resolve_model_scope(run_config)
+    state_mode = str(run_config.get("state_mode", "off"))
+    shapes = _model_shapes(scope, state_mode)
     common = sorted(set(flat) & set(shapes))
     only_base = sorted(set(flat) - set(shapes))
     only_model = sorted(set(shapes) - set(flat))
@@ -76,6 +84,8 @@ def _base_report(base: Path) -> tuple[dict, dict]:
     unexpected_missing = [key for key in only_model if not LORA.fullmatch(key)]
     report = {
         "base": str(base),
+        "model_scope": scope,
+        "state_mode": state_mode,
         "tensors": len(flat),
         "params_sha256": _tree_sha(flat),
         "model_tensors": len(shapes),
@@ -160,9 +170,13 @@ def main() -> int:
     parser.add_argument("--previous", type=Path, default=None,
                         help="optional earlier step directory for an update delta")
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument("--run-config", type=Path, default=None,
+                        help="saved config used to select model variants; defaults to historical E2 LoRA scope")
     args = parser.parse_args()
 
-    base_report, base_flat = _base_report(args.base)
+    run_config = (json.loads(args.run_config.read_text(encoding="utf-8"))
+                  if args.run_config else {})
+    base_report, base_flat = _base_report(args.base, run_config)
     result = {"base": base_report}
     if args.trained:
         root = args.checkpoint_root or args.trained.parent

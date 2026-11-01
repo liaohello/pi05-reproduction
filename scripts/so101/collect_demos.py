@@ -36,7 +36,7 @@ def _public_payload(output: Path, protocol: dict, config: dict, manifest: dict,
         "schema_version": 1,
         "created": manifest["created"],
         "phase": "E1",
-        "claim": "20 successful scripted-expert simulations; not a learned-policy success rate",
+        "claim": f"{manifest['successes']} successful scripted-expert simulations; not a learned-policy success rate",
         "protocol_sha256": protocol_sha,
         "source_sha256": fingerprint["source_sha256"],
         "expert_sha256": fingerprint["expert_sha256"],
@@ -86,11 +86,16 @@ def main() -> int:
     protocol_sha = common.sha256_file(args.protocol)
     config = common.load_external_config(root, protocol)
 
-    from bimanual.recording.collection import collect
+    import bimanual.recording.collection as collection_module
+    collect = collection_module.collect
     from bimanual.tasks.sorting import regions
     from bimanual.tasks.sorting.certification import check_certificate_current
-    from bimanual.tasks.sorting.scene_sampling import generate_scene
+    from bimanual.tasks.sorting.scene_sampling import generate_scene, SceneGenerationError
     from bimanual.sim.environment import BimanualEnv
+
+    if protocol.get("scene_layout"):
+        from clean_layout import install_filter
+        generate_scene = install_filter(collection_module, protocol)
 
     output = args.output.expanduser().resolve()
     if output.exists():
@@ -102,12 +107,12 @@ def main() -> int:
     collection = config["collection"]
     if args.pilot:
         pilot_seeds = [int(value) for value in args.pilot_seeds.split(",") if value.strip()]
-        if len(pilot_seeds) != 2:
-            raise SystemExit("--pilot-seeds must contain two comma-separated seeds")
+        if len(pilot_seeds) < 1:
+            raise SystemExit("--pilot-seeds must contain at least one seed")
         collection = dict(collection)
         collection["direct_seeds"] = pilot_seeds
         plan = [("direct", seed) for seed in pilot_seeds]
-        target, attempts = 1, 2
+        target, attempts = len(pilot_seeds), len(pilot_seeds)
     else:
         start, stop = protocol["collection"]["direct_seed_range"]
         plan = [("direct", seed) for seed in range(start, stop + 1)]
@@ -117,14 +122,18 @@ def main() -> int:
     print(json.dumps({"phase": "E1", "pilot": args.pilot, "output": str(output),
                       "plan_attempts": len(plan), "target_successes": target,
                       "seed_range": list(collection["direct_seeds"])}, indent=2))
+    _wall_start = __import__("time").time()
     summary = collect(config, output, plan=plan, collection=collection,
                       target=target, attempts=attempts,
-                      repo_id=common.COLLECTION_REPO_ID, certificate=certificate,
+                      repo_id=config["collection"]["repo_id"], certificate=certificate,
                       diagnostic=True)
+    _wall_s = round(__import__("time").time() - _wall_start, 1)
 
     successes = [row for row in summary["attempts"] if row["success"]]
     if args.pilot:
         pilot = {"phase": "E1-pilot", "pilot_seeds": pilot_seeds,
+                 "wall_time_s": _wall_s,
+                 "seconds_per_attempt": round(_wall_s / max(1, len(pilot_seeds)), 1),
                  "attempts": summary["profiles"]["direct"]["attempts"],
                  "successes": len(successes),
                  "failure_reasons": summary["profiles"]["direct"]["failure_reasons"],
@@ -170,16 +179,27 @@ def main() -> int:
         if stale:
             raise RuntimeError("certificate is stale: " + "; ".join(stale))
         eval_start, eval_stop = protocol["evaluation"]["seed_range"]
-        if not (eval_stop - eval_start + 1 == protocol["evaluation"]["episodes"]):
-            raise RuntimeError("evaluation seed range does not match the episode budget")
+        if eval_stop - eval_start + 1 < protocol["evaluation"]["episodes"]:
+            raise RuntimeError("evaluation seed pool is smaller than the episode budget")
         if set(range(eval_start, eval_stop + 1)) & set(range(start, stop + 1)):
             raise RuntimeError("evaluation seeds overlap the collection pool")
         evaluation_scenes = []
+        rejected_eval_seeds = []
         for seed in range(eval_start, eval_stop + 1):
-            scene = generate_scene(config, certificate, "direct", seed, env=env,
-                                   sampling=str(config["sorting"].get("sampling_mode", "legacy")))
+            try:
+                scene = generate_scene(config, certificate, "direct", seed, env=env,
+                                       sampling=str(config["sorting"].get("sampling_mode", "legacy")))
+            except SceneGenerationError:
+                if not protocol.get("scene_layout"):
+                    raise
+                rejected_eval_seeds.append(seed)
+                continue
             evaluation_scenes.append({"seed": seed, "sha256": scene.sha256,
                                       "summary": scene.summary, "scene": scene.as_dict()})
+            if len(evaluation_scenes) == protocol["evaluation"]["episodes"]:
+                break
+        if len(evaluation_scenes) != protocol["evaluation"]["episodes"]:
+            raise RuntimeError("evaluation pool did not supply enough valid layouts")
 
     evaluation_manifest = {
         "purpose": protocol["evaluation"]["purpose"],
@@ -188,6 +208,7 @@ def main() -> int:
         "certificate_hashes": certificate.hashes(),
         "config_sha256": common.sha256_json(config),
         "not_used_for": protocol["evaluation"]["not_used_for"],
+        "rejected_layout_seeds": rejected_eval_seeds,
     }
     evaluation_manifest_sha = common.sha256_json(evaluation_manifest)
 
@@ -200,12 +221,12 @@ def main() -> int:
         "schema_version": 1,
         "phase": "E1",
         "created": _now(),
-        "protocol_path": "configs/so101/protocol.json",
+        "protocol_path": args.protocol.name,
         "protocol_sha256": protocol_sha,
         "source_fingerprint": fingerprint,
         "config_sha256": config_sha,
         "dataset_info_sha256": dataset_info_sha,
-        "repo_id": common.COLLECTION_REPO_ID,
+        "repo_id": config["collection"]["repo_id"],
         "attempts_used": int(summary["profiles"]["direct"]["attempts"]),
         "successes": len(successes),
         "failures": int(summary["profiles"]["direct"]["failures"]),

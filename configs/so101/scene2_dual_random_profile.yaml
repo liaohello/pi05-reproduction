@@ -1,0 +1,66 @@
+schema_version: 1
+extends: configs/profiles/collection_50hz_three_camera.yaml
+
+# Workstream C scene profile: two blocks (target + distractor), two trays whose
+# colours can occupy either table side.  The adapter replaces the task and the
+# scene sampler; the external source and the shared scene1 profile are untouched.
+evaluation:
+  certificate: configs/certification/scene1_single_random_certificate_v2.json
+
+task:
+  type: dual_block_select_place
+
+sorting:
+  instruction: "Put the red block into the red tray."
+  instruction_template: "Put the {color} block into the {color} tray."
+  initial_positions_xy:
+    - [0.25, 0.10]
+    - [0.25, -0.10]
+  objects:
+    cube_0:
+      color: red
+    cube_1:
+      color: blue
+  timeout_s: 60.0
+  stable_success_s: 0.5
+  linear_speed_m_s: 0.02
+  angular_speed_rad_s: 0.2
+  block_jitter_m: 0.004
+  yaw_domain_degrees: [30.0, 75.0]
+  tray_sampling_positive:
+    x_m: [0.21, 0.27]
+    y_m: [0.22, 0.28]
+  tray_sampling_negative:
+    x_m: [0.21, 0.27]
+    y_m: [-0.28, -0.22]
+  tray_table_margin_m: 0.02
+  tray_tray_gap_m: 0.03
+  block_tray_clearance_m: 0.01
+  block_block_min_distance_m: 0.06
+  arm_park_joint_tolerance_deg: 2.0
+  arm_park_gripper_tolerance_percent: 5.0
+  arm_clearance_m: 0.01
+  distractor_max_displacement_m: 0.002
+  distractor_max_speed_m_s: 0.02
+  distractor_max_angular_speed_rad_s: 0.2
+
+grasp:
+  # The reference gripper is closed at 0 percent.  Seventy percent stays inside
+  # the CAD joint range and gives the withdrawn fingers clearance from the tray
+  # walls measured by the scene2 pre-pilot scan; the close stage still goes to 0.
+  open_percent: 70.0
+  closed_percent: 0.0
+  hover_height_m: 0.060
+  place_hover_height_m: 0.040
+  release_clearance_m: 0.006
+  retreat_clearance_x_m: 0.012
+
+scene:
+  transfer:
+    marker: false
+
+domain_randomization:
+  enabled: false
+
+collection:
+  recording_type: scripted_dual_block_select_place_demonstration

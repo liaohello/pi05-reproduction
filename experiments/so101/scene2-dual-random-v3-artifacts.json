@@ -1,0 +1,65 @@
+{
+  "adapter_sha256": "a63f60213e753cc35505eebbfa739a9c4f4d422b23ad265279bbed5bd19b7f76",
+  "certificate_sha256": "f593c0422a6f4aee3f6c2adcc4f4315e65dcd8c555caaf847ad84b5c0d0a7ad4",
+  "claim": "v3 4 layouts x 2 instructions = 8 condition episodes; 3/8; 1 layout both; per-scene search partial; v1 4/8 remains the reference; no formal collection",
+  "ignored_artifacts": {
+    "certificate": "ignored external certificate; bytes not redistributed; hash recorded above",
+    "frozen_scenes_file_sha256": "0a3d78e3bc5432418c924ebcc19af5c55ffe590b805252bb101b7bf58021ab82",
+    "raw_run_directories": "ignored; traces, three camera MP4s, events, applied actions and initial states are not redistributed"
+  },
+  "ledger_note": "the shared ledger was appended with v4 rows after this v3 manifest; the v4 artifact manifest records the current ledger hash",
+  "ledger_sha256": "fad31e4545a1954976d157af1e0b1056f580fa686f5b07fac6ad65d3cd835230",
+  "ledger_sha256_at_v3_completion": "fad31e4545a1954976d157af1e0b1056f580fa686f5b07fac6ad65d3cd835230",
+  "patch": {
+    "path": "patches/so101/scene2-dual-random-scene-v3.patch",
+    "sha256": "3dca90592846dd04ece867c51c5084fb69a27f26e836d7007c25985b88f994a0"
+  },
+  "phase": "scene2_v3_artifact_manifest",
+  "profile_sha256": "58bc734ed6ff6309d67cc24a7a7a94e3ae2c01c3d38c8deb223f10f54ee637bf",
+  "protocol_id": "scene2_dual_random_v3",
+  "protocol_sha256": "48117757fc1c52fa09fd2707a3bc0489907e36e80730873e919a304f251db2c9",
+  "report_assets": {
+    "reports/assets/so101-scene2-dual-random-v3/layout_00_red_vs_blue.png": "726a2aad8d2419b7a961fb0e4dc1fa6593a901fd77dc5b9251cf5773f5eef0ad",
+    "reports/assets/so101-scene2-dual-random-v3/layout_01_red_vs_blue.png": "faa9a21ed2703ab562ca7395ef63eeb36af1ee69da3b0f5a86485bc396d2449e",
+    "reports/assets/so101-scene2-dual-random-v3/layout_02_red_vs_blue.png": "13336687bc41630599ac5963314d5e84ca9ca7eb28a65abf8fd385a37b1eeeaa",
+    "reports/assets/so101-scene2-dual-random-v3/layout_03_red_vs_blue.png": "7138e7dc63c46ac02ba9f2759d06455f3f3f7cf3b97a37510ba366e996ca401d"
+  },
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tracked_files": {
+    "configs/so101/scene2_dual_random_profile_v3.yaml": "58bc734ed6ff6309d67cc24a7a7a94e3ae2c01c3d38c8deb223f10f54ee637bf",
+    "configs/so101/scene2_dual_random_protocol_v3.json": "48117757fc1c52fa09fd2707a3bc0489907e36e80730873e919a304f251db2c9",
+    "docs/so101-scene2-dual-random-v3.md": "9a44947598a302815b074475faec1f4a1eb71e8e8e26396ea6d18fafb5f453a5",
+    "experiments/so101/scene2-dual-random-v3-audit.json": "ca8557de3d091502176e7effe07107d98bc4b7aa888c91d7032c4c2ade11585d",
+    "experiments/so101/scene2-dual-random-v3-baseline.json": "021e91afb12ecfb2c7d1fd50023f170455b06056bde64fb4311126d30329586d",
+    "experiments/so101/scene2-dual-random-v3-layout-pilot.json": "91cc7fa5fb0a01541a474a78c63d5bf0e1f17aad28fbe5f11cd96f2faa6ffa22",
+    "experiments/so101/scene2-dual-random-v3-pilot-scenes.json": "9c075ae801966dc20d7780322c93dec88148927665d3db7681c6dceb760e8d31",
+    "experiments/so101/scene2-dual-random-v3-pilot.json": "7b85b25f0599c68c7db2f84df89f47bf33932ffa8d4cdca50b97870e05dba9d8",
+    "reports/so101-scene2-dual-random-v3-data.md": "d98cd02c586f00a3f5cf77d9a6bbdae79fd71fe9f1e99db2ef52b5dc998a59d4",
+    "reports/so101-scene2-dual-random-v3-engineering.md": "a820db532c325a435970e66dc80a05dc745461ab629a78de91a611bb7b999dc1",
+    "reports/so101-scene2-dual-random-v3-scene.md": "4570dde973a8028955d17bda80b288dace302c2fee718df26b69f7c71ea24a7b",
+    "scripts/so101/scene2_audit_v3.py": "1c11fe6040c2de5b3158e93000a8756017a7552b93f9d761db83e137478160c3",
+    "scripts/so101/scene2_certify_v3.py": "710f22c83cc41534a52f7d498adec156a06971c9f875ebd9b137f8f1e4fcd7f4",
+    "scripts/so101/scene2_collect_v3.py": "807f6d91a25f4c09d8d3b74be4821b6e2bde4595ac4680e42080707405cb3c39",
+    "scripts/so101/scene2_common_v3.py": "a63f60213e753cc35505eebbfa739a9c4f4d422b23ad265279bbed5bd19b7f76",
+    "scripts/so101/scene2_layout_pilot_v3.py": "493e52adcb2327c8d5ea0ef6105c125b6d3ebf7f35169ed3b448877760d8d484",
+    "scripts/so101/scene2_pregenerate_v3.py": "bd5510cbd740174cf673edfdbde85a06ee79751715e9ee039e55e987d35a3569",
+    "scripts/so101/scene2_settle_baseline_v3.py": "28e28f2b385fa40abc7392201e02ac8bbef808bb731e2b5a3525ec3809da7c73",
+    "tests/test_scene2_v3_contracts.py": "21a6e25351545742681800aab9d900add6b546fb763c36048901fa2617da0d92"
+  },
+  "v1_v2_reference": {
+    "v1_protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+    "v1_successes": 4,
+    "v1_v2_v3_note": "scene sets differ; v1 remains the aggregate reference",
+    "v2_protocol_sha256": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+    "v2_successes": 2,
+    "v3_successes": 3
+  }
+}

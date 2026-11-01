@@ -23,6 +23,7 @@ from flax import nnx
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import openpi_so101  # noqa: E402
+import model_scope  # noqa: E402
 import openpi.training.checkpoints as _checkpoints  # noqa: E402
 from openpi.models import model as _model  # noqa: E402
 from openpi.models.pi0 import make_attn_mask  # noqa: E402
@@ -227,6 +228,7 @@ def main() -> int:
         raise SystemExit(f"refusing to reuse {output}")
     run_config = json.loads(args.run_config.read_text(encoding="utf-8"))
     training = json.loads(args.training_config.read_text(encoding="utf-8"))
+    scope = model_scope.resolve_model_scope(run_config, training)
     windows_document = json.loads(args.windows.read_text(encoding="utf-8"))
     meta = json.loads((view / "meta.json").read_text(encoding="utf-8"))
     state_mode = run_config.get("state_mode")
@@ -266,7 +268,7 @@ def main() -> int:
         expected_windows = None
     config = openpi_so101.make_train_config(
         mode="serve", run_root=output, train_view=view, base_checkpoint=checkpoint,
-        exp_name="e4t_eval", state_mode=state_mode)
+        exp_name="e4t_eval", state_mode=state_mode, **scope)
     data_config = config.data.create(config.assets_dirs, config.model)
     assets_root = (args.assets_root.expanduser().resolve() if args.assets_root
                    else checkpoint / "assets")

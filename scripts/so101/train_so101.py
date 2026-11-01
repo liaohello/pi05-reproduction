@@ -11,9 +11,11 @@ import argparse
 import dataclasses
 import hashlib
 import importlib.util
+import io
 import json
 import logging
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -22,6 +24,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import openpi_so101  # noqa: E402
+import clean60_contracts as clean60  # noqa: E402
+from model_scope import resolve_model_scope  # noqa: E402
 
 
 def _load_train_module():
@@ -62,20 +66,139 @@ def _sha_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _runtime_snapshot(config) -> dict:
+    """Record the devices, mesh and batch sharding the run actually resolves to."""
+    import jax
+
+    from openpi.training import sharding as _sharding
+
+    # OpenPI's mesh is built from jax.devices(), so validate against that same
+    # device set before make_mesh can fail with a less useful reshape error.
+    devices = list(jax.devices())
+    device_count = len(devices)
+    fsdp_devices = config.fsdp_devices
+    batch_size = config.batch_size
+    if device_count < 1:
+        raise ValueError("OpenPI runtime requires at least one JAX device")
+    if not isinstance(fsdp_devices, int) or isinstance(fsdp_devices, bool) or fsdp_devices < 1:
+        raise ValueError("fsdp_devices must be a positive integer")
+    if device_count % fsdp_devices != 0:
+        raise ValueError(
+            f"fsdp_devices ({fsdp_devices}) must divide the OpenPI device count ({device_count})"
+        )
+    if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size < 1:
+        raise ValueError("batch_size must be a positive integer")
+    if batch_size % device_count != 0:
+        raise ValueError(
+            f"global batch_size ({batch_size}) must be divisible by the OpenPI device count "
+            f"({device_count})"
+        )
+
+    replicas = device_count // fsdp_devices
+    mesh = _sharding.make_mesh(config.fsdp_devices)
+    return {
+        "backend": jax.default_backend(),
+        "device_count": device_count,
+        "device_ids": [device.id for device in devices],
+        "device_kinds": sorted({device.device_kind for device in devices}),
+        "fsdp_devices": fsdp_devices,
+        "mesh_axis_names": list(mesh.axis_names),
+        "mesh_shape": {str(key): int(value) for key, value in mesh.shape.items()},
+        "data_parallel_replicas": replicas,
+        "global_batch_size": batch_size,
+        "batch_per_data_replica": batch_size // replicas,
+        "batch_per_device_shard": batch_size // device_count,
+        "batch_per_data_shard": batch_size // device_count,
+        "batch_partitioned_across_all_devices": True,
+        "fsdp_axis_replicates_batch": False,
+        "batch_divisible_by_device_count": True,
+        "num_train_steps": config.num_train_steps,
+    }
+
+
+def _training_settings(args, run_root: Path) -> dict:
+    """Resume the saved model and freeze scope instead of today's defaults."""
+    explicit_scope = {
+        "paligemma_variant": args.paligemma_variant,
+        "action_expert_variant": args.action_expert_variant,
+        "freeze_vision_encoder": args.freeze_vision_encoder,
+    }
+    if args.mode == "resume":
+        snapshot_path = run_root / "config_initial.json"
+        if not snapshot_path.is_file():
+            raise ValueError("resume requires the saved config_initial.json")
+        saved = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        scope = resolve_model_scope(saved)
+        for key, value in explicit_scope.items():
+            if value is not None and value != scope[key]:
+                raise ValueError(f"explicit {key} differs from the saved training config")
+        state_mode = saved.get("state_mode", "off")
+        if args.state_mode is not None and args.state_mode != state_mode:
+            raise ValueError("explicit state_mode differs from the saved training config")
+    else:
+        scope = {
+            "paligemma_variant": args.paligemma_variant or "gemma_2b_lora",
+            "action_expert_variant": args.action_expert_variant or "gemma_300m",
+            "freeze_vision_encoder": bool(args.freeze_vision_encoder),
+        }
+        state_mode = args.state_mode or "off"
+    return {"model_scope": scope, "state_mode": state_mode}
+
+
+class _FiniteOutputGuard(io.TextIOBase):
+    """Abort at the per-step log write, before that step can be checkpointed."""
+
+    _metric = re.compile(r"(?:loss|grad_norm|param_norm)=([-+A-Za-z0-9.]+)")
+    _step = re.compile(r"Step ([0-9]+):")
+
+    def __init__(self, wrapped, *, require_initial_update: bool):
+        self.wrapped = wrapped
+        self.require_initial_update = bool(require_initial_update)
+
+    def write(self, text):
+        metrics = {
+            match.group(0).split("=", 1)[0]: match.group(1)
+            for match in self._metric.finditer(text or "")
+        }
+        if any(value.lower() in {"nan", "+nan", "-nan", "inf", "+inf", "-inf"}
+               for value in metrics.values()):
+            raise FloatingPointError(f"non-finite training metrics: {metrics}")
+        step = self._step.search(text or "")
+        if step and self.require_initial_update and int(step.group(1)) == 0:
+            grad_norm = float(metrics.get("grad_norm", "nan"))
+            if not grad_norm > 0.0:
+                raise RuntimeError("first optimizer step produced a zero gradient")
+        return self.wrapped.write(text)
+
+    def flush(self):
+        return self.wrapped.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("initial", "resume", "smoke", "probe"), required=True)
     parser.add_argument("--phase", default=None)
+    parser.add_argument("--run-id", default=None)
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--train-view", type=Path, required=True)
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--exp-name", default="e2_lora_b1_s42")
-    parser.add_argument("--state-mode", choices=("off", "on"), default="off")
+    parser.add_argument("--state-mode", choices=("off", "on"), default=None)
     parser.add_argument("--train-episodes", default="",
                         help="comma-separated training episode ids; empty means the full split")
     parser.add_argument("--steps", type=int, default=None)
     parser.add_argument("--save-interval", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--action-horizon", type=int, default=10)
+    parser.add_argument("--optimizer", choices=("AdamW",), default="AdamW")
+    parser.add_argument("--gradient-clip-norm", type=float, default=1.0)
+    parser.add_argument("--ema-decay", type=float, default=None,
+                        help="EMA decay; omitted means EMA is disabled")
+    parser.add_argument("--dtype", choices=("bfloat16", "float32"), default="bfloat16")
     parser.add_argument("--lr-warmup-steps", type=int, default=10)
     parser.add_argument("--peak-lr", type=float, default=5e-5)
     parser.add_argument("--decay-steps", type=int, default=100)
@@ -85,10 +208,28 @@ def main() -> int:
                              "contents, so this changes only how fast batches arrive")
     parser.add_argument("--sampling-plan", type=Path, default=None)
     parser.add_argument("--data-admission", type=Path, default=None)
+    parser.add_argument("--registered-config-sha256", default=None)
+    parser.add_argument("--registered-training-config", type=Path, default=None)
+    parser.add_argument("--require-clean-data", action="store_true")
+    parser.add_argument("--require-action-norm-audit", action="store_true")
+    parser.add_argument("--registered-base-sha256", default=None)
+    parser.add_argument("--checkpoint-probe", action="store_true",
+                        help="allow a short isolated full-update/checkpoint probe")
+    parser.add_argument("--resume-step", type=int, default=None,
+                        help="authoritative TrainState.step restored by a checkpoint probe")
     parser.add_argument("--expected-total-episodes", type=int, default=None)
     parser.add_argument("--expected-train-episodes", type=int, default=None)
     parser.add_argument("--expected-validation-episodes", type=int, default=None)
     parser.add_argument("--dataset-label", default=None)
+    parser.add_argument("--fsdp-devices", type=int, default=1,
+                        help="devices per FSDP replica; the remaining visible devices are "
+                             "data-parallel replicas of the sharded model")
+    parser.add_argument("--paligemma-variant", default=None)
+    parser.add_argument("--action-expert-variant", default=None)
+    parser.add_argument("--freeze-vision-encoder", action=argparse.BooleanOptionalAction,
+                        default=None)
+    parser.add_argument("--expected-groups", type=int, default=2,
+                        help="minimum sampling groups; a clean-only protocol uses 1")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, force=True)
@@ -97,8 +238,68 @@ def main() -> int:
     run_root = args.run_root.expanduser().resolve()
     train_view = args.train_view.expanduser().resolve()
     base_checkpoint = args.base_checkpoint.expanduser().resolve()
+    settings = _training_settings(args, run_root)
+    model_scope = settings["model_scope"]
+    args.state_mode = settings["state_mode"]
     run_root.mkdir(parents=True, exist_ok=True)
     meta = json.loads((train_view / "meta.json").read_text(encoding="utf-8"))
+    registered_config = None
+    if args.registered_training_config is not None:
+        registered_config = json.loads(
+            args.registered_training_config.read_text(encoding="utf-8"))
+        actual_hash = _sha_file(args.registered_training_config)
+        if not args.registered_config_sha256 or actual_hash != args.registered_config_sha256:
+            raise ValueError("registered training configuration hash mismatch")
+    elif args.registered_config_sha256:
+        raise ValueError("registered config hash requires --registered-training-config")
+    if args.require_clean_data:
+        if registered_config is None:
+            raise ValueError("clean60 training requires its registered configuration")
+        problems = clean60.training_config_problems(registered_config)
+        if problems:
+            raise ValueError("registered training configuration failed: " + "; ".join(problems))
+        binding_path = train_view / "protocol_binding.json"
+        split = json.loads((train_view / "splits.json").read_text(encoding="utf-8"))
+        binding = (json.loads(binding_path.read_text(encoding="utf-8"))
+                   if binding_path.is_file() else None)
+        problems = clean60.view_contract_problems(
+            meta, protocol_binding=binding, require_clean=True)
+        admission_path = (args.data_admission or train_view / "e4t_admission.json")
+        admission = (json.loads(admission_path.read_text(encoding="utf-8"))
+                     if admission_path.is_file() else {})
+        problems.extend(clean60.admission_contract_problems(
+            admission, meta=meta, split=split,
+            train_stats_sha256=_sha_file(train_view / "train_stats.json")))
+        for name in ("scene_audit.json", "data_audit.json", "stats_recompute.json"):
+            if not (train_view / name).is_file():
+                problems.append(f"missing {name}")
+        if not problems:
+            norm_stats_sha256 = _sha_file(train_view / "assets/so101/norm_stats.json")
+            problems.extend(clean60.scene_audit_problems(
+                json.loads((train_view / "scene_audit.json").read_text()),
+                view_sha256=meta.get("view_sha256", "")))
+            problems.extend(clean60.data_audit_problems(
+                json.loads((train_view / "data_audit.json").read_text()),
+                view_sha256=meta.get("view_sha256", "")))
+            problems.extend(clean60.stats_recompute_problems(
+                json.loads((train_view / "stats_recompute.json").read_text()),
+                view_sha256=meta.get("view_sha256", ""),
+                norm_stats_sha256=norm_stats_sha256))
+        if problems:
+            raise ValueError("clean data contract failed: " + "; ".join(problems))
+        data = registered_config["data"]
+        if (args.expected_total_episodes, args.expected_train_episodes,
+                args.expected_validation_episodes) != (
+                    data["view_episodes"], data["train"], data["validation"]):
+            raise ValueError("CLI episode counts differ from the registered clean data profile")
+        if (args.mode == "initial" and not args.checkpoint_probe
+                and args.steps != registered_config["optimisation"]["planned_updates"]):
+            raise ValueError("formal clean60 initial training must use 25000 updates")
+        if args.batch_size != registered_config["optimisation"]["primary_batch_size"]:
+            raise ValueError("formal clean60 training must use global batch 8")
+    if (args.registered_base_sha256
+            and clean60.sha256_tree(base_checkpoint) != args.registered_base_sha256):
+        raise ValueError("base checkpoint does not match the probe-bound hash")
     episode_count = len(meta.get("episodes", []))
     train_ids_meta = sorted(int(row["episode_index"]) for row in meta.get("episodes", [])
                             if row.get("split") == "train")
@@ -142,6 +343,23 @@ def main() -> int:
             raise ValueError(f"training view has {episode_count} episodes; E2/E3.1 requires 20")
     if not (train_view / "assets/so101/norm_stats.json").is_file():
         raise FileNotFoundError("training view has no train-only norm stats")
+    norm_audit_path = train_view / "action_norm_audit.json"
+    norm_audit = None
+    norm_audit_sha256 = None
+    if args.require_action_norm_audit:
+        if not norm_audit_path.is_file():
+            raise ValueError("training requires the action normalization audit")
+        norm_audit = json.loads(norm_audit_path.read_text(encoding="utf-8"))
+        norm_audit_sha256 = _sha_file(norm_audit_path)
+        problems = clean60.norm_audit_problems(
+            norm_audit,
+            view_sha256=meta.get("view_sha256", ""),
+            norm_stats_sha256=_sha_file(train_view / "assets/so101/norm_stats.json"),
+            base_checkpoint_sha256=args.registered_base_sha256 or "",
+            training_config_sha256=args.registered_config_sha256 or "",
+        )
+        if problems:
+            raise ValueError("action normalization audit failed: " + "; ".join(problems))
     os.environ["SO101_TRAIN_VIEW"] = str(train_view)
     if args.train_episodes.strip():
         requested = sorted(int(value) for value in args.train_episodes.split(",") if value.strip())
@@ -152,42 +370,62 @@ def main() -> int:
         os.environ.pop("SO101_TRAIN_EPISODES", None)
 
     sampling_summary = None
-    if phase == "E4-T" and args.mode not in {"smoke", "probe"}:
+    if (phase == "E4-T"
+            and (args.mode not in {"smoke", "probe"} or args.checkpoint_probe)):
+        if args.mode == "resume" and args.resume_step is None:
+            raise ValueError("checkpoint resume requires the restored TrainState.step")
         policy = json.loads(args.sampling_plan.read_text(encoding="utf-8"))
         raw = openpi_so101.SO101EpisodeDataset(
-            train_view, split="train", action_horizon=10,
+            train_view, split="train", action_horizon=args.action_horizon,
             episode_ids=train_ids_meta)
         total = raw.sampling_summary()
-        if total["split"] != "train" or len(total["groups"]) < 2:
+        if total["split"] != "train" or len(total["groups"]) < args.expected_groups:
             raise ValueError("E4-T training sample audit is incomplete")
         weights, audit = raw.weighted_sample_probabilities(policy)
         count = int(args.steps) * int(args.batch_size)
-        indices = raw.precomputed_sample_indices(weights, count, seed=42)
+        indices = raw.precomputed_sample_indices(weights, count, seed=args.seed)
         id_path = run_root / "training_sample_ids.jsonl.gz"
         import gzip
         with gzip.open(id_path, "wt", encoding="utf-8") as handle:
             for value in indices:
                 handle.write(f"{value}\n")
-        unique = len(set(indices))
+        offset = (int(args.resume_step) * int(args.batch_size)
+                  if args.mode == "resume" else 0)
+        if offset < 0 or offset >= len(indices):
+            raise ValueError("resume sample offset is outside the precomputed sequence")
+        active_indices_path = id_path
+        if offset:
+            active_indices_path = run_root / "resume_training_sample_ids.jsonl.gz"
+            with gzip.open(active_indices_path, "wt", encoding="utf-8") as handle:
+                for value in indices[offset:]:
+                    handle.write(f"{value}\n")
+        active_indices = indices[offset:]
+        unique = len(set(active_indices))
         group_counts: dict[str, int] = {}
-        for value in indices:
+        for value in active_indices:
             group = raw.sample_metadata[value]["subgroup"]
             group_counts[group] = group_counts.get(group, 0) + 1
         sampling_summary = {
             "policy_sha256": _sha_file(args.sampling_plan),
             "eligible_windows": total,
             "configured_audit": audit,
-            "requested_samples": count,
+            "requested_samples": len(active_indices),
+            "full_requested_samples": count,
             "unique_samples_covered": unique,
             "empirical_coverage": unique / total["total_eligible_windows"],
             "actual_group_counts": group_counts,
             "actual_group_fractions": {
-                key: value / count for key, value in sorted(group_counts.items())},
-            "sample_ids_sha256": _sha_file(id_path),
-            "sample_ids_file": id_path.name,
+                key: value / len(active_indices)
+                for key, value in sorted(group_counts.items())},
+            "sample_ids_sha256": _sha_file(active_indices_path),
+            "full_sample_ids_sha256": _sha_file(id_path),
+            "sample_ids_file": active_indices_path.name,
+            "full_sample_ids_file": id_path.name,
+            "resume_batch_offset": offset,
+            "restored_train_state_step": args.resume_step,
             "validation_used_for_training": False,
         }
-        os.environ["SO101_TRAINING_SAMPLE_IDS"] = str(id_path)
+        os.environ["SO101_TRAINING_SAMPLE_IDS"] = str(active_indices_path)
 
     config = openpi_so101.make_train_config(
         mode=args.mode, run_root=run_root, train_view=train_view,
@@ -198,20 +436,34 @@ def main() -> int:
         decay_steps=args.decay_steps, decay_lr=args.decay_lr,
         dataset_label=args.dataset_label or meta.get("dataset_label", "so101"),
         phase=phase, num_workers=args.data_loader_workers,
+        fsdp_devices=args.fsdp_devices, **model_scope,
+        action_horizon=args.action_horizon, seed=args.seed,
+        gradient_clip_norm=args.gradient_clip_norm, optimizer_name=args.optimizer,
+        ema_decay=args.ema_decay, dtype=args.dtype,
     )
     snapshot = {
         "created": time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime()),
         "mode": args.mode,
+        "run_id": args.run_id,
+        "registered_config_sha256": args.registered_config_sha256,
+        "runtime": _runtime_snapshot(config),
         "run_root": str(run_root),
         "train_view": str(train_view),
         "base_checkpoint": str(base_checkpoint),
         "exp_name": args.exp_name,
         "config": _config_snapshot(config),
         "state_mode": args.state_mode,
+        "model_scope": model_scope,
         "train_episodes": args.train_episodes,
         "steps": config.num_train_steps,
         "save_interval": config.save_interval,
         "batch_size": config.batch_size,
+        "seed": config.seed,
+        "action_horizon": config.model.action_horizon,
+        "optimizer": args.optimizer,
+        "gradient_clip_norm": args.gradient_clip_norm,
+        "ema_decay": config.ema_decay,
+        "dtype": config.model.dtype,
         "lr_schedule": {"warmup_steps": args.lr_warmup_steps, "peak_lr": args.peak_lr,
                         "decay_steps": args.decay_steps, "decay_lr": args.decay_lr},
         "sampling_plan": str(args.sampling_plan) if args.sampling_plan else None,
@@ -219,9 +471,18 @@ def main() -> int:
         "data_admission": str(args.data_admission) if args.data_admission else None,
         "train_view_meta_sha256": _sha_file(train_view / "meta.json"),
         "norm_stats_sha256": _sha_file(train_view / "assets/so101/norm_stats.json"),
+        "norm_audit_sha256": norm_audit_sha256,
+        "base_checkpoint_sha256": (norm_audit.get("base_checkpoint_sha256")
+                                   if norm_audit else None),
     }
     config_path = run_root / f"config_{args.mode}.json"
     config_path.write_text(json.dumps(snapshot, indent=2, default=str) + "\n", encoding="utf-8")
+    if args.mode == "probe" and args.checkpoint_probe:
+        initial_sidecar = run_root / "config_initial.json"
+        if initial_sidecar.exists():
+            raise ValueError("checkpoint probe initial sidecar already exists")
+        initial_sidecar.write_text(
+            json.dumps(snapshot, indent=2, default=str) + "\n", encoding="utf-8")
     train_stats = json.loads((train_view / "train_stats.json").read_text(encoding="utf-8"))
     meta = json.loads((train_view / "meta.json").read_text(encoding="utf-8"))
     admission = (json.loads(args.data_admission.read_text(encoding="utf-8"))
@@ -230,6 +491,7 @@ def main() -> int:
         "schema_version": 1,
         "phase": phase,
         "state_mode": args.state_mode,
+        "model_scope": model_scope,
         "train_view": str(train_view),
         "train_episodes": args.train_episodes or f"all:{len(train_ids_meta)}",
         "train_episode_ids": train_ids_meta,
@@ -237,6 +499,14 @@ def main() -> int:
         "steps": config.num_train_steps,
         "save_interval": config.save_interval,
         "batch_size": config.batch_size,
+        "seed": config.seed,
+        "action_horizon": config.model.action_horizon,
+        "optimizer": args.optimizer,
+        "gradient_clip_norm": args.gradient_clip_norm,
+        "ema_decay": config.ema_decay,
+        "dtype": config.model.dtype,
+        "run_id": args.run_id,
+        "registered_config_sha256": args.registered_config_sha256,
         "lr_schedule": snapshot["lr_schedule"],
         "sampling_plan": snapshot["sampling_plan"],
         "sampling_summary": sampling_summary,
@@ -246,6 +516,9 @@ def main() -> int:
         "config_sha256": _sha_file(config_path),
         "norm_stats_canonical_sha256": train_stats.get("norm_stats_canonical_sha256")
         or train_stats.get("norm_stats_sha256"),
+        "norm_audit_sha256": norm_audit_sha256,
+        "base_checkpoint_sha256": (norm_audit.get("base_checkpoint_sha256")
+                                   if norm_audit else None),
         "view_sha256": meta.get("view_sha256"),
         "train_stats_sha256": _sha_file(train_view / "train_stats.json"),
         "data_admission_sha256": (_sha_file(args.data_admission) if args.data_admission else None),
@@ -257,6 +530,7 @@ def main() -> int:
 
     train_module, train_path = _load_train_module()
     original_loader = train_module._data_loader.create_data_loader
+    original_stdout = sys.stdout
     train_module._data_loader.create_data_loader = openpi_so101.create_so101_data_loader
     print(json.dumps({"phase": phase, "mode": args.mode, "train_entry": str(train_path),
                       "checkpoint_dir": str(config.checkpoint_dir),
@@ -265,9 +539,12 @@ def main() -> int:
                       "lora": [config.model.paligemma_variant,
                                config.model.action_expert_variant]}), flush=True)
     try:
+        sys.stdout = _FiniteOutputGuard(
+            original_stdout, require_initial_update=bool(args.require_clean_data))
         train_module.main(config)
     finally:
         train_module._data_loader.create_data_loader = original_loader
+        sys.stdout = original_stdout
     (run_root / f"done_{args.mode}.json").write_text(
         json.dumps({"finished": time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime()),
                     "mode": args.mode, "checkpoint_dir": str(config.checkpoint_dir)},

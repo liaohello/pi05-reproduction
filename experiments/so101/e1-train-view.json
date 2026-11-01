@@ -1,0 +1,540 @@
+{
+  "claim": "converted training view; not a new dataset or a policy result",
+  "created": "2026-10-25T15:20:05+08:00",
+  "dataset_info_sha256": "6212cc911b75d3b45d3a1e10fca5cb8f47f2feac5449fa07bc88f96c6cc235fb",
+  "episodes": [
+    {
+      "action_shape": [
+        2717,
+        12
+      ],
+      "episode_index": 0,
+      "frames": 2717,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "abdab53ca13129b47b07302f2a7dcaae71fafe8efc29851c3a64453b852dfec3",
+      "seed": 8100,
+      "split": "train",
+      "state_shape": [
+        2717,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2767,
+        12
+      ],
+      "episode_index": 1,
+      "frames": 2767,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "f576f406e7a7d8ccf1ebb708979efd8922aa97e308b3bdc84ae0e7a9aa975957",
+      "seed": 8101,
+      "split": "train",
+      "state_shape": [
+        2767,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2770,
+        12
+      ],
+      "episode_index": 2,
+      "frames": 2770,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "5de1ee5f1c1ce1bd880f5e59744140b0542ca6deefcc42bc12c3e3b3524dd23c",
+      "seed": 8102,
+      "split": "train",
+      "state_shape": [
+        2770,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2811,
+        12
+      ],
+      "episode_index": 3,
+      "frames": 2811,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "f8e1341afb8a6ece28d9e1013a9166a34f5c7b618ac983f0a19fe875765b961e",
+      "seed": 8103,
+      "split": "train",
+      "state_shape": [
+        2811,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2763,
+        12
+      ],
+      "episode_index": 4,
+      "frames": 2763,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "68ff799b47227b19ddd8fc7c9742d1b1ef8db3339548ba259738e995a75a5dd6",
+      "seed": 8104,
+      "split": "train",
+      "state_shape": [
+        2763,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2653,
+        12
+      ],
+      "episode_index": 5,
+      "frames": 2653,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "02f551c8eb82e690840c8e7a1ee1054c0f9c7c657ddcd0d67310f8d4c10b5a48",
+      "seed": 8105,
+      "split": "train",
+      "state_shape": [
+        2653,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2583,
+        12
+      ],
+      "episode_index": 6,
+      "frames": 2583,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "4e91e4273223e5e805408448c48517006df3bdae35a18317d893bee9c658b4af",
+      "seed": 8106,
+      "split": "train",
+      "state_shape": [
+        2583,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2707,
+        12
+      ],
+      "episode_index": 7,
+      "frames": 2707,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "4cd82182752465b650e0927dfcd3088c7a6dc23a56018240304661651a3ec96d",
+      "seed": 8107,
+      "split": "train",
+      "state_shape": [
+        2707,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2762,
+        12
+      ],
+      "episode_index": 8,
+      "frames": 2762,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "e56e40cd10873d7d11370e2f9a20d234ee255dc5c26fc6160b5488f52e7f49fa",
+      "seed": 8108,
+      "split": "train",
+      "state_shape": [
+        2762,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2682,
+        12
+      ],
+      "episode_index": 9,
+      "frames": 2682,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "52a3f1e250266b849df6a32dd7d9bed72c4f782cfa5dacf9dbe13a4ddef6752b",
+      "seed": 8109,
+      "split": "train",
+      "state_shape": [
+        2682,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2625,
+        12
+      ],
+      "episode_index": 10,
+      "frames": 2625,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "8a81326ca308199af988e098d50b9703e39735b7c0239f705b92febbbbb314c2",
+      "seed": 8110,
+      "split": "train",
+      "state_shape": [
+        2625,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2656,
+        12
+      ],
+      "episode_index": 11,
+      "frames": 2656,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "dadf3e3bbba97e15e488ee4727bc9669c268e6a280696fd46d7b8ca25c95d360",
+      "seed": 8111,
+      "split": "train",
+      "state_shape": [
+        2656,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2655,
+        12
+      ],
+      "episode_index": 12,
+      "frames": 2655,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "9ea9516f3a221904e2d6789606a0495ea8f7e07ef51957db7608f66e9a09a148",
+      "seed": 8112,
+      "split": "train",
+      "state_shape": [
+        2655,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2702,
+        12
+      ],
+      "episode_index": 13,
+      "frames": 2702,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "13f2cf07c12b0c8b72aa5de0fcd7bbf67e6b130e5b08e1df4b9b98c82765f8e7",
+      "seed": 8113,
+      "split": "train",
+      "state_shape": [
+        2702,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2787,
+        12
+      ],
+      "episode_index": 14,
+      "frames": 2787,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "6a417913e8c959e8f8b21346e58f7c82872f36fec111017ab01bb748b9263189",
+      "seed": 8114,
+      "split": "train",
+      "state_shape": [
+        2787,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2697,
+        12
+      ],
+      "episode_index": 15,
+      "frames": 2697,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "60834c771a9e73e18e48fab29f81cf77a173f560ec26aafea931f4248fa24c7a",
+      "seed": 8115,
+      "split": "train",
+      "state_shape": [
+        2697,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2703,
+        12
+      ],
+      "episode_index": 16,
+      "frames": 2703,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "0de94d8a8926c4c437243b9d39854f3abf3f3223d14d8ec8a1c901fbdb678925",
+      "seed": 8116,
+      "split": "validation",
+      "state_shape": [
+        2703,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2723,
+        12
+      ],
+      "episode_index": 17,
+      "frames": 2723,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "41e9b4ed981b9bf9608b302d4c43fa6d62d0b93e9e81cc6812ad68113e8d5dd6",
+      "seed": 8117,
+      "split": "validation",
+      "state_shape": [
+        2723,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2679,
+        12
+      ],
+      "episode_index": 18,
+      "frames": 2679,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "ae0b758c15dcb3ad4d1715a25f9348dac7ab3ee979a9576d6e780efeb516a8b5",
+      "seed": 8118,
+      "split": "validation",
+      "state_shape": [
+        2679,
+        12
+      ]
+    },
+    {
+      "action_shape": [
+        2699,
+        12
+      ],
+      "episode_index": 19,
+      "frames": 2699,
+      "image_shape": [
+        480,
+        640,
+        3
+      ],
+      "max_action_error_vs_trace": 0.0,
+      "max_state_error_vs_trace": 0.0,
+      "scene_sha256": "e4fe61f63916c3dabd3a4c708fb3c7864150f3455a297ff3d0a3c7dde4b75d5a",
+      "seed": 8119,
+      "split": "validation",
+      "state_shape": [
+        2699,
+        12
+      ]
+    }
+  ],
+  "expert_sha256": "200dcd12513a31af15a1dc915526fd79b319924c2cb3ead2ae85f4e0e6e7421e",
+  "norm_stats_canonical_sha256": "5fd6e6d804b1299f8115846aff543589bff869c8c8a04c2868b625df70cdbae5",
+  "norm_stats_sha256": "0b8160be0f509aa32a2d1a58f3c92856f8c487505996432efcedfd533fe9aa94",
+  "phase": "E1->E2",
+  "protocol_sha256": "ddf9879fb556e16c243d6fb08eaef604a461dca5198ff43d3e43d32b7203d3ae",
+  "schema_version": 1,
+  "source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+  "split": {
+    "rule": "successful episodes in collection order: first 16 train, last 4 validation",
+    "train": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "train_seeds": [
+      8100,
+      8101,
+      8102,
+      8103,
+      8104,
+      8105,
+      8106,
+      8107,
+      8108,
+      8109,
+      8110,
+      8111,
+      8112,
+      8113,
+      8114,
+      8115
+    ],
+    "validation": [
+      16,
+      17,
+      18,
+      19
+    ],
+    "validation_seeds": [
+      8116,
+      8117,
+      8118,
+      8119
+    ]
+  },
+  "train_stats": {
+    "constant_dimensions": {
+      "actions": [],
+      "state": []
+    },
+    "scope": "train split only",
+    "train_episodes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "train_frames": 43337,
+    "validation_episodes": [
+      16,
+      17,
+      18,
+      19
+    ]
+  },
+  "view_bytes": 6068154610,
+  "view_files": 162463,
+  "view_sha256": "fbb8b6edda727a3a5b341865b4e856cd8b5eaced2e0e032b4e1d9b37f26b7dee"
+}

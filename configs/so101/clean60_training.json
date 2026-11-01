@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E4-T",
+  "claim": "next round: 60 clean spread-layout episodes and 25000 state-on JAX LoRA updates; not an executed result",
+  "runtime_binding": {
+    "image": "openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "openpi_source_sha256": "c6c7ffc0c4ed63a24a6c67e239d45157fd297ea712ea35c8a15dec52bf4ec23c",
+    "base_checkpoint_sha256": "10db7f0bd9a2c006d1c35f15ae1941041a76fb7c98b9ecf7e5a46bfe25540f8b",
+    "sentencepiece_asset_sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6"
+  },
+  "resource_policy": {
+    "utilisation_is_not_an_admission_gate": true,
+    "measured_per_card_demand_mib": 17069,
+    "memory_margin_mib": 100,
+    "required_free_memory_mib": 17169,
+    "measured_jax_memory_fraction": 0.689586,
+    "current_admission": "passes the 100 MiB margin at the final 2026-10-28 resource check; recheck immediately before launch",
+    "current_observed_free_margin_mib": 382,
+    "jax_preallocate": false,
+    "memory_fraction": "computed per device from measured whole-process demand, measured JAX pool peak, 512 MiB free margin, and the tightest selected card",
+    "containers": "exact-name registry only; no broad prefix/label cleanup",
+    "training_and_evaluation_may_use_different_gpus": true,
+    "parallel_evaluation_reads_only_completed_checkpoints": true
+  },
+  "initialisation": {
+    "base_checkpoint": "pi05_libero",
+    "loader": "OpenPI CheckpointWeightLoader",
+    "resume_previous_so101_checkpoint": false,
+    "state_mode": "on",
+    "architecture": "pi05",
+    "internal_action_dim": 32,
+    "state_action_dim": 12,
+    "action_horizon": 10,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m",
+    "freeze_rule": "Pinned OpenPI Pi0Config.get_freeze_filter(): freeze .*llm.* except .*llm.*_1.* (action expert) and except .*lora.*; SigLIP image tower and action/time projections stay trainable",
+    "trainable_groups": {
+      "language_backbone": "Gemma 2B original weights frozen; attn and ffn LoRA adapters trainable",
+      "action_expert": "Gemma 300M non-LoRA variant, full kernel and bias trainable",
+      "vision_encoder": "SigLIP/PaliGemma img tower fully trainable",
+      "projections": "action_in_proj, action_out_proj, time_mlp_in, time_mlp_out full kernel and bias trainable"
+    },
+    "lora": {
+      "source": "openpi/models/gemma.py get_config('gemma_2b_lora')",
+      "attn": {
+        "rank": 16,
+        "alpha": 16.0
+      },
+      "ffn": {
+        "rank": 16,
+        "alpha": 16.0
+      },
+      "verified_in": "runs/so101/clean60_runtime parameter-tree probe"
+    }
+  },
+  "devices": {
+    "policy": "probe 2-card and 4-card candidates with the real global batch; select from measured peak memory and throughput",
+    "selected": {
+      "gpu_count": 4,
+      "fsdp_devices": 4,
+      "data_parallel_replicas": 1,
+      "global_batch_size": 8,
+      "per_device_batch_shard": 2,
+      "global_batch_interpretation": "8 unique samples total, not 32",
+      "measured_s_per_update": 4.025230646133423,
+      "measured_per_card_demand_mib": 17069,
+      "memory_margin_mib": 100
+    },
+    "capacity_probe": {"tested_gpu_count": 4, "fsdp_devices": 4, "data_parallel_replicas": 1,
+                 "measured_s_per_update": 4.025230646133423, "projected_25k_wall_s": 100630.76615333557,
+                 "measured_per_card_demand_mib": 17069, "observed_free_margin_mib": 382,
+                 "measured_jax_memory_fraction": 0.689586,
+                 "demand_probe": "clean60 prepare-only attempt 31 (FSDP4, global batch 8, 3 optimizer updates, no checkpoint)",
+                 "evidence": "private prepare-only probe report; promoted into ready evidence after v3 rebinding",
+                 "selection_status": "FSDP4 selected after the user changed the required free-memory margin to 100 MiB; full checkpoint save/restore probe passed"},
+    "rejected_alternative": "4 cards with fsdp_devices=2 measured 3.8 s/update, slower than fsdp_devices=4; 2 physical cards with fsdp_devices=2 exhausted memory in forward_backward (needed a further 4.25 GiB on top of a 16.4 GiB resident pool)",
+    "fsdp_devices": "set at launch from --fsdp-devices; equals the selected device count unless a probe shows a smaller replica is faster",
+    "batch_semantics": "TrainConfig.batch_size=8 is global; the measured loader assigns 2 unique samples to each of 4 devices (8 total), not 32 and not a replicated batch of 8 per device",
+    "jax_preallocate": "per selected device, from that device's measured free memory minus the registered margin; the tightest device binds the fraction",
+    "other_tenant_memory_is_not_an_admission_gate": true,
+    "other_jobs_are_never_stopped": true,
+    "historical_estimate_invalid": "the 52.15M trainable parameters and 15-20 GiB from the LoRA-only E4-T run do not apply to this scope; measured footprint is ~16.3 GiB per card of the four"
+  },
+  "data": {
+    "view_episodes": 60,
+    "train": 48,
+    "validation": 12,
+    "clean": 60,
+    "recovery": 0,
+    "statistics": "48 train episodes only; recompute for the new dataset",
+    "sample_weighting": "clean episodes equal; eligible windows equal within each episode",
+    "perturbations_enabled": false
+  },
+  "sampling_plan": {
+    "mode": "balanced_categories",
+    "group_weights": {
+      "clean": 1.0
+    },
+    "episode_equal_within_group": true
+  },
+  "optimisation": {
+    "seed": 42,
+    "primary_batch_size": 8,
+    "data_loader_workers": 8,
+    "allow_batch_fallback": false,
+    "allow_update_override": false,
+    "memory_probes_maximum": 3,
+    "planned_updates": 25000, "measured_s_per_update": 4.025230646133423,
+    "training_wall_limit_s": 108000,
+    "warmup_steps": 500,
+    "peak_lr": 5e-05,
+    "decay_steps": 25000,
+    "decay_lr": 5e-06,
+    "optimizer": "AdamW",
+    "gradient_clip_norm": 1.0,
+    "dtype": "bfloat16"
+  },
+  "checkpointing": {
+    "reference_step0": true,
+    "save_interval": 5000,
+    "step_axis": "TrainState.step",
+    "orbax_directory_offset": "directory name is loop index; actual TrainState.step is recorded by read_train_state.py",
+    "keep_period": 1,
+    "eval_checkpoints": [
+      0,
+      5000,
+      10000,
+      15000,
+      20000,
+      25000
+    ]
+  },
+  "validation_gate": {
+    "pre_registered_before_training": true,
+    "clean_active_joint_macro_mae_deg": 2.0,
+    "recovery_post_event_active_joint_macro_mae_deg": 2.0,
+    "clean_active_joint_p95_deg": 5.0,
+    "recovery_post_event_active_joint_p95_deg": 5.0,
+    "gripper_mae_pct": 3.0,
+    "key_event_timing_tolerance_control_frames": 3,
+    "key_event_timing_tolerance_ms": 60.0,
+    "activity_definition": "ground-truth action max absolute per-frame change >= 0.02 deg or gripper change >= 0.05 percentage points",
+    "activity_joint_deg_per_frame": 0.02,
+    "activity_gripper_pct_per_frame": 0.05,
+    "activity_threshold_provenance": "floor must be re-derived from the 48 clean60 train episodes before the gate is applied; the E4-T 40-episode calibration in experiments/so101/e4t-activity-calibration.json is historical and is not reused as a clean60 result",
+    "gripper_open_threshold_percent": 25.0,
+    "gripper_closed_threshold_percent": 10.0,
+    "must_beat_initialization": true,
+    "must_beat_hold_baseline": true,
+    "must_beat_train_mean_baseline": true,
+    "static_only_success_is_insufficient": true,
+    "fk_tcp_error_mib": "not reported: the pinned OpenPI model has no SO101 FK interface and this round performs no physics rollout",
+    "applicability": "clean-only dataset; historical recovery metrics are not applicable; no closed-loop entry is authorized by this training run"
+  },
+  "privacy": {
+    "no_real_host_or_private_path": true,
+    "raw_commands_and_logs_private": true,
+    "public_artifacts_sanitised": true
+  },
+  "run": {
+    "directory": "runs/so101/clean60_25k",
+    "directory_policy": "launcher creates a unique child directory named by run-id",
+    "exp_name": "clean60_25k_state_on_b8",
+    "collection_protocol": "configs/so101/clean60_protocol.json",
+    "require_action_norm_audit": true,
+    "require_explicit_clean_contract": true,
+    "require_ready_manifest": true
+  }
+}

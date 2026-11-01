@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "protocol_id": "libero-pi05-goal8-s2-v5-validation",
+  "experiment_prefix": "libero-pi05-",
+  "policy_config": "pi05_libero",
+  "suite": "libero_goal",
+  "task_id": 8,
+  "dataset_task_index": 10,
+  "task": "put the bowl on the plate",
+  "base": {
+    "name": "pi05_base",
+    "tree_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd"
+  },
+  "data": {
+    "view_sha256": "a68a8c87ce541cfbf7833f8a9bedd33a292b97d2a9b45ce44f89bb111c7ba6b5",
+    "norm_stats_sha256": "dba8704a80c31af5b5aa9818741a1074d314a7e7607659117229033133ccc2cc",
+    "train_episodes": 39,
+    "validation_episodes": 10,
+    "train_frames": 3668,
+    "validation_frames": 895,
+    "fps": 10,
+    "state_dim": 8,
+    "action_dim": 7,
+    "internal_action_dim": 32,
+    "action_horizon": 25,
+    "action_semantics": "delta_end_effector",
+    "cameras": [
+      "image",
+      "wrist_image"
+    ],
+    "validation_in_norm_stats": false,
+    "scene_family_atomic": true,
+    "scene_center_tolerance_px": 2.0
+  },
+  "runtime": {
+    "image_digest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "openpi_src": {
+      "files": 56,
+      "bytes": 497539,
+      "sha256": "6bb8d9f5babb8ab3b655a5a320ea75bb7380851418d8e0cb22f4da610343d7ad"
+    },
+    "openpi_scripts": {
+      "files": 10,
+      "bytes": 50118,
+      "sha256": "5637d3f1407d072c7d201487406821f868670941a6e3a9f9e0536a3a9b4e20fd"
+    },
+    "libero_source": {
+      "files": 1116,
+      "bytes": 443644276,
+      "sha256": "d874a4c9729fad981dc7fc3dd89e6d705d4f437870204e721eac77b6ef5f807a"
+    }
+  },
+  "model": {
+    "pi05": true,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m",
+    "discrete_state_input": false,
+    "dtype": "bfloat16",
+    "scope": "s2_language_lora_action_full_vision_frozen_projection_full",
+    "freeze_language_non_lora": true,
+    "freeze_vision_encoder": true,
+    "train_language_attention_lora": true,
+    "train_language_mlp_lora": true,
+    "train_action_expert_full": true,
+    "train_projection_full": true
+  },
+  "training": {
+    "seed": 42,
+    "global_batch_size": 8,
+    "optimizer_updates": 25000,
+    "optimizer": "AdamW",
+    "adamw_b1": 0.9,
+    "adamw_b2": 0.95,
+    "adamw_eps": 1e-08,
+    "adamw_weight_decay": 1e-10,
+    "gradient_clip_norm": 1.0,
+    "warmup_steps": 500,
+    "peak_lr": 5e-05,
+    "cosine_decay_steps": 25000,
+    "final_lr": 5e-06,
+    "ema_decay": 0.999,
+    "fsdp_devices": [
+      2,
+      4
+    ],
+    "data_loader_workers": 8
+  },
+  "validation": {
+    "split": "validation",
+    "expected_samples": 895,
+    "norm_stats_source": "train_only",
+    "train_argument": false,
+    "loss": "flow_matching_mse",
+    "seed": 42,
+    "sample_order": "episode_index_then_frame_index",
+    "sample_weighting": "uniform_per_valid_sample",
+    "gradient_updates": 0,
+    "evaluate_after_checkpoint": true
+  },
+  "checkpoint": {
+    "save_steps": [
+      500,
+      1000,
+      1500,
+      2000,
+      3000,
+      6000,
+      9000,
+      12000,
+      15000,
+      18000,
+      21000,
+      24000,
+      25000
+    ],
+    "full_train_state": true,
+    "retain_all_saved_steps": true,
+    "orbax_directory_is_not_train_state_step": true
+  },
+  "resource": {
+    "minimum_memory_margin_mib": 10,
+    "jax_preallocate": false,
+    "utilisation_is_not_admission_gate": true
+  },
+  "evaluation": {
+    "suite": "libero_goal",
+    "task_id": 8,
+    "protocol": "configs/libero/protocol.json",
+    "status": "pending_after_training_authorization"
+  }
+}

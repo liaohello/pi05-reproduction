@@ -1,0 +1,102 @@
+{
+  "checkpoint_norm_stats_sha256": "5fd6e6d804b1299f8115846aff543589bff869c8c8a04c2868b625df70cdbae5",
+  "claim": "small-sample engineering diagnostic; not a benchmark success rate",
+  "created": "2026-10-25T15:55:03+08:00",
+  "failure_categories": {
+    "unexpected_contact": 20
+  },
+  "invalid_infrastructure": 0,
+  "manifest_sha256": "b7d7daaa95532b1691141238bf270b0df6f859010c753e48ea5b3b97f1a20e38",
+  "phase": "E3",
+  "scene_count": 20,
+  "scene_hashes": [
+    {
+      "seed": 9100,
+      "sha256": "37fc7b2340607a38ecba390aded59489b1e50e14df8507ef89b3d069535daa26"
+    },
+    {
+      "seed": 9101,
+      "sha256": "4fb551ee32965da8e52d343d4ec4122cb5766c5706e48a6fdf0f3f089d1ff61c"
+    },
+    {
+      "seed": 9102,
+      "sha256": "df1e25fd02903f18083decaba5e80f17a5cc2e9d846a017403c7cab9fc4945f9"
+    },
+    {
+      "seed": 9103,
+      "sha256": "526347269a29dec979ef4faa56cc816e836d416d5ba05e19ab14f1e2883b3ad6"
+    },
+    {
+      "seed": 9104,
+      "sha256": "1ac355c3e8287c34bf19fa268d118cfc1a5e63a6e5267448201423d4d02dc4c9"
+    },
+    {
+      "seed": 9105,
+      "sha256": "4a5ef2fcd3d98637f0635483d5493753b2b6207b830e4d9a222a7cfac413b4ee"
+    },
+    {
+      "seed": 9106,
+      "sha256": "2ef1a0d058b0df3d3c697e9aa7fbeadf0d1b231272e9e0646ae1f376f03cf2fa"
+    },
+    {
+      "seed": 9107,
+      "sha256": "a77117dfef089a3dcbf1b3669f239bcec79f0b833dfadd56394ec36b1a72c37f"
+    },
+    {
+      "seed": 9108,
+      "sha256": "b7a87d56fe6927430a1d41e3bf574b56672b3adccc723a3f6ad5352d90affbf4"
+    },
+    {
+      "seed": 9109,
+      "sha256": "079c720077a5c96e218b58432cc166ab24d911ea4ccbee99a64de7b923a94d96"
+    },
+    {
+      "seed": 9110,
+      "sha256": "37245298b93aebea89ab8280bd5a21431e68acd39adb1080eb7cfaf77ee92167"
+    },
+    {
+      "seed": 9111,
+      "sha256": "f86c5e7b7cbbf2db75e06d69bee8d7e34c2b123621c5eaccef8d3c5349c6e6d9"
+    },
+    {
+      "seed": 9112,
+      "sha256": "0d3f84f9617829d5cf0b918c6414475df81f56198c193b5712fca538554e6270"
+    },
+    {
+      "seed": 9113,
+      "sha256": "0e3eab6ce302ee534d79c07e0ba890efbb07e6059775b0fab352ce65d6701825"
+    },
+    {
+      "seed": 9114,
+      "sha256": "39e77f5542aa565f1ba597356b1caf759fb9f790540b807929d739e5049288a7"
+    },
+    {
+      "seed": 9115,
+      "sha256": "0502d7a01e1b9ff39a0ebf5c3363a8efd0153f3fc6a087b0d71c71da54092dc2"
+    },
+    {
+      "seed": 9116,
+      "sha256": "2e08ddc96fd0a871e41a64d9d91aeb013d72d773b82d9d09992571eb5ddb5eac"
+    },
+    {
+      "seed": 9117,
+      "sha256": "cfbf30a0f0d850d6b04ca4c2065e0823c181c3dcf286392d9a1b31d1b750c8af"
+    },
+    {
+      "seed": 9118,
+      "sha256": "3063b06ae9a4066542a4aa200f6d0987701228fbe907c2f9d890fc5d3c520b03"
+    },
+    {
+      "seed": 9119,
+      "sha256": "628df5139004dc72ae4419a69e54e95d6e8f4b82b9908f3c3732305701ae43d9"
+    }
+  ],
+  "schema_version": 1,
+  "success_rate": 0.0,
+  "successes": 0,
+  "valid_episodes": 20,
+  "wilson_95": [
+    0.0,
+    0.16113
+  ]
+}

@@ -1,0 +1,590 @@
+{
+  "schema_version": 1,
+  "phase": "E3.1",
+  "passed": true,
+  "checks": [
+    {
+      "name": "contract_ten_physics_substeps",
+      "passed": true,
+      "detail": "contract states 500 Hz / 50 Hz = ten substeps; contact stops may be partial"
+    },
+    {
+      "name": "eval_checkpoint_step_binding",
+      "passed": true,
+      "detail": "E3 evaluated checkpoint 99 / TrainState.step 100, not 101"
+    },
+    {
+      "name": "oracle_present",
+      "passed": true,
+      "detail": "oracle report"
+    },
+    {
+      "name": "oracle_comparable",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "oracle_passed",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "oracle_initial_state_exact",
+      "passed": true,
+      "detail": "restored state/file/frame0 exact"
+    },
+    {
+      "name": "oracle_action_prefix_exact",
+      "passed": true,
+      "detail": "recorded applied actions match through the compared prefix"
+    },
+    {
+      "name": "oracle_no_extra_clipping",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "oracle_success_four_objects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "oracle_substeps_ten",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "state_check_present",
+      "passed": true,
+      "detail": "fixed-noise state check"
+    },
+    {
+      "name": "state_all_checks",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "state_off_negative_control",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "state_on_tokens_live",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "state_on_fixed_noise_output_live",
+      "passed": true,
+      "detail": "fixed noise, same images/task; only state changed"
+    },
+    {
+      "name": "initial_checkpoint_step0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "branch_steps_actual",
+      "passed": true,
+      "detail": "Orbax directory 999 = TrainState.step 1000"
+    },
+    {
+      "name": "common_initial_params",
+      "passed": true,
+      "detail": "the two state modes initialize to the same parameter tree"
+    },
+    {
+      "name": "branch_params_distinct",
+      "passed": true,
+      "detail": "state-off and state-on trained different final params"
+    },
+    {
+      "name": "training_off_saved_state_mode",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_model_flag",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_single_episode",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_budget",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_exit",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_wall_under_60min",
+      "passed": true,
+      "detail": "450.14187264442444 s"
+    },
+    {
+      "name": "training_off_1000_updates",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_finite_loss",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_off_stats_and_view",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_saved_state_mode",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_model_flag",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_single_episode",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_budget",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_exit",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_wall_under_60min",
+      "passed": true,
+      "detail": "456.84860014915466 s"
+    },
+    {
+      "name": "training_on_1000_updates",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_finite_loss",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "training_on_stats_and_view",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_off_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_off_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_off_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_off_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_off_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_on_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_on_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_on_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_on_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_initial_on_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_250_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_250_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_250_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_250_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_250_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_500_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_500_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_500_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_500_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_500_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_750_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_750_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_750_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_750_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_750_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_999_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_999_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_999_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_999_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_999_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_250_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_250_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_250_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_250_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_250_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_500_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_500_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_500_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_500_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_500_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_750_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_750_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_750_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_750_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_750_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_999_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_999_32_windows",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_999_model_loss_sanity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_999_finite",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_999_fixed_seeds",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_off_improves_true12",
+      "passed": true,
+      "detail": "same 32 windows, flow rng and noise"
+    },
+    {
+      "name": "offline_on_improves_true12",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_on_improves_action_mae",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "offline_padding_target_reported",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_server_binding",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_checkpoint_step",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_training_scene",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_trace",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_off_action_errors",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_server_binding",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_checkpoint_step",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_training_scene",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_trace",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_on_action_errors",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "rollout_guard_used",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "original_e2_preserved",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "original_e3_preserved",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "existing_e3_contact_manifest",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "existing_e3_contact_categories",
+      "passed": true,
+      "detail": "same E3 manifest; gripper/environment contacts"
+    },
+    {
+      "name": "existing_e3_contact_partial_frames",
+      "passed": true,
+      "detail": "contact stops can end a control frame before ten substeps"
+    },
+    {
+      "name": "e31_ledger_scope",
+      "passed": true,
+      "detail": "8 SO101 E3 records"
+    },
+    {
+      "name": "libero_d5_untouched",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "libero_d4_untouched",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "e4_entry_gate": false,
+  "e4_reasons": {
+    "oracle_passed": true,
+    "state_checks_passed": true,
+    "fixed_true12_improved": true,
+    "training_scene_at_least_one_object": false,
+    "on_sorted_count": 0,
+    "off_sorted_count": 0,
+    "on_success": false,
+    "off_success": false
+  },
+  "claim": "E3.1 debug gate; not E4 completion and not a benchmark",
+  "evidence": {
+    "oracle": "experiments/so101/e31-oracle.json",
+    "state": "experiments/so101/e31-state.json",
+    "offline": "experiments/so101/e31-offline.json",
+    "paired": "experiments/so101/e31-paired.json",
+    "report": "reports/so101-e31-diagnostics.md"
+  },
+  "decision": {
+    "enter_e4": false,
+    "reason": "All integrity and learnability prechecks passed, but neither paired branch reached or stably placed an object in the training scene (off 0, on 0). The E4 entry condition requires at least one stable placement; the branch pauses and reports the unresolved closed-loop gap."
+  }
+}

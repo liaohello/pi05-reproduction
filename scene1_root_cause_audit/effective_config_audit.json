@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "subject": "scene1-pi05base-val50-20261029T184107Z-92c99192",
+  "method": "static comparison of the two config snapshots written by scripts/so101/train_so101.py:478-529; no running process was inspected (see process_restart_audit.md)",
+  "sources": {
+    "initial": {
+      "path": "runs/so101/scene1-pi05base-val50-20261029T184107Z-92c99192/formal/config_initial.json",
+      "created": "2026-10-29T20:55:53+0000",
+      "mode": "initial",
+      "run_id": "scene1-pi05base-val50-20261029T184107Z-92c99192-formal"
+    },
+    "resume": {
+      "path": "runs/so101/scene1-pi05base-val50-20261029T184107Z-92c99192/formal/config_resume.json",
+      "created": "2026-10-30T00:24:48+0000",
+      "mode": "resume",
+      "run_id": "scene1-pi05base-val50-20261029T184107Z-92c99192-resume-2000b"
+    },
+    "registered_config_sha256": "2868d0fb0e509ade8762c28402d8c33afa1af42a184bf65575b26416d9408951",
+    "registered_hash_equal_in_both_snapshots": true
+  },
+
+  "effective_hyperparameters": {
+    "model": {
+      "name": "pi05_so101_e2",
+      "pi05": true,
+      "action_dim": 32,
+      "action_horizon": 10,
+      "max_token_len": 200,
+      "dtype": "bfloat16",
+      "paligemma_variant": "gemma_2b_lora",
+      "action_expert_variant": "gemma_300m",
+      "discrete_state_input": true,
+      "freeze_vision_encoder": true,
+      "state_action_dim": 12
+    },
+    "optimizer": {
+      "name": "AdamW",
+      "b1": 0.9,
+      "b2": 0.95,
+      "eps": 1e-08,
+      "weight_decay": 1e-10,
+      "clip_gradient_norm": 1.0
+    },
+    "lr_schedule": {
+      "warmup_steps": 1000,
+      "peak_lr": 5e-05,
+      "decay_steps": 25000,
+      "decay_lr": 5e-06
+    },
+    "ema_decay": 0.999,
+    "batch_size": 8,
+    "seed": 42,
+    "num_train_steps": 25000,
+    "save_interval": 1,
+    "keep_period": 1,
+    "log_interval": 1,
+    "resume": {"initial": false, "resume": true},
+    "overwrite": {"initial": true, "resume": false},
+    "runtime": {
+      "backend": "gpu",
+      "device_count": 4,
+      "device_kinds": ["NVIDIA GeForce RTX 4090"],
+      "fsdp_devices": 4,
+      "mesh_axis_names": ["batch", "fsdp"],
+      "mesh_shape": {"batch": 1, "fsdp": 4},
+      "data_parallel_replicas": 1,
+      "batch_per_device_shard": 2
+    }
+  },
+
+  "drift_between_initial_and_resume": {
+    "fields_compared": [
+      "model", "optimizer", "lr_schedule", "ema_decay", "batch_size", "seed",
+      "num_train_steps", "save_interval", "keep_period", "model_scope", "state_mode"
+    ],
+    "differences_found": [],
+    "note": "The only intended differences are mode/run_id/overwrite/resume, which is correct: overwrite=true + resume=false appears only on the initial snapshot (train_so101.py:182-233 semantics, not inferred from the filename)."
+  },
+
+  "save_schedule": {
+    "declared_save_interval": 1,
+    "declared_keep_period": 1,
+    "declared_checkpoint_steps": [500, 1000, 1500, 2000, 3000, 6000, 9000, 12000, 15000, 18000, 21000, 24000, 25000],
+    "observed_retained_steps": [500, 1000, 1500, 2000],
+    "finding": "save_interval=1 is NOT the governing schedule. If it were, and keep_period=1 keeps every periodic checkpoint, the directory would hold every step 1..~2050. It holds exactly the milestone subset. The operative gate is checkpoint_steps, enforced by the Scene1 schedule contract in scene1_validation.py:331-340 (checkpoint_steps must equal EXPECTED_CHECKPOINT_STEPS exactly or training refuses to start).",
+    "label": "VERIFIED",
+    "caveat": "The loop that applies checkpoint_steps lives in the pinned upstream /opt/openpi/scripts/train.py, which is NOT archived in this repository (train_so101.py:31-42 loads it from disk). The gating behaviour is proven by the artifact set, not by reading that file."
+  },
+
+  "validation_binding": {
+    "probe": {"every_updates": 50, "samples": 256, "metric": "val_loss_probe"},
+    "full": {"samples": 8300, "metric": "val_loss_full", "batch_size": 16, "seed": 42},
+    "weights_source_declared": "TrainState.params",
+    "weights_source_enforced_at": "scripts/so101/scene1_validation.py:166  (nnx.merge(state.model_def, state.params))",
+    "fixed_noise_and_time": true,
+    "observed_loss_curve": {
+      "step_500": 0.011135204419520324,
+      "step_1500": 0.009838988804121653,
+      "step_2000": 0.008662019782658969,
+      "units": "mean squared flow-matching velocity error, averaged over 10 horizon steps x 32 action dims, then uniformly over 8300 windows",
+      "source": ["formal/val_loss_full_500.json:33", "formal/val_loss_full_1500.json:35", "formal/val_loss_full_2000.json:36"]
+    },
+    "label": "VERIFIED"
+  },
+
+  "resume_contract_gap": {
+    "finding": "train_so101.py:_training_settings (lines 119-145) pins paligemma_variant, action_expert_variant, freeze_vision_encoder and state_mode against config_initial.json on resume. ema_decay is NOT pinned.",
+    "consequence": "A resume launched with a different --ema-decay (or with the flag omitted, since the default is None = EMA disabled, train_so101.py:199-200) would be accepted silently. Because the checkpoint's params/ item IS the EMA tree (checkpoints.py:145-152) and inference loads params/ (policy_config.py:57), changing ema_decay across a resume silently changes what the deployed policy is, with no error and no hash break.",
+    "observed_value_initial": 0.999,
+    "observed_value_resume": 0.999,
+    "did_it_happen_here": "no evidence of a change; both snapshots agree",
+    "label": "VERIFIED (gap exists) / RULED_OUT (not exercised in this run)"
+  },
+
+  "not_verifiable_without_execution": {
+    "actual_argv_of_each_launch": "BLOCKED",
+    "environment_variables_at_launch": "BLOCKED",
+    "whether_the_validation_plan_hash_matches_the_sampled_noise_at_runtime": "BLOCKED (hashes are recorded: validation_full_plan_sha256=698e1bc4..., noise_sha256=98d06b75... in val_loss_full_2000.json, but nothing recomputed them)"
+  }
+}

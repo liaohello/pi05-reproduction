@@ -23,6 +23,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import so101_common as common  # noqa: E402
+import clean60_contracts as clean60  # noqa: E402
 
 CAMERAS = {
     "observation.images.central": "central",
@@ -168,12 +169,126 @@ def _export_one(job: dict) -> dict:
 
 
 def _stats(arrays: np.ndarray) -> dict:
+    # np.mean/np.std on these 129k-row float32 arrays can accumulate millimetre-
+    # scale drift in joint statistics.  Use float64 before reducing.
+    arrays = np.asarray(arrays, dtype=np.float64)
     return {
         "mean": np.mean(arrays, axis=0).astype(float).tolist(),
         "std": np.std(arrays, axis=0).astype(float).tolist(),
         "q01": np.quantile(arrays, 0.01, axis=0).astype(float).tolist(),
         "q99": np.quantile(arrays, 0.99, axis=0).astype(float).tolist(),
     }
+
+
+def public_episode(row: dict, *, require_clean: bool) -> dict:
+    """Project an exported episode without dropping its audition provenance."""
+    fields = (
+        "episode_index", "seed", "scene_sha256", "split", "frames",
+        "state_shape", "action_shape", "image_shape",
+        "max_state_error_vs_trace", "max_action_error_vs_trace",
+    )
+    if require_clean:
+        fields += (
+            "category", "subgroup", "perturbation_frame",
+            "eligible_windows", "excluded_cross_event_windows",
+            "fixed_windows", "event_windows",
+        )
+    missing = [field for field in fields if field not in row]
+    if missing:
+        raise RuntimeError(f"export result lacks metadata fields: {missing}")
+    return {field: row[field] for field in fields}
+
+
+def replay_audit_passed(audit: dict, total: int) -> bool:
+    """Accept the two historical replay-report schemas without weakening counts."""
+    if "replay" in audit:
+        replay = audit.get("replay") or {}
+        return bool(audit.get("passed") is True
+                    and not audit.get("problems")
+                    and replay.get("total") == total
+                    and replay.get("passed") == total)
+    return bool(audit.get("ok") is True
+                and audit.get("replay_total") == total
+                and audit.get("replay_passed") == total)
+
+
+def collection_content_binding(protocol: dict, collection: Path, episodes: list[dict],
+                               summary: dict) -> dict:
+    """Bind the dataset to the protocol by observed content, not by file bytes.
+
+    Used when the protocol file changed after collection (an amendment to a
+    non-governing field).  Every value that actually drove the data is re-derived
+    from the collection artifacts, so a semantic drift cannot pass.
+    """
+    import itertools
+    import math
+
+    expected = protocol["collection"]
+    layout = protocol["scene_layout"]
+    start, stop = [int(v) for v in expected["direct_seed_range"]]
+    minimum = float(layout["minimum_pairwise_distance_m"])
+    checks: dict[str, object] = {}
+    problems: list[str] = []
+
+    seeds = [int(row["seed"]) for row in episodes]
+    if not all(start <= seed <= stop for seed in seeds):
+        problems.append("episode seed outside the registered collection range")
+    checks["seeds_within_registered_range"] = [start, stop]
+    if summary["protocol"] != protocol["protocol_id"]:
+        problems.append("protocol_id differs from the one recorded by the collector")
+    ceiling = summary["maximum_attempts_per_profile"]
+    if isinstance(ceiling, dict):
+        ceiling = int(ceiling["direct"])
+    if int(ceiling) > int(expected["maximum_attempts"]):
+        problems.append("attempts ceiling is below what the collector was allowed to use")
+    if len(episodes) != int(expected["target_successes"]):
+        problems.append("success count differs from the registered target")
+    split_rule = protocol["split"] if "split" in protocol else expected["split"]
+    checks["split_rule"] = split_rule["rule"]
+
+    distances, perturbed, routes, counts = [], [], set(), set()
+    for row in episodes:
+        scene_path = Path(row["attempt"]["diagnostics"]) / "scene.json"
+        scene = common.load_json(scene_path) if scene_path.is_absolute() else \
+            common.load_json(collection / Path(row["attempt"]["diagnostics"]).relative_to(collection))
+        objects = scene["objects"]
+        counts.add(len(objects))
+        routes.update(obj.get("route") for obj in objects)
+        if scene.get("extra", {}).get("perturbation") or scene.get("perturbation"):
+            perturbed.append(row["seed"])
+        points = [tuple(float(v) for v in obj["xy"]) for obj in objects]
+        distances.append(min(math.dist(a, b) for a, b in itertools.combinations(points, 2)))
+    checks["object_counts"] = sorted(counts)
+    checks["routes"] = sorted(routes)
+    checks["perturbation_free"] = not perturbed
+    checks["minimum_pairwise_distance_m"] = {"observed_min": round(min(distances), 4),
+                                            "observed_mean": round(sum(distances) / len(distances), 4),
+                                            "observed_max": round(max(distances), 4),
+                                            "registered": minimum,
+                                            "episodes_below": sum(1 for d in distances if d < minimum)}
+    if counts != {int(layout["object_count"])}:
+        problems.append("object count differs from the protocol")
+    if routes != {"direct"}:
+        problems.append("routes are not all direct")
+    if perturbed:
+        problems.append("perturbation schedule present in supposedly clean scenes")
+    if layout.get("perturbations_enabled") is not False:
+        problems.append("protocol no longer declares perturbations disabled")
+    if checks["minimum_pairwise_distance_m"]["episodes_below"]:
+        problems.append("episodes violate the registered minimum separation")
+    if sorted({row["seed"] for row in episodes}) != sorted(set(seeds)):
+        problems.append("duplicate seeds among accepted episodes")
+    governing = {key: value for key, value in sorted({
+        "protocol_id": protocol["protocol_id"], "seeds": [start, stop],
+        "target": expected["target_successes"], "attempts": expected["maximum_attempts"],
+        "split": expected["split"], "success_predicate": expected["success_predicate"],
+        "failure_policy": expected["failure_policy"], "repo_id": expected["repo_id"],
+        "instruction": protocol["task"]["instruction"], "control": protocol["control"],
+        "state": protocol["observation"]["state"], "action": protocol["action"],
+        "layout": layout}.items())}
+    return {"passed": not problems, "problems": problems, "checks": checks,
+            "governing_sha256": common.sha256_json(governing),
+            "episodes_bound": len(episodes)}
 
 
 def main() -> int:
@@ -183,6 +298,11 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--jpeg-quality", type=int, default=95)
     parser.add_argument("--public-manifest", type=Path, default=None)
+    parser.add_argument("--protocol", type=Path, default=common.REPO_ROOT / "configs/so101/protocol.json")
+    parser.add_argument("--audit", type=Path, default=None,
+                        help="required replay/alignment verification for clean-layout datasets")
+    parser.add_argument("--acknowledge-protocol-amendment", default=None,
+                        help="disclose a post-collection protocol edit that changed no governing field")
     args = parser.parse_args()
 
     collection = args.collection.expanduser().resolve()
@@ -190,9 +310,41 @@ def main() -> int:
     summary = common.load_json(collection / "summary.json")
     split = common.load_json(collection / "split.json")
     e1 = common.load_json(collection / "e1_manifest.json")
+    protocol = common.load_json(args.protocol)
+    expected = protocol["collection"]
+    total = int(expected["target_successes"])
+    expected_train = int(expected["split"]["train"])
+    expected_val = int(expected["split"]["validation"])
+    if total != expected_train + expected_val:
+        raise RuntimeError("protocol split does not sum to its episode target")
     episodes = e1["episodes"]
-    if len(episodes) != 20:
-        raise RuntimeError(f"expected 20 episodes, got {len(episodes)}")
+    if len(episodes) != total:
+        raise RuntimeError(f"expected {total} episodes, got {len(episodes)}")
+    if len({row["scene_sha256"] for row in episodes}) != total:
+        raise RuntimeError("duplicate scene identities in collection")
+    clean_layout = protocol.get("scene_layout")
+    audit = None
+    if clean_layout:
+        if args.audit is None:
+            raise RuntimeError("clean-layout export requires a physical replay audit")
+        audit = common.load_json(args.audit)
+        if not replay_audit_passed(audit, total):
+            raise RuntimeError("clean-layout collection has not passed complete physical replay")
+        binding = collection_content_binding(protocol, collection, episodes, summary)
+        if not binding["passed"]:
+            raise RuntimeError("content binding failed: " + "; ".join(binding["problems"]))
+        if e1["protocol_sha256"] != common.sha256_file(args.protocol):
+            if not args.acknowledge_protocol_amendment:
+                raise RuntimeError(
+                    "collection protocol bytes differ from the selected file; pass "
+                    "--acknowledge-protocol-amendment after verifying the amendment touched only "
+                    "non-governing fields")
+            binding["recorded_protocol_sha256"] = e1["protocol_sha256"]
+            binding["live_protocol_sha256"] = common.sha256_file(args.protocol)
+            binding["amendment"] = args.acknowledge_protocol_amendment
+        else:
+            binding["mode"] = "exact_bytes"
+            binding["protocol_sha256"] = e1["protocol_sha256"]
     if output.exists():
         raise FileExistsError(f"choose a new training-view directory: {output}")
     output.mkdir(parents=True)
@@ -217,13 +369,13 @@ def main() -> int:
                               "state_error": result["max_state_error_vs_trace"],
                               "action_error": result["max_action_error_vs_trace"]}), flush=True)
     results.sort(key=lambda row: row["episode_index"])
-    if [row["episode_index"] for row in results] != list(range(20)):
-        raise RuntimeError("training view does not contain episodes 0..19")
+    if [row["episode_index"] for row in results] != list(range(total)):
+        raise RuntimeError("training view does not contain the complete episode index range")
 
     train_ids = [row["episode_index"] for row in results if row["split"] == "train"]
     val_ids = [row["episode_index"] for row in results if row["split"] == "validation"]
-    if len(train_ids) != 16 or len(val_ids) != 4:
-        raise RuntimeError("split is not 16 train / 4 validation")
+    if len(train_ids) != expected_train or len(val_ids) != expected_val:
+        raise RuntimeError("split differs from the registered protocol")
 
     state_rows, action_rows = [], []
     for episode_id in train_ids:
@@ -263,21 +415,33 @@ def main() -> int:
     }
     common.write_json(output / "train_stats.json", train_stats)
 
+    windows = {}
+    if clean_layout:
+        for row in results:
+            count = max(0, int(row["frames"]) - 9)
+            n = 16 if row["split"] == "train" else 64
+            selected = sorted(set(np.linspace(0, count - 1, min(n, count), dtype=int).tolist())) if count else []
+            row.update(category="clean", subgroup="clean", perturbation_frame=None,
+                       eligible_windows=count, excluded_cross_event_windows=0,
+                       fixed_windows=selected, event_windows=selected)
+            windows[str(row["episode_index"])] = selected
+
     view_sha = common.sha256_tree(output / "episodes")
-    public_episodes = [{
-        "episode_index": row["episode_index"],
-        "seed": row["seed"],
-        "scene_sha256": row["scene_sha256"],
-        "split": row["split"],
-        "frames": row["frames"],
-        "state_shape": row["state_shape"],
-        "action_shape": row["action_shape"],
-        "image_shape": row["image_shape"],
-        "max_state_error_vs_trace": row["max_state_error_vs_trace"],
-        "max_action_error_vs_trace": row["max_action_error_vs_trace"],
-    } for row in results]
+    public_episodes = [public_episode(row, require_clean=bool(clean_layout)) for row in results]
+    clean_profile = None
+    if clean_layout:
+        clean_profile = {
+            "category": "clean",
+            "source": clean60.CLEAN_SOURCE,
+            "perturbation_free": True,
+            "perturbation_frame_field": "present_and_null",
+            "episodes_bound": len(public_episodes),
+            "minimum_pairwise_distance_m": float(
+                clean_layout["minimum_pairwise_distance_m"]),
+            "protocol_binding_sha256": common.sha256_json(binding),
+        }
     meta = {
-        "schema_version": 1,
+        "schema_version": 2 if clean_layout else 1,
         "created": _now(),
         "phase": "E1->E2",
         "source_collection": str(collection),
@@ -294,6 +458,7 @@ def main() -> int:
         "feature_units": ["degree"] * 5 + ["percent"] + ["degree"] * 5 + ["percent"],
         "action_semantics": "absolute joint target applied at that control frame",
         "episodes": public_episodes,
+        "clean_profile": clean_profile,
         "split": split,
         "train_stats": "train_stats.json",
         "norm_stats_sha256": stats_sha,
@@ -305,6 +470,20 @@ def main() -> int:
     }
     common.write_json(output / "meta.json", meta)
     common.write_json(output / "splits.json", split)
+    if clean_layout:
+        common.write_json(output / "protocol_binding.json", binding)
+        common.write_json(output / "e4t_windows.json", windows)
+        common.write_json(output / "e4t_admission.json", {
+            "schema_version": 2, "passed": True,
+            "data_gate": {"passed": True, "train_only_statistics": True,
+                          "clean_source": clean60.CLEAN_SOURCE,
+                          "replay_audit_sha256": common.sha256_file(args.audit),
+                          "reason": "clean collection passed replay, alignment and protocol-bound layout filtering"},
+            "view_sha256": meta["view_sha256"], "dataset_sha256": e1["dataset_info_sha256"],
+            "split_sha256": common.sha256_json(split), "train_stats_sha256": stats_sha,
+            "totals": {"episodes": total, "train": len(train_ids), "validation": len(val_ids),
+                       "clean": total, "recovery": 0},
+        })
     if args.public_manifest:
         common.write_json(args.public_manifest, {
             "schema_version": 1, "phase": "E1->E2", "created": meta["created"],
@@ -314,13 +493,14 @@ def main() -> int:
             "view_sha256": meta["view_sha256"], "view_files": meta["view_files"],
             "view_bytes": meta["view_bytes"], "norm_stats_sha256": stats_sha,
             "norm_stats_canonical_sha256": canonical_sha,
+            "clean_profile": meta["clean_profile"],
             "episodes": public_episodes, "split": split,
             "train_stats": {key: train_stats[key] for key in
                             ("scope", "train_episodes", "validation_episodes",
                              "train_frames", "constant_dimensions")},
             "claim": meta["claim"],
         })
-    print(json.dumps({"phase": "convert", "status": "complete", "episodes": 20,
+    print(json.dumps({"phase": "convert", "status": "complete", "episodes": total,
                       "train": len(train_ids), "validation": len(val_ids),
                       "view_sha256": meta["view_sha256"], "norm_stats_sha256": stats_sha,
                       "norm_stats_canonical_sha256": canonical_sha,

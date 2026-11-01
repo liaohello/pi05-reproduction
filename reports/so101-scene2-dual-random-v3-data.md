@@ -1,0 +1,3 @@
+# Scene2 v3 data quality
+
+8 episodes, 5293 control frames at 50 Hz; dt 0.020 s, no long/short/unexplained gaps. Three failure episodes end with terminal partial frames (1/5/7 substeps); trace time plus substeps equals summary within 1e-14 s. applied == commanded exactly (max 0.0); state/action finite; joint jumps <=5.24 deg; gripper 70 percent at open. Three cameras 640x480/50 fps; decoded frames equal trace frames; central no duplicate; wrist 2-3 frames. Initial states 4/4. Target paths 0.166-0.219 m on successes and placed failures; distractor net 0.0. Predicate and summary agree on all 8. Raw data ignored; the tracked audit is [here](../experiments/so101/scene2-dual-random-v3-audit.json).

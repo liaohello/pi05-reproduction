@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "scene1",
+  "substage": "data",
+  "created": "2026-10-29T21:10:47+08:00",
+  "protocol": "configs/so101/scene1_single_random_protocol.json",
+  "protocol_sha256": "1e69c2fb6c0e546ee8eeb13c31d099e134852657422ab78a05509e5edf6c7890",
+  "certificate_sha256": "f5a858a018cc88eadb81a45466c1bea4e55f358e52bae605272482c8176ecd23",
+  "collection_run": [
+    15100,
+    15999
+  ],
+  "source": {
+    "base_source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+    "patched_source_sha256": "7f5656ff582bc8b8fd7bcc9356c0740f63b23cce7092b6e3a0c0d2155beb7af6",
+    "expert_sha256": "8f00ad914326c4743d901db870a2418e7ede98953be6c1909b18f38982f760ac",
+    "patch_sha256": "47cdf5a00a5a80bafc24a6d86e75b6946e6f78a1349e6b8c672eea13278e5ec7"
+  },
+  "attempts": 78,
+  "layout_rejects": 2,
+  "successes": 64,
+  "target": 64,
+  "successes_by_color": {
+    "red": 32,
+    "blue": 32
+  },
+  "failure_reasons": {
+    "unexpected_contact": 9,
+    "ik_unreachable": 5
+  },
+  "failures": [
+    {
+      "attempt_id": "blue_15107",
+      "seed": 15107,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 601,
+      "yaw_degrees": 64.512112,
+      "block_xy": [
+        0.178406,
+        -0.051808
+      ],
+      "trays": {
+        "red": [
+          0.233855,
+          0.261462
+        ],
+        "blue": [
+          0.24529,
+          -0.250994
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15110",
+      "seed": 15110,
+      "color": "blue",
+      "failure_reason": "ik_unreachable",
+      "failure_stage": "direct_carry_cube_0",
+      "failure_message": "ik_unreachable: direct_carry_cube_0 follow waypoint unreachable",
+      "frames": 476,
+      "yaw_degrees": 1.41792,
+      "block_xy": [
+        0.281118,
+        -0.106246
+      ],
+      "trays": {
+        "red": [
+          0.269529,
+          0.268891
+        ],
+        "blue": [
+          0.260186,
+          -0.270915
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15111",
+      "seed": 15111,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 608,
+      "yaw_degrees": 63.027149,
+      "block_xy": [
+        0.160959,
+        -0.066255
+      ],
+      "trays": {
+        "red": [
+          0.240007,
+          0.26621
+        ],
+        "blue": [
+          0.261047,
+          -0.259864
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15114",
+      "seed": 15114,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 550,
+      "yaw_degrees": 62.931534,
+      "block_xy": [
+        0.213735,
+        -0.117754
+      ],
+      "trays": {
+        "red": [
+          0.237272,
+          0.243883
+        ],
+        "blue": [
+          0.22841,
+          -0.278107
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15117",
+      "seed": 15117,
+      "color": "blue",
+      "failure_reason": "ik_unreachable",
+      "failure_stage": "place_withdraw",
+      "failure_message": "ik_unreachable: place: no collision-free withdraw direction",
+      "frames": 585,
+      "yaw_degrees": 59.978497,
+      "block_xy": [
+        0.240452,
+        -0.067957
+      ],
+      "trays": {
+        "red": [
+          0.215169,
+          0.224258
+        ],
+        "blue": [
+          0.260875,
+          -0.255432
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15122",
+      "seed": 15122,
+      "color": "blue",
+      "failure_reason": "ik_unreachable",
+      "failure_stage": "direct_carry_cube_0",
+      "failure_message": "ik_unreachable: direct_carry_cube_0 follow waypoint unreachable",
+      "frames": 525,
+      "yaw_degrees": 11.581968,
+      "block_xy": [
+        0.253011,
+        -0.05278
+      ],
+      "trays": {
+        "red": [
+          0.21853,
+          0.263009
+        ],
+        "blue": [
+          0.261981,
+          -0.279954
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15128",
+      "seed": 15128,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 568,
+      "yaw_degrees": 63.944493,
+      "block_xy": [
+        0.241553,
+        -0.043661
+      ],
+      "trays": {
+        "red": [
+          0.256816,
+          0.263251
+        ],
+        "blue": [
+          0.222767,
+          -0.221409
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15129",
+      "seed": 15129,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 541,
+      "yaw_degrees": 60.257807,
+      "block_xy": [
+        0.272462,
+        -0.083114
+      ],
+      "trays": {
+        "red": [
+          0.213692,
+          0.277001
+        ],
+        "blue": [
+          0.247344,
+          -0.232094
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15153",
+      "seed": 15153,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 532,
+      "yaw_degrees": 65.422692,
+      "block_xy": [
+        0.18226,
+        -0.090366
+      ],
+      "trays": {
+        "red": [
+          0.252955,
+          0.223366
+        ],
+        "blue": [
+          0.239644,
+          -0.220917
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15154",
+      "seed": 15154,
+      "color": "blue",
+      "failure_reason": "ik_unreachable",
+      "failure_stage": "direct_carry_cube_0",
+      "failure_message": "ik_unreachable: direct_carry_cube_0 follow waypoint unreachable",
+      "frames": 423,
+      "yaw_degrees": 1.413354,
+      "block_xy": [
+        0.270445,
+        -0.158306
+      ],
+      "trays": {
+        "red": [
+          0.247207,
+          0.255685
+        ],
+        "blue": [
+          0.263182,
+          -0.276286
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15165",
+      "seed": 15165,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 584,
+      "yaw_degrees": 68.230326,
+      "block_xy": [
+        0.253367,
+        -0.050536
+      ],
+      "trays": {
+        "red": [
+          0.257591,
+          0.224648
+        ],
+        "blue": [
+          0.242942,
+          -0.246699
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15170",
+      "seed": 15170,
+      "color": "blue",
+      "failure_reason": "ik_unreachable",
+      "failure_stage": "place_withdraw",
+      "failure_message": "ik_unreachable: place: no collision-free withdraw direction",
+      "frames": 548,
+      "yaw_degrees": 47.540005,
+      "block_xy": [
+        0.213827,
+        -0.119372
+      ],
+      "trays": {
+        "red": [
+          0.222788,
+          0.275518
+        ],
+        "blue": [
+          0.264924,
+          -0.256778
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15175",
+      "seed": 15175,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 596,
+      "yaw_degrees": 69.029831,
+      "block_xy": [
+        0.222555,
+        -0.048704
+      ],
+      "trays": {
+        "red": [
+          0.265324,
+          0.236621
+        ],
+        "blue": [
+          0.252086,
+          -0.256515
+        ]
+      }
+    },
+    {
+      "attempt_id": "blue_15176",
+      "seed": 15176,
+      "color": "blue",
+      "failure_reason": "unexpected_contact",
+      "failure_stage": "place_release",
+      "failure_message": "unexpected_contact: substep guard rejected contact in place_release",
+      "frames": 540,
+      "yaw_degrees": 63.308971,
+      "block_xy": [
+        0.257634,
+        -0.096923
+      ],
+      "trays": {
+        "red": [
+          0.256262,
+          0.266831
+        ],
+        "blue": [
+          0.216054,
+          -0.240485
+        ]
+      }
+    }
+  ],
+  "split": {
+    "train": 52,
+    "validation": 12,
+    "train_red": 26,
+    "train_blue": 26,
+    "validation_red": 6,
+    "validation_blue": 6,
+    "family_crosses": 0
+  },
+  "view": {
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "view_files": 135221,
+    "view_bytes": 4556172670,
+    "norm_stats_sha256": "c44567cdecf7aae63f644d2d64535672adae70ec954742259a7dfb24dd49d63f",
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "train_frames": 36623,
+    "constant_dimensions": {
+      "actions": [],
+      "state": []
+    }
+  },
+  "data_quality": {
+    "frames_total": 45031,
+    "frames_min": 657,
+    "frames_max": 775,
+    "control_tick_s": {
+      "expected": 0.02,
+      "max": 0.02000000000000668,
+      "min": 0.019999999999997797
+    },
+    "substeps_all_full": true,
+    "incomplete_frames": 0,
+    "max_state_error_vs_trace": 0.0,
+    "max_action_error_vs_trace": 0.0,
+    "task_per_episode_matches_scene": true,
+    "video_timestamps_aligned": true,
+    "camera_sync_passed": true,
+    "contact_monitor_errors": 0,
+    "soft_contacts": 0
+  },
+  "claim": "64 successful single-block scripted-expert episodes; not a benchmark success rate",
+  "boundaries": {
+    "perturbations": false,
+    "visual_randomization": false,
+    "policy_actions_executed_in_simulation": false,
+    "real_robot_touched": false,
+    "public_push": false
+  }
+}

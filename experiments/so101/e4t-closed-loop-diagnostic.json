@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "run_id": "20261027T015446-so101-E3-verify-E4-T-T5-closed-loop-diagnostic",
+  "ts": "2026-10-27T01:54:46Z",
+  "scope": "so101",
+  "phase": "E3",
+  "substage": "single_scene_gate_waived_closed_loop_diagnostic",
+  "claim": "One user-authorized, gate-waived MuJoCo diagnostic; not E4-R and not a success-rate estimate.",
+  "user_authorized_gate_waiver": true,
+  "e4r_qualifying_evaluation": false,
+  "success_rate_estimate": false,
+  "open_loop_gate_decision_before": "not_eligible_for_closed_loop",
+  "open_loop_gate_decision_after": "not_eligible_for_closed_loop",
+  "real_follower_started": false,
+  "checkpoint": {
+    "id": "e4t_30k_state_on_b8",
+    "orbax_step_directory": 29999,
+    "train_state_step": 30000,
+    "parameters_sha256": "cf636c6eee7729902b6eda63a23d96894e84e6068ad8dbf9b2377361a9e2004d",
+    "run_config_sha256": "b4ed085e31b11a3a181091a42b589936ababebe83d81a64e2f3432516b6c10ed",
+    "norm_stats_canonical_sha256": "e55ef2d55861fe430fbbabd8cb195f27d1fff296888fa012352e50273eb3b74a",
+    "view_sha256": "66faffa6d7186ab905e4b8402f1fc45faf27d4f308a865984985ee382a08557e"
+  },
+  "scene": {
+    "attempt_id": "clean_new_8350_000",
+    "split": "train",
+    "category": "clean",
+    "episode_index": 20,
+    "seed": 8350,
+    "scene_sha256": "d1015d71ea667c65a00c6dade652e776efab25101376ca06126e975a0398ac70",
+    "trace_vs_view_state_max_abs": 0.0,
+    "trace_vs_view_action_max_abs": 0.0
+  },
+  "first_policy_observation_audit": {
+    "state_passed": true,
+    "state_mae": 0.0,
+    "state_max_abs_error": 0.0,
+    "cameras_passed": true,
+    "camera_mae_pixel": {
+      "observation.images.central": 1.1108040364583334,
+      "observation.images.left_wrist": 0.8577756076388889,
+      "observation.images.right_wrist": 0.9031814236111111
+    },
+    "camera_p95_abs_pixel": {
+      "observation.images.central": 5.0,
+      "observation.images.left_wrist": 3.0,
+      "observation.images.right_wrist": 4.0
+    }
+  },
+  "rollout": {
+    "policy_actions_executed": true,
+    "policy_inference_chunks": 600,
+    "frames": 6000,
+    "executed_substeps": 60000,
+    "sim_time_s": 119.9999999999008,
+    "wall_time_s": 398.72333693504333,
+    "success": false,
+    "sorted_count": 0,
+    "failure_reason": "timeout",
+    "clipped_frames": 0,
+    "clipped_values": 0,
+    "safety_stops": 0,
+    "stop_contacts": []
+  },
+  "frame_zero_low_quality_image": {
+    "format": "JPEG",
+    "width": 960,
+    "height": 240,
+    "jpeg_quality": 38,
+    "sha256": "f1db6e44db6299a6eeb9ab3547f503ba29a26ae9daf368c5ff1d7bb0eb20927a",
+    "tracked": false
+  },
+  "workstream": "E4-T"
+}

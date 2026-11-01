@@ -1,49 +1,13 @@
-# SO101 training code review
+# SO101训练代码导航
 
-The SO101 implementation is available for source review. Its training entry point builds a
-project-specific OpenPI configuration and data loader, then calls the external OpenPI trainer.
-OpenPI and the dual-SO101 simulator remain external dependencies; their source, weights and
-datasets are not included in this repository.
+本仓库实现SO101训练适配、配置、数据导出和评估；优化循环调用外置OpenPI/JAX训练器。运行需外部代码、镜像、checkpoint、tokenizer和数据，均不随仓库分发。
 
-## Start here
+| 用途 | 文件 |
+|---|---|
+| 参数与启动 | [`e4t_training.json`](../configs/so101/e4t_training.json)、[`e4t_launch_training.py`](../scripts/so101/e4t_launch_training.py)、[`train_so101.py`](../scripts/so101/train_so101.py) |
+| 模型/loader | [`openpi_so101.py`](../scripts/so101/openpi_so101.py) |
+| 数据视图 | [`export_e4t_view.py`](../scripts/so101/export_e4t_view.py) |
+| 开环评估/门禁 | [`evaluate_e4t_openloop.py`](../scripts/so101/evaluate_e4t_openloop.py)、[`summarize_e4t_openloop.py`](../scripts/so101/summarize_e4t_openloop.py) |
+| 动作语义 | [`SO101_CONTRACT.md`](../inference/SO101_CONTRACT.md) |
 
-| Responsibility | Source |
-| --- | --- |
-| Registered training parameters | [`configs/so101/e4t_training.json`](../configs/so101/e4t_training.json) |
-| Configuration-driven launch | [`e4t_launch_training.py`](../scripts/so101/e4t_launch_training.py) |
-| Container launch and GPU admission | [`e4t_run_training.py`](../scripts/so101/e4t_run_training.py) |
-| Training entry, admission checks and configuration snapshot | [`train_so101.py`](../scripts/so101/train_so101.py) |
-| Model, LoRA freeze filter, optimizer, schedule and data loader | [`openpi_so101.py`](../scripts/so101/openpi_so101.py) |
-| Dataset export and train-only statistics | [`export_e4t_view.py`](../scripts/so101/export_e4t_view.py) |
-| Open-loop prediction | [`evaluate_e4t_openloop.py`](../scripts/so101/evaluate_e4t_openloop.py) |
-| Checkpoint selection and validation gate | [`summarize_e4t_openloop.py`](../scripts/so101/summarize_e4t_openloop.py) |
-| Exact container ownership | [`e4t_resources.py`](../scripts/so101/e4t_resources.py) |
-| Observation and action contract | [`SO101_CONTRACT.md`](../inference/SO101_CONTRACT.md) |
-
-The data-collection, replay, diagnostic and plotting tools are under `scripts/so101/`.
-SO101 experiment tracking is isolated from the LIBERO phase gates. The shared `scripts/run.sh`
-still exposes the LIBERO deployment and tracking commands; SO101 uses the entries above.
-
-## Host-side checks
-
-These unit tests use synthetic fixtures and require NumPy and Pillow. They do not start training,
-connect to a remote host, apply simulator actions or require JAX, model weights or a GPU.
-
-```bash
-uv venv .venv
-uv pip install --python .venv/bin/python -r requirements-review.txt
-.venv/bin/python -m unittest discover -s tests -v
-bash scripts/security/scan.sh
-```
-
-Running training requires the external OpenPI runtime, a prepared dataset view, checkpoint and
-tokenizer assets. Deployment asset locations are resolved from environment variables or ignored
-local configuration. See [`PROVENANCE.md`](../third_party/PROVENANCE.md) and
-[`THIRD_PARTY_LICENSES.md`](../THIRD_PARTY_LICENSES.md).
-
-## Evidence review boundary
-
-This source-review commit excludes the new experiment ledger entries, evaluation JSON, reports
-and generated figures. Those materials remain local for human review before a separate evidence
-commit. Their absence from this snapshot does not describe the local experiment history.
-This commit does not complete the LIBERO training-reproduction or benchmark gates.
+复跑资产与实验边界见[工程手册](so101-engineering.md)，结果见[报告](../reports/so101-e4t-training.md)。查看测试依赖 `requirements-review.txt`；安全扫描为 `bash scripts/security/scan.sh`。公开证据提交须人工审阅，许可/来源见[清单](../THIRD_PARTY_LICENSES.md)。

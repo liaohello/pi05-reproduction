@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-budget",
+  "created": "2026-10-27T01:05:30+08:00",
+  "round_start": "2026-10-25T10:20:36-07:00",
+  "elapsed_s": 85494,
+  "round_total_reserved_s": 86400,
+  "round_total_remaining_s": 906,
+  "overdue": false,
+  "stages": {
+    "collection_adaptation": {
+      "reserved_s": 28800,
+      "ledger_records": [
+        "E4-T-T-DATA-pilot",
+        "E4-T-T1-batch-probe",
+        "E4-T-T-DATA-pilot-v13-slip",
+        "E4-T-T-DATA-pilot-v14-gate-pass",
+        "E4-T-T-DATA-collection",
+        "E4-T-T-DATA-gate",
+        "E4-T-T0-selfcheck"
+      ],
+      "first_record": "2026-10-25T10:20:36-07:00",
+      "last_record": "2026-10-25T21:46:40-07:00",
+      "ledger_span_s": 41164,
+      "status": "recorded",
+      "used_s": 41164,
+      "verdict": "over reservation by 12364 s"
+    },
+    "training": {
+      "reserved_s": 32400,
+      "ledger_records": [
+        "E4-T-T1-training"
+      ],
+      "first_record": "2026-10-26T08:57:28-07:00",
+      "last_record": "2026-10-26T08:57:28-07:00",
+      "ledger_span_s": null,
+      "status": "measured from run_initial.json",
+      "measured_wall_s": 31853.7,
+      "exit_code": 0,
+      "gpu_admission": {
+        "jax_memory_fraction": 0.8,
+        "memory_free_mib_at_admission": 24076,
+        "memory_margin_mib": 1500,
+        "memory_total_mib": 24564,
+        "memory_used_mib_at_admission": 17,
+        "peak_mib_sampled": 19723,
+        "utilisation_is_not_an_admission_gate": true,
+        "utilisation_percent_at_admission": 0.1
+      },
+      "used_s": 31853.7,
+      "verdict": "within reservation"
+    },
+    "evaluation_plotting": {
+      "reserved_s": 28800,
+      "ledger_records": [
+        "E4-T-T3-openloop-gate",
+        "E4-T-T2-openloop"
+      ],
+      "first_record": "2026-10-26T08:57:49-07:00",
+      "last_record": "2026-10-26T10:04:13-07:00",
+      "ledger_span_s": 3984,
+      "status": "measured from train/validation driver manifests and per-report split/window-set metadata",
+      "driver_attempts_by_split": {
+        "train": 2,
+        "validation": 23
+      },
+      "successful_driver_checkpoints_by_split": {
+        "train": 1,
+        "validation": 6
+      },
+      "frozen_plan_reports_by_split": {
+        "train": 3,
+        "validation": 7
+      },
+      "supplementary_reports_by_window_set": {
+        "frozen_plan_plus_dense_sweep": 1,
+        "event_anchored_supplementary": 7
+      },
+      "first_launch": "2026-10-26T08:04:39+00:00",
+      "last_launch": "2026-10-26T16:05:13+00:00",
+      "report_creation_span_s": null,
+      "launch_span_s": 28834,
+      "registered_evaluation_launches": 22,
+      "first_registered_evaluation_launch": "2026-10-26T05:15:57+00:00",
+      "last_registered_evaluation_finish": "2026-10-26T16:53:57+00:00",
+      "last_report_mtime_utc": "2026-10-26T15:53:09.103583+00:00",
+      "evaluation_wall_upper_bound_s": 41880,
+      "checkpoints_evaluated": 10,
+      "measured_wall_s": 41880,
+      "measured_wall_note": "span from the first driver/resource launch to the latest report timestamp or registered job finish; an upper bound because jobs overlap training and one another",
+      "used_s": 41880,
+      "verdict": "over reservation by 13080 s"
+    }
+  },
+  "training_budget_from_config": {
+    "planned_updates": 30000,
+    "training_wall_limit_s": 32400,
+    "primary_batch_size": 8
+  },
+  "attempt_budgets": {
+    "pilot_maximum_attempts": 36,
+    "main_collection_maximum_attempts": 250
+  },
+  "note": "stage spans are taken from ledger timestamps; the training and evaluation entries add the measured wall clock once those artifacts exist",
+  "claim": "budget accounting only; not a performance result"
+}

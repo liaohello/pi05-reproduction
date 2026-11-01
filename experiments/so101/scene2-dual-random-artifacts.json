@@ -1,0 +1,62 @@
+{
+  "adapter_sha256": "e1f826b355f0abc945d1cf54698376455f776908bdea8afd35b124620eec6c0c",
+  "certificate_sha256": "11511f03839c4ef34568efa9c54644a8a767a4e6cbdc1e218f5d53efa51a39e8",
+  "claim": "four layouts x two instructions = eight condition episodes; the pilot is not validation and not a benchmark success rate",
+  "ignored_artifacts": {
+    "certificate": "ignored external certificate; bytes not redistributed; hash recorded below",
+    "certificate_sha256": "11511f03839c4ef34568efa9c54644a8a767a4e6cbdc1e218f5d53efa51a39e8",
+    "frozen_scenes_file_sha256": "231ee0cd715b94a55bd73d4c922017247d59b930673140f7f0f29bb4eafb44a7",
+    "raw_run_directories": "ignored; traces, three camera MP4s, events, applied actions and initial states are not redistributed"
+  },
+  "ledger": "experiments/ledger.jsonl; four rows appended for layout pilot, baseline, physical pilot and frame audit",
+  "ledger_note": "the shared ledger was appended with v2 rows after this v1 manifest; the v2 artifact manifest records the current ledger hash",
+  "ledger_sha256": "de05edb77a8353e97b6ae2042dc5477abd8e8c79414935758a98009cb6b7e6b8",
+  "ledger_sha256_at_v1_completion": "de05edb77a8353e97b6ae2042dc5477abd8e8c79414935758a98009cb6b7e6b8",
+  "phase": "scene2_artifact_manifest",
+  "profile_sha256": "260e65f6ebc1f3338890e66497a96e1f5335f58ee50e68b92e92689b35008374",
+  "protocol_id": "scene2_dual_random_v1",
+  "protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+  "report_assets": {
+    "reports/assets/so101-scene2-dual-random/layout_00_red_vs_blue.png": "6df4c755c3f352c3ba6abede1fb897dfb171ad3a6c2c0ec606675ff76c6da161",
+    "reports/assets/so101-scene2-dual-random/layout_01_red_vs_blue.png": "6748faafa4d5a50cd5de2700bdc7a4e41c54e9f67b9a634e35724bb23362aa50",
+    "reports/assets/so101-scene2-dual-random/layout_02_red_vs_blue.png": "e06ba42e97ce044577f0a9b04b97364c6c86ae9887feac44fd6f9f731a29cd22",
+    "reports/assets/so101-scene2-dual-random/layout_03_red_vs_blue.png": "28075b4953e13511313e588fbb99ea10a72f57743b9ba70aa6667d5579e94a58"
+  },
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "packages": {
+      "Pillow": "12.3.0",
+      "PyYAML": "6.0.3",
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6"
+    },
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tracked_files": {
+    "configs/so101/scene2_dual_random_profile.yaml": "260e65f6ebc1f3338890e66497a96e1f5335f58ee50e68b92e92689b35008374",
+    "configs/so101/scene2_dual_random_protocol.json": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+    "docs/so101-scene2-dual-random-interface.md": "3143da9434e69e947568853a742ac23a79901661223f59db77e201374cbe7196",
+    "docs/so101-scene2-dual-random.md": "a343b55347de4bcb62f397041dfb9f1f9ec42288799a2640a03b68df4dd2b046",
+    "experiments/so101/scene2-dual-random-audit.json": "d54e9ed836cee49edaa68e44598553765d58089306335e072f070007e157190e",
+    "experiments/so101/scene2-dual-random-baseline.json": "da41b8fafd1a226efc0c6146a6ed476da336002b00e66a3c827120297ed5d8f3",
+    "experiments/so101/scene2-dual-random-layout-pilot.json": "1802d8a5d2f1a9cd49d283016d4f5144e9d2192db8cfafc4c65d899e02fbd0ab",
+    "experiments/so101/scene2-dual-random-pilot-scenes.json": "db51d9e6215ceb347bc7daedd5fa36ecfd5e4a644512ccb67ae8fab9997a9ccc",
+    "experiments/so101/scene2-dual-random-pilot.json": "1acfd7b4c76f77108c3e350fc080258177861a254ec1df148d82e45f919ea6df",
+    "reports/so101-scene2-dual-random-data.md": "8a2a140bed190a515221f2d514bba905642ba54b29e5a836f8fe47b551b8cc52",
+    "reports/so101-scene2-dual-random-engineering.md": "6436c9a6bc33f48f77c6153ba0bc6a373ab22c25566a54cf9f74bdc8ac6d03ad",
+    "reports/so101-scene2-dual-random-scene.md": "d18b71286df68dcb359a38097374510cf04d466330ee9182968ffa9c543ad55a",
+    "scripts/so101/scene2_audit.py": "e7400d84efbaeba344038d89948bd1d1815f051c24fac2ea557bdd9d6f9bfaa5",
+    "scripts/so101/scene2_certify.py": "f9506c0aec0815fc19c82ab9ec9b3d0aead8165b0f9053bbf4ae78839079c846",
+    "scripts/so101/scene2_collect.py": "fa20bbfa61c8642e3861f8a7dc2745a358d50f0469f59d3cdd2b3b27780c4a3c",
+    "scripts/so101/scene2_common.py": "e1f826b355f0abc945d1cf54698376455f776908bdea8afd35b124620eec6c0c",
+    "scripts/so101/scene2_layout_pilot.py": "c7cce3a3a04b4320cdf72daca084d7c8b14000000157715bb52cbe212171a4a9",
+    "scripts/so101/scene2_pregenerate.py": "d1880427c78abe4240939a6df0ef9e26b7efa2c125f663855899bca4832de083",
+    "scripts/so101/scene2_settle_baseline.py": "648a88f0ace76822d3ee97a1d0369a5062ec6bc86181c05d412546a18d6f1036",
+    "tests/test_scene2_contracts.py": "5de045f2047e612ac350606b5592ac2e825c1d0836a6bddf03073ef676540c05"
+  }
+}

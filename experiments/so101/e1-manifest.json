@@ -1,0 +1,353 @@
+{
+  "cameras": [
+    "observation.images.central",
+    "observation.images.left_wrist",
+    "observation.images.right_wrist"
+  ],
+  "claim": "20 successful scripted-expert simulations; not a learned-policy success rate",
+  "collection": {
+    "attempts_used": 20,
+    "direct_seed_range": [
+      8100,
+      8199
+    ],
+    "failure_reasons": {},
+    "failures": 0,
+    "maximum_attempts": 100,
+    "successes": 20,
+    "target_successes": 20
+  },
+  "config_sha256": "5a119565b5bd7f6aeb94d9864e75cdb2c073a27fe154f674416b98f56987b168",
+  "control": {
+    "control_hz": 50,
+    "nominal_realtime_claim": false,
+    "physics_hz": 500,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 120.0
+  },
+  "created": "2026-10-25T14:47:26+08:00",
+  "dataset_info_sha256": "6212cc911b75d3b45d3a1e10fca5cb8f47f2feac5449fa07bc88f96c6cc235fb",
+  "episodes": [
+    {
+      "episode_index": 0,
+      "frames": 2717,
+      "scene_sha256": "abdab53ca13129b47b07302f2a7dcaae71fafe8efc29851c3a64453b852dfec3",
+      "seed": 8100,
+      "source_episode_index": 0,
+      "split": "train"
+    },
+    {
+      "episode_index": 1,
+      "frames": 2767,
+      "scene_sha256": "f576f406e7a7d8ccf1ebb708979efd8922aa97e308b3bdc84ae0e7a9aa975957",
+      "seed": 8101,
+      "source_episode_index": 1,
+      "split": "train"
+    },
+    {
+      "episode_index": 2,
+      "frames": 2770,
+      "scene_sha256": "5de1ee5f1c1ce1bd880f5e59744140b0542ca6deefcc42bc12c3e3b3524dd23c",
+      "seed": 8102,
+      "source_episode_index": 2,
+      "split": "train"
+    },
+    {
+      "episode_index": 3,
+      "frames": 2811,
+      "scene_sha256": "f8e1341afb8a6ece28d9e1013a9166a34f5c7b618ac983f0a19fe875765b961e",
+      "seed": 8103,
+      "source_episode_index": 3,
+      "split": "train"
+    },
+    {
+      "episode_index": 4,
+      "frames": 2763,
+      "scene_sha256": "68ff799b47227b19ddd8fc7c9742d1b1ef8db3339548ba259738e995a75a5dd6",
+      "seed": 8104,
+      "source_episode_index": 4,
+      "split": "train"
+    },
+    {
+      "episode_index": 5,
+      "frames": 2653,
+      "scene_sha256": "02f551c8eb82e690840c8e7a1ee1054c0f9c7c657ddcd0d67310f8d4c10b5a48",
+      "seed": 8105,
+      "source_episode_index": 5,
+      "split": "train"
+    },
+    {
+      "episode_index": 6,
+      "frames": 2583,
+      "scene_sha256": "4e91e4273223e5e805408448c48517006df3bdae35a18317d893bee9c658b4af",
+      "seed": 8106,
+      "source_episode_index": 6,
+      "split": "train"
+    },
+    {
+      "episode_index": 7,
+      "frames": 2707,
+      "scene_sha256": "4cd82182752465b650e0927dfcd3088c7a6dc23a56018240304661651a3ec96d",
+      "seed": 8107,
+      "source_episode_index": 7,
+      "split": "train"
+    },
+    {
+      "episode_index": 8,
+      "frames": 2762,
+      "scene_sha256": "e56e40cd10873d7d11370e2f9a20d234ee255dc5c26fc6160b5488f52e7f49fa",
+      "seed": 8108,
+      "source_episode_index": 8,
+      "split": "train"
+    },
+    {
+      "episode_index": 9,
+      "frames": 2682,
+      "scene_sha256": "52a3f1e250266b849df6a32dd7d9bed72c4f782cfa5dacf9dbe13a4ddef6752b",
+      "seed": 8109,
+      "source_episode_index": 9,
+      "split": "train"
+    },
+    {
+      "episode_index": 10,
+      "frames": 2625,
+      "scene_sha256": "8a81326ca308199af988e098d50b9703e39735b7c0239f705b92febbbbb314c2",
+      "seed": 8110,
+      "source_episode_index": 10,
+      "split": "train"
+    },
+    {
+      "episode_index": 11,
+      "frames": 2656,
+      "scene_sha256": "dadf3e3bbba97e15e488ee4727bc9669c268e6a280696fd46d7b8ca25c95d360",
+      "seed": 8111,
+      "source_episode_index": 11,
+      "split": "train"
+    },
+    {
+      "episode_index": 12,
+      "frames": 2655,
+      "scene_sha256": "9ea9516f3a221904e2d6789606a0495ea8f7e07ef51957db7608f66e9a09a148",
+      "seed": 8112,
+      "source_episode_index": 12,
+      "split": "train"
+    },
+    {
+      "episode_index": 13,
+      "frames": 2702,
+      "scene_sha256": "13f2cf07c12b0c8b72aa5de0fcd7bbf67e6b130e5b08e1df4b9b98c82765f8e7",
+      "seed": 8113,
+      "source_episode_index": 13,
+      "split": "train"
+    },
+    {
+      "episode_index": 14,
+      "frames": 2787,
+      "scene_sha256": "6a417913e8c959e8f8b21346e58f7c82872f36fec111017ab01bb748b9263189",
+      "seed": 8114,
+      "source_episode_index": 14,
+      "split": "train"
+    },
+    {
+      "episode_index": 15,
+      "frames": 2697,
+      "scene_sha256": "60834c771a9e73e18e48fab29f81cf77a173f560ec26aafea931f4248fa24c7a",
+      "seed": 8115,
+      "source_episode_index": 15,
+      "split": "train"
+    },
+    {
+      "episode_index": 16,
+      "frames": 2703,
+      "scene_sha256": "0de94d8a8926c4c437243b9d39854f3abf3f3223d14d8ec8a1c901fbdb678925",
+      "seed": 8116,
+      "source_episode_index": 16,
+      "split": "validation"
+    },
+    {
+      "episode_index": 17,
+      "frames": 2723,
+      "scene_sha256": "41e9b4ed981b9bf9608b302d4c43fa6d62d0b93e9e81cc6812ad68113e8d5dd6",
+      "seed": 8117,
+      "source_episode_index": 17,
+      "split": "validation"
+    },
+    {
+      "episode_index": 18,
+      "frames": 2679,
+      "scene_sha256": "ae0b758c15dcb3ad4d1715a25f9348dac7ab3ee979a9576d6e780efeb516a8b5",
+      "seed": 8118,
+      "source_episode_index": 18,
+      "split": "validation"
+    },
+    {
+      "episode_index": 19,
+      "frames": 2699,
+      "scene_sha256": "e4fe61f63916c3dabd3a4c708fb3c7864150f3455a297ff3d0a3c7dde4b75d5a",
+      "seed": 8119,
+      "source_episode_index": 19,
+      "split": "validation"
+    }
+  ],
+  "evaluation_manifest_sha256": "1b226d7b5a383989bee615142f6382ddde535ea7ab21cc0f1a8b6e4d335c49e4",
+  "evaluation_scenes": [
+    {
+      "seed": 9100,
+      "sha256": "37fc7b2340607a38ecba390aded59489b1e50e14df8507ef89b3d069535daa26",
+      "summary": "direct seed 9100: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9101,
+      "sha256": "4fb551ee32965da8e52d343d4ec4122cb5766c5706e48a6fdf0f3f089d1ff61c",
+      "summary": "direct seed 9101: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9102,
+      "sha256": "df1e25fd02903f18083decaba5e80f17a5cc2e9d846a017403c7cab9fc4945f9",
+      "summary": "direct seed 9102: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9103,
+      "sha256": "526347269a29dec979ef4faa56cc816e836d416d5ba05e19ab14f1e2883b3ad6",
+      "summary": "direct seed 9103: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9104,
+      "sha256": "1ac355c3e8287c34bf19fa268d118cfc1a5e63a6e5267448201423d4d02dc4c9",
+      "summary": "direct seed 9104: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9105,
+      "sha256": "4a5ef2fcd3d98637f0635483d5493753b2b6207b830e4d9a222a7cfac413b4ee",
+      "summary": "direct seed 9105: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9106,
+      "sha256": "2ef1a0d058b0df3d3c697e9aa7fbeadf0d1b231272e9e0646ae1f376f03cf2fa",
+      "summary": "direct seed 9106: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9107,
+      "sha256": "a77117dfef089a3dcbf1b3669f239bcec79f0b833dfadd56394ec36b1a72c37f",
+      "summary": "direct seed 9107: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9108,
+      "sha256": "b7a87d56fe6927430a1d41e3bf574b56672b3adccc723a3f6ad5352d90affbf4",
+      "summary": "direct seed 9108: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9109,
+      "sha256": "079c720077a5c96e218b58432cc166ab24d911ea4ccbee99a64de7b923a94d96",
+      "summary": "direct seed 9109: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9110,
+      "sha256": "37245298b93aebea89ab8280bd5a21431e68acd39adb1080eb7cfaf77ee92167",
+      "summary": "direct seed 9110: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9111,
+      "sha256": "f86c5e7b7cbbf2db75e06d69bee8d7e34c2b123621c5eaccef8d3c5349c6e6d9",
+      "summary": "direct seed 9111: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9112,
+      "sha256": "0d3f84f9617829d5cf0b918c6414475df81f56198c193b5712fca538554e6270",
+      "summary": "direct seed 9112: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9113,
+      "sha256": "0e3eab6ce302ee534d79c07e0ba890efbb07e6059775b0fab352ce65d6701825",
+      "summary": "direct seed 9113: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9114,
+      "sha256": "39e77f5542aa565f1ba597356b1caf759fb9f790540b807929d739e5049288a7",
+      "summary": "direct seed 9114: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9115,
+      "sha256": "0502d7a01e1b9ff39a0ebf5c3363a8efd0153f3fc6a087b0d71c71da54092dc2",
+      "summary": "direct seed 9115: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9116,
+      "sha256": "2e08ddc96fd0a871e41a64d9d91aeb013d72d773b82d9d09992571eb5ddb5eac",
+      "summary": "direct seed 9116: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9117,
+      "sha256": "cfbf30a0f0d850d6b04ca4c2065e0823c181c3dcf286392d9a1b31d1b750c8af",
+      "summary": "direct seed 9117: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9118,
+      "sha256": "3063b06ae9a4066542a4aa200f6d0987701228fbe907c2f9d890fc5d3c520b03",
+      "summary": "direct seed 9118: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    },
+    {
+      "seed": 9119,
+      "sha256": "628df5139004dc72ae4419a69e54e95d6e8f4b82b9908f3c3732305701ae43d9",
+      "summary": "direct seed 9119: cube_0(red) direct left->left, cube_1(blue) direct right->right, cube_2(red) direct left->left, cube_3(blue) direct right->right"
+    }
+  ],
+  "expert_sha256": "200dcd12513a31af15a1dc915526fd79b319924c2cb3ead2ae85f4e0e6e7421e",
+  "phase": "E1",
+  "protocol_sha256": "ddf9879fb556e16c243d6fb08eaef604a461dca5198ff43d3e43d32b7203d3ae",
+  "schema_version": 1,
+  "source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+  "split": {
+    "rule": "successful episodes in collection order: first 16 train, last 4 validation",
+    "train": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "train_seeds": [
+      8100,
+      8101,
+      8102,
+      8103,
+      8104,
+      8105,
+      8106,
+      8107,
+      8108,
+      8109,
+      8110,
+      8111,
+      8112,
+      8113,
+      8114,
+      8115
+    ],
+    "validation": [
+      16,
+      17,
+      18,
+      19
+    ],
+    "validation_seeds": [
+      8116,
+      8117,
+      8118,
+      8119
+    ]
+  },
+  "state_action_dim": 12
+}

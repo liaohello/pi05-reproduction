@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED",
+  "reason": "Requires a Python process and the 45,031-frame training view. The host currently fails fork(2) with EAGAIN (third consecutive session); see scene1_root_cause_audit/README.md section 0.",
+  "not_executed": true,
+  "must_not_be_read_as_a_result": true,
+  "required_command": "python scene1_libero_audit/tools/input_trace.py --train-view <data_view_v3> --episodes 62,13,11,2 --frames 0,200,400 --colour-pair --out scene1_libero_audit/model_input_trace.measured.json",
+  "planned_schema": {
+    "per_sample": {
+      "episode_id": "int",
+      "frame": "int",
+      "colour": "red|blue",
+      "raw_state_12": ["float x12"],
+      "state_after_normalize_12": ["float x12"],
+      "state_after_pad_32": ["float x32 (last 20 must be exactly 0.0)"],
+      "state_discretised_bins": ["int x12, range 0..255; -1 is the defect signature"],
+      "n_dims_below_minus_one": "int",
+      "raw_action_10x12": "float[10][12]",
+      "action_after_pad_10x32": "float[10][32]",
+      "prompt_string": "str",
+      "token_ids": ["int"],
+      "token_ids_decoded": "str",
+      "token_mask_true_len": "int",
+      "truncated": "bool",
+      "image_shape_pre_resize": "[480,640,3]",
+      "image_shape_post_resize": "[224,224,3]",
+      "image_sha256_pre_and_post": "str"
+    },
+    "colour_pair_diff": {
+      "token_positions_that_differ": ["int"],
+      "tokens_that_differ": [["int", "int"]],
+      "state_bins_identical_between_pair": "bool"
+    }
+  },
+  "what_is_already_known_without_running": {
+    "state_dim_at_tokenisation": 12,
+    "state_tensor_padded_to": 32,
+    "padded_state_is_read_by_model": false,
+    "source": "openpi/models/pi0.py:106-137 and 151; openpi/transforms.py:248-266"
+  }
+}

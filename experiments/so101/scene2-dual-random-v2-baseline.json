@@ -1,0 +1,25 @@
+{
+  "adapter_sha256": "c8b5d503ec0a556229810b706dce1f0a8d137a00faae7796c2e392ebcff63b13",
+  "certificate_sha256": "154819d608023a941d7f4b5f6b355829f1c6bf78b8a7a356d18dfb1a454785e2",
+  "claim": "v2 post-settle parked hold; threshold stays 2 mm; no expert execution",
+  "clean_run": {
+    "any_false_grasp": false,
+    "any_robot_contact": false,
+    "hold_s": 2.0,
+    "max_hold_displacement_m": 2e-09,
+    "scenes_measured": 12,
+    "seed_range": [
+      22800,
+      22907
+    ],
+    "threshold_m": 0.002,
+    "threshold_rule": "max(0.002, measured_max + 0.001)"
+  },
+  "phase": "distractor_settle_baseline_v2",
+  "protocol_id": "scene2_dual_random_v2",
+  "protocol_sha256": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d",
+  "v1_threshold_m": 0.002
+}

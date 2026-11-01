@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "identified_at_utc": "2026-10-30T04:28:00Z",
+  "method": "read-only inspection of the run's own config_initial.json / result.json / status.json; no process was signalled, connected to, or inspected on the GPU host",
+  "run_id": "libero-pi05-goal8-s2-base-v1-20261030T035742Z-6c0a9c44",
+  "answers_to_the_task_questions": {
+    "init_weights": "pi05_base",
+    "init_weights_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd",
+    "is_pi05_libero_finetune": false,
+    "from_scratch_or_resume": "from scratch: start_train_state_step = 0, resume_from_probe = false",
+    "official_openpi_config": false,
+    "official_config_note": "uses this repository's protocol configs/libero/s2_training.json (sha 23fcec4b...), not an upstream OpenPI config name",
+    "finetune_scope": {
+      "action_expert": "full",
+      "language": "LoRA rank16 alpha16, non-LoRA frozen",
+      "projections": "full kernel+bias",
+      "vision_encoder": "frozen",
+      "scope_tag": "s2_language_lora_action_full_vision_frozen_projection_full"
+    },
+    "dataset": {
+      "suite": "libero_goal",
+      "task": "put the bowl on the plate",
+      "task_id": 8,
+      "dataset_task_index": 10,
+      "train_episodes": 39,
+      "train_frames": 3668,
+      "validation_episodes": 10,
+      "validation_frames": 895,
+      "view_sha256": "a68a8c87ce541cfbf7833f8a9bedd33a292b97d2a9b45ce44f89bb111c7ba6b5",
+      "validation_in_norm_stats": false
+    },
+    "discrete_state_input": false,
+    "action": {
+      "dim": 7,
+      "semantics": "delta_end_effector",
+      "horizon": 25,
+      "state_dim": 8,
+      "cameras": ["image", "wrist_image"],
+      "fps": 10,
+      "internal_action_dim": 32
+    },
+    "loss": "flow_matching_mse over 32 internal dims (7 real + 25 padding); the 7/25 split is NOT reported by the runner",
+    "norm_stats_sha256": "dba8704a80c31af5b5aa9818741a1074d314a7e7607659117229033133ccc2cc",
+    "ema": {"enabled": true, "decay": 0.999},
+    "validation_and_closed_loop": {
+      "validation": "configured (10 episodes / 895 frames), no validation record yet at 194 updates",
+      "closed_loop": "not run; result.json lists 'Full evaluation after training' as a remaining requirement"
+    }
+  },
+  "runtime": {
+    "status": "RUNNING",
+    "container_id": "174bb4e83e1f7b5f9730b659af966eb5797a1fa0ffdec5937b34e1adcbc924f7",
+    "container_restart_policy": "no",
+    "image_digest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "gpus": [0, 1, 2, 3],
+    "jax_memory_fraction": 0.711855,
+    "required_memory_with_margin_mib": 17090,
+    "source_snapshot": "source_snapshot_v31",
+    "train_script_sha256": "3481c38fefb21629acee455ea8ff0346a34d81a868b8085401fa56ddfaccb026",
+    "openpi_src_sha256": "6bb8d9f5babb8ab3b655a5a320ea75bb7380851418d8e0cb22f4da610343d7ad",
+    "openpi_scripts_sha256": "5637d3f1407d072c7d201487406821f868670941a6e3a9f9e0536a3a9b4e20fd"
+  },
+  "progress_snapshot": {
+    "captured_utc": "2026-10-30T04:03:51Z",
+    "latest_train_state_step": 194,
+    "seconds_per_update": 3.0,
+    "first_loss": 0.09178272634744644,
+    "latest_loss": 0.07877809554338455,
+    "grad_norm_range": [0.26295, 0.26912],
+    "param_norm": 1803.1566,
+    "eta_hours_at_3s_per_update": 20.8,
+    "checkpoints_present": "none (first at step 3000)"
+  },
+  "shared_with_scene1": [
+    "base checkpoint tree (identical sha256 9909d717...)",
+    "container image digest 405af520...",
+    "JAX memory fraction 0.7119",
+    "optimizer/AdamW hyperparameters, LR schedule shape, EMA 0.999, seed 42, batch 8",
+    "openpi training loop, checkpoints.py, compute_loss, transforms.py"
+  ],
+  "different_from_scene1": [
+    "discrete_state_input: false (Scene1: true) -> different state path entirely",
+    "action semantics: delta EEF 7-D (Scene1: absolute joint 12-D)",
+    "action horizon 25 (Scene1: 10)",
+    "cameras 2 (Scene1: 3)",
+    "fps 10 (Scene1: 50)",
+    "dataset size 39/10 episodes (Scene1: 52/12)",
+    "warmup 500 (Scene1: 1000)",
+    "save interval 3000 (Scene1: milestone list)"
+  ],
+  "consequence": "This run is a shared-infrastructure probe, not an L0 baseline. It cannot validate Scene1's discrete-state prompt path, its 12-D absolute action path, or its norm stats. Loss values are not comparable (7 real dims vs 12).",
+  "delivery_note": "Nothing was stopped, restarted, modified or overwritten. The 4 GPUs are fully committed to this run (jax fraction 0.71, 17.1 GB demand), so any Scene1 measurement requiring a GPU is deferred by construction."
+}

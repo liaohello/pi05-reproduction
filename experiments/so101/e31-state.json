@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "phase": "E3.1",
+  "substage": "G2-state-input",
+  "claim": "Fixed-image/fixed-noise state sensitivity check. State-off is an empirically inert channel; state-on is the discrete state-token path. This is an input diagnostic, not a task result.",
+  "checkpoint": {
+    "id": "e2_lora_b1_s42/99",
+    "train_state_step": 100,
+    "parameters_sha256": "34442a1742b4de81f1dd69f1514dbcf0063c95beb2dd8d7140179362bcddb528",
+    "norm_stats_canonical_sha256": "5fd6e6d804b1299f8115846aff543589bff869c8c8a04c2868b625df70cdbae5",
+    "preserved_from_original_e2_e3": true
+  },
+  "setup": {
+    "state_frames": [0, 100],
+    "fixed_noise_sha256": "c968708d9810d049db50723e40b135ef2be562d73d8f8aae77d67d7e57fe41b2",
+    "same_images": true,
+    "same_task": true,
+    "same_noise": true,
+    "action_shape": [10, 12]
+  },
+  "checks": {
+    "state_off_invariant": true,
+    "state_off_tokens_equal": true,
+    "state_on_tokens_changed": true,
+    "state_on_output_changed": true,
+    "state_on_no_truncation": true,
+    "state_on_mask_valid": true,
+    "state_on_quantized_changed": true,
+    "state_on_decoded_state_present": true,
+    "state_off_decoded_state_absent": true
+  },
+  "modes": {
+    "off": {
+      "discrete_state_input": false,
+      "action_max_abs_difference": 0.0,
+      "action_mean_abs_difference": 0.0,
+      "token_changed_positions": 0,
+      "quantized_state_changed": 8,
+      "normalized_state_max_delta": 1.3618892730995162,
+      "valid_tokens": 19,
+      "max_tokens": 200,
+      "mask_is_valid_prefix": true,
+      "truncated": false,
+      "decoded_state_present": false
+    },
+    "on": {
+      "discrete_state_input": true,
+      "action_max_abs_difference": 5.146442413330078,
+      "action_mean_abs_difference": 1.5474978685379028,
+      "token_changed_positions": 43,
+      "quantized_state_changed": 8,
+      "normalized_state_max_delta": 1.3618892730995162,
+      "valid_tokens_frame0": 65,
+      "valid_tokens_frame100": 70,
+      "max_tokens": 200,
+      "mask_is_valid_prefix": true,
+      "truncated": false,
+      "decoded_state_present": true,
+      "decoded_prefix_frame0": "Task: Sort the red cubes into the red tray and the blue cubes into the blue tray., State: 91 -1 221 -1 91 255 120 -1 232 -1 120 255; Action: "
+    }
+  },
+  "interpretation": "With images, task and flow noise fixed, changing only the 12-D state leaves the state-off tokens and actions bit-identical, while the state-on mode changes 43 token positions and produces a 5.15 deg maximum action difference. The E3 checkpoint is therefore state-blind; a tokenizer/mask fault does not explain that result. State-on tokens are a valid, untruncated prefix and encode the quantized state as text. Training and serving used the same saved run_config state_mode and config SHA, rather than an inference-only switch.",
+  "claim_boundary": [
+    "two fixed frames, one checkpoint, one fixed noise draw",
+    "state sensitivity does not prove that state fixes closed-loop control",
+    "state-on is the discrete token path, not a continuous state embedding",
+    "the original E2 checkpoint and 0/20 E3 record remain unchanged"
+  ]
+}

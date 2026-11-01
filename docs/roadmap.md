@@ -1,67 +1,10 @@
-# Roadmap
+# 路线图
 
-四个阶段逐步推进。每个阶段只有在前一阶段的评估可复现之后才展开；未开始的阶段不建空目录，
-以免仓库暗示了并不存在的能力。
+当前以 SO101 π0.5 工程链为主；LIBERO、RoboTwin、真机各自验收，不能互相代替。未启动阶段不建空实现。
 
-## 总览
+- **P1 LIBERO**：P1.0仅推理冒烟，规范结论为“4/4 smoke-test episodes succeeded; not a benchmark success-rate estimate.” P1.1的2,000回合协议评估、P1.2正式训练复现、P1.3 ACT对照未完成；M0仍 in progress。见[Phase 1](phase1-libero.md)和[阅读路线](reading-guide.md)。
+- **SO101**：E0–E3.1、E4-T已执行；E4-T开环连续误差低，但夹爪事件时序门未过，E4-R不具备资格。结果以[交接摘要](session-handoff.md)、[实验手册](so101-engineering.md)及对应[报告](../reports/so101-e4t-training.md)为准。
+- **RoboTwin**：多模型同数据/种子对照仍是独立研究；源码、权重和数据按[路线计划](roadmap-future.md)准备后再启动。
+- **真机**：待仿真闭环、接管、限位及急停验证后另行定义。
 
-| 阶段 | 环境 | 主模型 / 对照 | 核心问题 |
-| --- | --- | --- | --- |
-| P1 | LIBERO | π0.5 公开权重 | 官方基线在固定协议下到底是多少？训练能否复现？ |
-| P2 | RoboTwin | π0.5 / SmolVLA / X-VLA | 双臂任务上模型差异有多大？泛化如何？ |
-| P3 | MuJoCo 双 SO101 | π0.5（微调） | 自采专家数据能否支撑闭环？RTC 是否真的降低延迟？ |
-| P4 | 真实 SO101 | 同 P3 | 仿真到真实的差距在哪里，能否量化？ |
-
-## P1 · LIBERO Benchmark
-
-| 门 | 内容 | 通过标准 | 状态 |
-| --- | --- | --- | --- |
-| P1.0 | 推理链路冒烟 | 四套件各 1 episode 成功，有录像与台账 | **done**（见 `reports/phase1-inference-smoke.md`） |
-| P1.1 | 官方协议完整评估 | 4 套件 × 10 任务 × 50 rollout = 2,000 episode；每套件 SR/SPL；协议、种子、初始状态、执行策略全部写入台账 | 未开始 |
-| P1.2 | 训练复现 | 从 `pi05_base` 微调可复现，记录数据版本、优化器、步数、显存占用 | 未开始（缺 ≈12.44 GB 基础权重） |
-| P1.3 | ACT 对照 | 相同协议下 ACT 基线，产出对照报告 | 未开始 |
-
-**M0 的定义是 P1.1 + P1.2 完成**，不是 P1.0。当前仓库把 M0 记为 `in progress`。
-
-## P2 · RoboTwin Benchmark
-
-- M1：RoboTwin 双臂任务适配，π0.5 能闭环控制。
-- M2：自动专家轨迹生成（随机初态批量采集、成功筛选、回放验证）。
-- M3：π0.5 / SmolVLA / X-VLA 在同一数据集、同一测试种子下对比。
-- 进入条件：`inference/CONTRACT.md` 已有多模型所需的 `model_id` 字段，且 P1.1 报告已发布。
-
-## P3 · MuJoCo 双 SO101
-
-- 三相机输入、12 维动作输出的适配层。
-- 现有 ACT 专家数据 → LeRobot Dataset 转换、校验。
-- 50 Hz 控制接口与动作归一化核对。
-- RTC：同步 / 异步 / RTC 三种执行方式同权重对比。
-- 进入条件：P2 至少一个模型在 RoboTwin 上闭环成功。
-
-## P4 · 真机 Sim-to-Real
-
-- SO101 真机数据采集、真实场景微调、部署。
-- 仿真与真实的差异评估（按任务、按失败模式分类）。
-- 进入条件：P3 中 RTC 版本在仿真上稳定，且延迟满足真机要求。
-
-## 明确不做的事
-
-- 不在 P1 阶段实现多模型抽象层；只定义契约（`inference/CONTRACT.md`）。
-- 不把 MuJoCo 通用仿真平台、3D 编辑、录制服务搬进本仓库——那属于 Workbench，通过接口连接。
-- 不把模型权重、原始数据集、完整 episode 录像提交进 Git。
-- 不在没有实验结果时先写框架代码：目录只在阶段真正开始时创建。
-
-## 依赖与风险
-
-| 风险 | 影响 | 应对 |
-| --- | --- | --- |
-| 基础权重 `pi05_base` 缺失（≈12.44 GB） | P1.2 无法开始 | 先确认公开获取渠道与许可，再下载 |
-| GPU 与其他人共享（观测到 99% 利用率） | 评估时长膨胀、时延指标不可用 | 评估前检查显存与利用率，报告里注明共享状态 |
-| 第三方源码无上游 commit | 版本无法用 git 固定 | 内容哈希 + 镜像 digest，见 `third_party/PROVENANCE.md` |
-| 视频与 JSON 泄露部署信息 | 公开仓库出现隐私问题 | `scripts/security/scan.sh` + 人工复核 |
-
-## 后续开发记录
-
-- 修复 `scripts/verify/source_lock.py` 的首次引导：在缺少 gitignored manifest 时，`--server`
-  当前会提前退出，因此文档给出的首次生成命令不可执行。后续应增加明确的 manifest 导出入口，
-  并分别读取 server 与 client 镜像来核对 OpenPI 和 LIBERO 文件。此项本轮只记录，不修改实现。
+SO101任务编号与LIBERO阶段门禁独立。记录必须关联ledger；视频、截图和评估JSON提交前须人工审阅。第三方源码、权重和原始数据不入Git。迁移决策见[迁移记录](migration-notes.md)。

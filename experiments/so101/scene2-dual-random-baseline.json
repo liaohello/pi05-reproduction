@@ -1,0 +1,39 @@
+{
+  "adapter_sha256": "e1f826b355f0abc945d1cf54698376455f776908bdea8afd35b124620eec6c0c",
+  "certificate_sha256": "11511f03839c4ef34568efa9c54644a8a767a4e6cbdc1e218f5d53efa51a39e8",
+  "claim": "post-settle hold with both arms parked; threshold floor 2 mm; no expert execution; not a physical success rate",
+  "clean_run": {
+    "any_false_grasp": false,
+    "any_robot_contact": false,
+    "hold_s": 2.0,
+    "max_hold_displacement_m": 2e-09,
+    "scenes_measured": 12,
+    "seed_range": [
+      20800,
+      20854
+    ],
+    "threshold_m": 0.002,
+    "threshold_rule": "max(0.002, measured_max + 0.001)"
+  },
+  "phase": "distractor_settle_baseline",
+  "protocol_id": "scene2_dual_random_v1",
+  "protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+  "rejected_draws": {
+    "cube_0_pick_region": 5,
+    "cube_0_tray_keepout": 22,
+    "cube_1_pick_region": 2,
+    "cube_1_tray_keepout": 14
+  },
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d",
+  "superseded_attempt": {
+    "reason": "crossed the original evaluation reservation 21000-21099",
+    "resolution": "discarded; clean baseline used 20800-20899; evaluation moved to 21100-21199",
+    "seed_range": [
+      20980,
+      21004
+    ],
+    "threshold_used": false
+  }
+}

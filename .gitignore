@@ -6,6 +6,7 @@ scripts/deploy/config.json
 scripts/deploy/config.local.json
 **/config.local.json
 **/config.private.json
+configs/monitor/local.env
 
 # Credentials
 .ssh/
@@ -54,3 +55,6 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# Local agent workspace (session notes and memory stay on the machine)
+.workbuddy/

@@ -1,0 +1,509 @@
+{
+  "attempts": 80,
+  "camera_shapes": [
+    [
+      480,
+      640,
+      3
+    ]
+  ],
+  "camera_sync": {
+    "camera_order": [
+      "central",
+      "left_wrist",
+      "right_wrist"
+    ],
+    "frames": 10,
+    "note": "one observe() call renders all three cameras before any physics step",
+    "observations": [
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 0,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 1,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 2,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 3,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 4,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 5,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 6,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 7,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 8,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [
+          {
+            "camera": "central",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "left_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          },
+          {
+            "camera": "right_wrist",
+            "elapsed_steps": 0,
+            "sim_time": 0.4000000000000003
+          }
+        ],
+        "cameras": [
+          "central",
+          "left_wrist",
+          "right_wrist"
+        ],
+        "frame": 9,
+        "image_shapes": {
+          "observation.images.central": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.left_wrist": [
+            480,
+            640,
+            3
+          ],
+          "observation.images.right_wrist": [
+            480,
+            640,
+            3
+          ]
+        },
+        "same_elapsed_steps": true,
+        "same_sim_time": true
+      },
+      {
+        "calls": [],
+        "frame": 10,
+        "step_advanced_s": 0.4200000000000003
+      }
+    ],
+    "passed": true,
+    "protocol_sha256": "1e69c2fb6c0e546ee8eeb13c31d099e134852657422ab78a05509e5edf6c7890",
+    "schema_version": 1
+  },
+  "contact_monitor_errors": 0,
+  "control_tick_s": {
+    "expected": 0.02,
+    "max": 0.02000000000000668,
+    "min": 0.019999999999997797
+  },
+  "created": "2026-10-29T20:46:41+08:00",
+  "episodes": 64,
+  "episodes_by_color": {
+    "blue": 32,
+    "red": 32
+  },
+  "failure_reasons": {
+    "ik_unreachable": 5,
+    "unexpected_contact": 9
+  },
+  "frames_max": 775,
+  "frames_min": 657,
+  "frames_total": 45031,
+  "incomplete_frames": 0,
+  "layout_rejects": 2,
+  "max_action_error_vs_trace": 0.0,
+  "max_state_error_vs_trace": 0.0,
+  "schema_version": 1,
+  "soft_contacts": 0,
+  "split_families_cross": 0,
+  "substeps_all_full": true,
+  "task_per_episode_matches_scene": true,
+  "timestamps_equal_frame_index_over_fps": true,
+  "train": 52,
+  "train_only_statistics": true,
+  "validation": 12,
+  "video_timestamps_aligned_across_cameras": true,
+  "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+  "yaw_degrees": {
+    "max": 69.677002,
+    "min": 0.112227
+  },
+  "video_alignment_method": "per-camera duration comparison; absolute file offsets differ by encoder chunking",
+  "video_duration_delta_max_s": 5.684341886080802e-14
+}

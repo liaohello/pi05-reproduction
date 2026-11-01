@@ -1,0 +1,1299 @@
+# Scene2 workstream C v3 per-scene search
+# Base: b0d869c (v1/v2 scene2 files and other workstreams' changes are present)
+# v1/v2 files are untouched; this patch adds the v3 protocol/profile, v3 adapter,
+# wrappers, tests, docs and reports. Large evidence JSON/PNG are listed by hash in
+# experiments/so101/scene2-dual-random-v3-artifacts.json; raw runs are ignored.
+
+diff --git a/configs/so101/scene2_dual_random_protocol_v3.json b/configs/so101/scene2_dual_random_protocol_v3.json
+new file mode 100644
+index 0000000..a45dc8c
+--- /dev/null
++++ b/configs/so101/scene2_dual_random_protocol_v3.json
+@@ -0,0 +1,499 @@
++{
++  "schema_version": 1,
++  "branch": "so101-scene2-dual-random-scene-v3",
++  "experiment_prefix": "so101-scene2-dual-random-scene-v3-",
++  "protocol_id": "scene2_dual_random_v3",
++  "status": "v3_per_scene_search_rules_frozen",
++  "task": {
++    "name": "dual_block_select_place",
++    "instruction_template": "Put the {color} block into the {color} tray.",
++    "instruction_values": {
++      "red": "Put the red block into the red tray.",
++      "blue": "Put the blue block into the blue tray."
++    },
++    "objects_per_episode": 2,
++    "target": "the instructed colour; placed into its same-colour tray",
++    "distractor": "the other colour; never grasped and never moved by the expert",
++    "source": "external dual-SO101 MuJoCo project, scripted physical expert through this branch adapter",
++    "transfer_protocol": false,
++    "handover_between_arms": false,
++    "external_force_perturbation": false,
++    "visual_randomization": false
++  },
++  "record_conflicts": [
++    {
++      "source": "model-line prototype experiment_state.json (ignored; not tracked here)",
++      "recorded_instructions": [
++        "Place the red block in the tray.",
++        "Place the blue block in the tray."
++      ],
++      "recorded_tray_rule": "one tray, position random; the recorded text does not bind tray colour to target colour",
++      "this_branch": "two coloured trays; target goes into the same-colour tray; instructions name the tray colour",
++      "resolution": "the later confirmed rule in this protocol governs scene2 data; the model-line prototype file is ignored and was not modified"
++    }
++  ],
++  "source_binding": {
++    "external_root_env": "SO101_SOURCE_ROOT",
++    "external_python_env": "SO101_PYTHON",
++    "profile": "configs/so101/scene2_dual_random_profile_v3.yaml",
++    "certificate": "configs/certification/scene2_dual_random_certificate_v3.json",
++    "snapshot_policy": "independent ignored snapshot under the cache root; the shared checkout, the scene1 snapshot and other workstreams' files are never modified",
++    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d",
++    "source_files": 113,
++    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
++    "expert_files": 37,
++    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
++    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
++    "provenance_note": "the scene1 protocol records source_sha256 201898ff... with 109 files; the current shared snapshot measured here has 113 files and 908d940d... The difference is not silently adopted: this branch pins and records the tree it actually executes.; v2 reuses the same measured source tree and adds only adapter/config keys; v3 reuses the same source and certificate logic and adds per-scene release/withdraw search keys"
++  },
++  "control": {
++    "physics_hz": 500,
++    "control_hz": 50,
++    "recording_fps": 50,
++    "settle_s": 0.4,
++    "timeout_s": 60.0,
++    "nominal_realtime_claim": false
++  },
++  "grasp": {
++    "open_percent": 70.0,
++    "closed_percent": 0.0,
++    "hover_height_m": 0.06,
++    "place_hover_height_m": 0.04,
++    "release_clearance_m": 0.006,
++    "retreat_clearance_x_m": 0.012,
++    "target_band_contact_in_descend": "allowed only for the target block's CAD collision bands (index <= 1); the distractor, trays, table and arm-arm contacts stay hard",
++    "basis": "engineering scan: the centre grasp descend grazes the target fixed finger by 0.6-1.3 mm; the grasp is intended, so the target band contact is admitted while every non-target contact keeps the 0.5 mm guard",
++    "release_open_percent": 50.0,
++    "vertical_withdraw": true,
++    "close_screen": true,
++    "v2_basis": "v1 pilot failures: pick_close tray wall 0.61/0.74 mm; place_release 0.83 mm; place_withdraw no collision-free direction. v2 adds an outer-rectangle block keepout, a central slot, a 50 percent release opening, a vertical-first withdraw and a closed-gripper close screen; the success predicate and 0.5 mm guard are unchanged.",
++    "release_open_candidates": [
++      40.0,
++      50.0,
++      30.0
++    ],
++    "withdraw_directions": [
++      "gripper_x_neg",
++      "gripper_x_pos",
++      "world_x_neg",
++      "world_x_pos"
++    ],
++    "withdraw_retreat_m": 0.06,
++    "v3_basis": "v2 reductions to 0.50-0.59 mm release contacts and one fixed-direction IK failure; v3 searches the release opening and withdraw direction per scene at the actual pose. The success predicate and 0.5 mm guard are unchanged."
++  },
++  "pre_pilot_engineering_scan": {
++    "status": "engineering_only_not_pilot_data",
++    "fixed_layout": "one candidate layout, both arms, open 50/70/90, yaw 0/15/30/45/60/68/75",
++    "findings": [
++      "pick descend target-band contact was 0.6-1.3 mm at every open percentage; open width did not remove it",
++      "place withdraw passed at open=70 for yaw 30-75 and failed at 0/15 on the tray wall",
++      "one full runtime smoke episode succeeded (blue target); the red-target smoke placed the target but failed withdraw with 0.7-0.9 mm tray/cube contact"
++    ],
++    "decisions": [
++      "open_percent 70",
++      "yaw candidate [30,75]",
++      "target-band contact admitted in the grasp descend only",
++      "no guard relaxation for trays, table, arm-arm or the distractor"
++    ],
++    "v2_changes": [
++      "central slot",
++      "block outer-rectangle clearance 0.07 m",
++      "release open 50 percent",
++      "vertical-first withdraw",
++      "closed-gripper close screen"
++    ],
++    "v3_changes": [
++      "block outer clearance 0.10 m",
++      "per-scene release open 40/50/30",
++      "per-scene vertical withdraw direction",
++      "dynamic choice at the actual release pose"
++    ]
++  },
++  "observation": {
++    "cameras": [
++      "observation.images.central",
++      "observation.images.left_wrist",
++      "observation.images.right_wrist"
++    ],
++    "rgb": {
++      "dtype": "uint8",
++      "layout": "HWC",
++      "height": 480,
++      "width": 640,
++      "policy_resize": [
++        224,
++        224
++      ],
++      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
++    },
++    "state": {
++      "key": "observation.state",
++      "shape": [
++        12
++      ],
++      "order": [
++        "left_shoulder_pan.pos",
++        "left_shoulder_lift.pos",
++        "left_elbow_flex.pos",
++        "left_wrist_flex.pos",
++        "left_wrist_roll.pos",
++        "left_gripper.pos",
++        "right_shoulder_pan.pos",
++        "right_shoulder_lift.pos",
++        "right_elbow_flex.pos",
++        "right_wrist_flex.pos",
++        "right_wrist_roll.pos",
++        "right_gripper.pos"
++      ],
++      "units": [
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "percent",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "percent"
++      ],
++      "timing": "measured joint state immediately before the action is issued"
++    }
++  },
++  "action": {
++    "key": "action",
++    "shape": [
++      12
++    ],
++    "semantics": "absolute joint-position target, left six then right six",
++    "units": [
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "percent",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "percent"
++    ],
++    "label_rule": "the clamped actuator target actually applied at that control frame; never the next measured state",
++    "chunk_horizon": "left to the model line; no chunk length is frozen by this protocol",
++    "replan_steps": "left to the model line"
++  },
++  "scene_layout": {
++    "object_count": 2,
++    "cube_edge_m": 0.025,
++    "cube_mass_kg": 0.012,
++    "arrangements": {
++      "values": [
++        "red_positive_y",
++        "red_negative_y"
++      ],
++      "rule": "the red tray occupies one side and the blue tray the other; the arrangement is sampled independently of the instruction",
++      "balance": "formal collection must split evenly; the 4-scene pilot uses 2 of each"
++    },
++    "trays": {
++      "count": 2,
++      "orientation": "axis-aligned; positions random, orientation fixed",
++      "positive_y_sampling": {
++        "x_m": [
++          0.21,
++          0.27
++        ],
++        "y_m": [
++          0.22,
++          0.28
++        ]
++      },
++      "negative_y_sampling": {
++        "x_m": [
++          0.21,
++          0.27
++        ],
++        "y_m": [
++          -0.28,
++          -0.22
++        ]
++      },
++      "constraints": [
++        "tray footprint inside the table by at least 0.02 m",
++        "tray-tray outer-edge gap at least 0.03 m",
++        "each block outside both tray keepouts plus 0.01 m",
++        "chosen slot release, hover, descent and withdrawal IK and collision screening"
++      ],
++      "candidate_region_status": "v3_probe_rules_frozen",
++      "frozen_sampling": {
++        "positive_y": {
++          "x_m": [
++            0.21,
++            0.27
++          ],
++          "y_m": [
++            0.22,
++            0.28
++          ]
++        },
++        "negative_y": {
++          "x_m": [
++            0.21,
++            0.27
++          ],
++          "y_m": [
++            -0.28,
++            -0.22
++          ]
++        }
++      },
++      "slot_rule": "one central slot per tray at the tray centre; the second offset slot is not used because the task places one block; the v1 two-slot rule is kept in the v1 record"
++    },
++    "blocks": {
++      "target_xy_source": "certified pick points of the arm on the target tray's side; jitter 0.004 m",
++      "distractor_xy_source": "certified pick points of the arm on the other tray's side; jitter 0.004 m",
++      "minimum_pairwise_distance_m": 0.06,
++      "yaw": {
++        "distribution": "continuous uniform",
++        "domain_degrees": [
++          30.0,
++          75.0
++        ],
++        "domain_status": "v3_candidate_from_v2_failures",
++        "domain_basis": "the engineering scan found place-withdraw clearance at open=70 percent for 30-75 degrees and hard tray-wall rejection at 0/15 degrees; the scan is not pilot data and the accepted distribution is still reported separately from the draw distribution; v2 keeps the same [30,75] probe domain and changes the clearance/withdraw instead; v3 keeps [30,75] and searches release/withdraw per scene",
++        "applies_to": [
++          "target",
++          "distractor"
++        ]
++      },
++      "per_scene_checks": [
++        "target grasp IK and hover IK at the sampled yaw",
++        "target approach and lift path screening with the distractor present and the other arm parked",
++        "target place release and hover IK at the sampled yaw",
++        "target descent and withdrawal screening with the distractor present",
++        "containment of the rotated cube footprint in the same-colour tray",
++        "initial settling: no robot contact with either block, no block-block contact, speeds below limits",
++        "block centre at least 0.07 m from each tray outer rectangle",
++        "close-stage static screen with the gripper closed",
++        "per-scene release opening search 40/50/30 percent",
++        "per-scene vertical withdraw direction search"
++      ],
++      "block_tray_outer_clearance_m": 0.1
++    },
++    "colour_decoupling": {
++      "rule": "the instruction colour and the tray arrangement are sampled independently; the active arm is the arm on the target tray's side",
++      "consequence": "across scenes each colour is executed by both arms and placed on both table sides; no colour is bound to one arm or one position",
++      "within_scene": "the two counterfactual instructions of one layout necessarily use different arms because the trays are on opposite sides"
++    },
++    "active_arm_rule": {
++      "selection": "left if the target tray centre has y > 0, right if y < 0",
++      "other_arm": "home park pose [0, -25, 40, -15, 0] degrees, gripper 40 percent; certified park; no handover and no second-arm motion",
++      "safety": "the parked TCP is about 0.22 m above the table surface; initial settling and the success predicate both check no robot-block or robot-tray contact"
++    },
++    "perturbations_enabled": false,
++    "visual_randomization_enabled": false,
++    "vary_positions_between_episodes": true,
++    "reuse_previous_episodes": false,
++    "duplicate_scene_policy": "a layout SHA-256 may appear once; the two target conditions of one layout are a registered counterfactual pair, not duplicates"
++  },
++  "success_predicate": {
++    "id": "dual_block_select_place_physical_v1",
++    "requires_all_target": [
++      "the target block is inside its same-colour tray using the rotated footprint against the tray inner half-size",
++      "the target block is supported by that tray's floor geom ({colour}_tray_0)",
++      "no contact between the target block and either arm (released)",
++      "target linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
++      "both arms are at the registered home park pose within 2.0 degrees and 5.0 gripper percent",
++      "no contact between either arm and either tray",
++      "both TCP sites are at least 0.01 m from the target block centre and from the outer rectangle of both trays",
++      "all of the above hold continuously for at least 0.5 s"
++    ],
++    "requires_all_distractor": [
++      "no contact between the distractor block and either arm",
++      "no bilateral gripper grasp of the distractor by either arm",
++      "distractor supported by the table (or a tray floor, never outside the table)",
++      "distractor linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
++      "distractor displacement from its post-settle initial pose <= the registered baseline threshold",
++      "distractor not out of bounds",
++      "distractor checks hold over the same 0.5 s success window"
++    ],
++    "distractor_baseline": {
++      "status": "v3_recheck_threshold_0.002",
++      "method": "12 independent layouts from the same sampler, both arms parked at home, 0.4 s settle then 2.0 s hold; post-settle displacement, speed, robot contact and false grasp measured every physics step",
++      "seed_range": [
++        20800,
++        20854
++      ],
++      "scenes_measured": 12,
++      "measured_max_hold_displacement_m": 2e-09,
++      "measured_any_robot_contact": false,
++      "measured_any_false_grasp": false,
++      "threshold_m": 0.002,
++      "threshold_rule": "max(0.002, measured_max + 0.001); the 2 mm floor governs because the measured drift is below 1 mm",
++      "scope_note": "the baseline has no arm motion; arm-induced table vibration is not included and is reported in the physical pilot",
++      "record": "tracked summary in experiments/so101/scene2-dual-random-baseline.json; full record in the ignored run directory",
++      "v2_recheck": "12-scene v2 baseline uses the same threshold 0.002; the measured value is in the tracked v2 baseline summary",
++      "v3_recheck": "12-scene v3 baseline uses threshold 0.002; measured value in the tracked v3 baseline summary"
++    },
++    "not_sufficient": [
++      "expert return code",
++      "visual appearance in a camera",
++      "target tray state alone without the distractor checks",
++      "a single frame of support or containment"
++    ],
++    "failure_reasons": [
++      "object_out_of_bounds",
++      "wrong_tray",
++      "not_supported",
++      "robot_contact",
++      "not_stable",
++      "arm_not_clear",
++      "grasp_failed",
++      "payload_lost",
++      "ik_unreachable",
++      "path_collision",
++      "placement_failed",
++      "timeout",
++      "distractor_contact",
++      "distractor_grasped",
++      "distractor_displaced",
++      "distractor_unstable",
++      "distractor_out_of_bounds",
++      "replay_mismatch"
++    ]
++  },
++  "scene_family": {
++    "definition": "family_key = layout_sha256 over both blocks (names, colours, XY, yaw), both tray poses, arrangement, seed, model and certificate hashes",
++    "rule": "the red-target and blue-target episodes of one layout are a counterfactual pair and never cross train/validation",
++    "split_algorithm": "to be registered with the formal collection; whole layout families only",
++    "frozen_before": "any normalisation statistic or training update",
++    "pilot_is_not_validation": true
++  },
++  "collection": {
++    "seed_registry": {
++      "layout_pilot": [
++        23200,
++        23439
++      ],
++      "physical_pilot_layouts": [
++        23440,
++        23479
++      ],
++      "distractor_baseline": [
++        23800,
++        23899
++      ],
++      "engineering_smoke": [
++        23990,
++        23999
++      ],
++      "evaluation_reserved": [
++        24100,
++        24199
++      ],
++      "superseded_seed_use": {
++        "v1_all": "20000-20279,20800-20899,20990-20999,21100-21199",
++        "v2_all": "22000-22279,22800-22899,22990-22999,23100-23199"
++      },
++      "disjoint_from": {
++        "e1": "8100-8199 and 9100-9119",
++        "e4t": "8220-8779 and 9300-9349",
++        "clean60": "12000-13199 and 14000-14199",
++        "clean100": "13200-13999",
++        "scene1": "15050-16099",
++        "v1_scene2": "20000-20279, 20800-20899, 20990-20999, 21100-21199",
++        "v2_scene2": "22000-22279, 22800-22899, 22990-22999, 23100-23199"
++      },
++      "pilot_policy": "a pilot layout is never reused as a demonstration; every candidate and every executed episode is recorded"
++    },
++    "layout_pilot": {
++      "status": "v3_probe_running",
++      "seeds": 240,
++      "seed_start": 23200,
++      "maximum_attempts_per_layout": 400,
++      "wall_clock_limit_s": 10800,
++      "acceptance_gate_value": 0.5,
++      "acceptance_gate": "at least 0.50 of attempted seeds produce a fully checked layout with both target conditions feasible; otherwise narrow the yaw or tray domain, record the amendment and rerun",
++      "record": "per-seed tray poses, both block XY/yaw, per-target IK and collision verdicts, initial-settling metrics, sampler draws and rejection reasons"
++    },
++    "physical_pilot": {
++      "status": "pending_v3_pregeneration",
++      "layouts": 4,
++      "episodes": 8,
++      "max_layout_candidates": 40,
++      "layout_wall_clock_limit_s": 3600,
++      "episode_wall_clock_limit_s": 14400,
++      "episode_attempt_cap": 8,
++      "rule": "each layout is executed once with the red instruction and once with the blue instruction; no episode is retried after a physical failure",
++      "success_gate": "report the exact count out of 8; do not relax a check to reach 8",
++      "initial_state_fingerprint": "the two conditions must reproduce the same post-settle state fingerprint; a mismatch invalidates the pair",
++      "pilot_is_not_formal_validation": true
++    },
++    "formal": {
++      "status": "not_started",
++      "target_episodes": null,
++      "train": null,
++      "validation": null,
++      "maximum_attempts": null,
++      "normalisation": "not computed in this phase; only frozen-split train data may supply it",
++      "forbidden": [
++        "clean60 norm",
++        "clean60 checkpoint",
++        "clean100 norm",
++        "clean100 checkpoint"
++      ]
++    }
++  },
++  "data_interface": {
++    "raw_control_tick": "one row per control frame at 50 Hz; 10 physics substeps per row when complete",
++    "timestamps": "simulation time from the environment; wall-clock start/end per episode; no synthetic index is treated as proof of no dropped frames",
++    "three_cameras": "central, left_wrist, right_wrist at 640x480 RGB, captured before the action is applied",
++    "state_action_order": "left six then right six; degrees for joints and percent for grippers",
++    "action_label": "clamped absolute target actually applied that frame",
++    "objects": "both blocks: position, quaternion, linear and angular velocity per control frame",
++    "events": "stage start/end, contact-monitor facts, failures, initial/final state",
++    "chunk_length": "model line decides; this branch supplies contiguous raw trajectories",
++    "pilot_dataset": "if written, labelled pilot_only and excluded from training and validation"
++  },
++  "claims": {
++    "engineering_chain": "v3 per-scene release/withdraw search; 4 layouts x 2 instructions = 8 condition episodes; not eight independent scenes; v1/v2 evidence retained",
++    "explicitly_not": [
++      "a benchmark success rate",
++      "a formal training or validation split",
++      "policy language-conditioning evidence",
++      "a dual-arm handover result",
++      "real-robot validation",
++      "a v2 benchmark success rate",
++      "a v3 benchmark success rate"
++    ]
++  },
++  "pilot_amendments": [
++    {
++      "id": "baseline_seed_conflict",
++      "date": "2026-10-29",
++      "change": "the first baseline attempt consumed seeds 21000-21004 inside the original evaluation reservation; that run was discarded, the clean baseline used 20800-20899, and evaluation is reserved on 21100-21199",
++      "effect": "no pilot or training data used the superseded seeds; the threshold comes only from the clean run"
++    },
++    {
++      "id": "pre_pilot_open_yaw_scan",
++      "date": "2026-10-29",
++      "change": "engineering scan set open_percent=70 and candidate yaw [30,75], and admitted target CAD-band contact only in the grasp descend",
++      "effect": "registered before the layout pilot; the layout pilot still measures the accepted distribution and the physical pilot judges success with the unchanged predicate"
++    },
++    {
++      "id": "v2_clearance_probe",
++      "date": "2026-10-29",
++      "change": "v2 adds a central slot, a 0.07 m block-to-tray outer clearance, release open 50 percent, vertical-first withdraw and close-gripper screening",
++      "effect": "new v2 scenes and pilot; v1 protocol/scenes/reports are unchanged; the success predicate and guard are unchanged"
++    },
++    {
++      "id": "v3_per_scene_search",
++      "date": "2026-10-29",
++      "change": "v3 adds a 0.10 m outer clearance and searches release opening 40/50/30 and four withdraw directions at the actual release pose",
++      "effect": "new v3 scenes/pilot; v1/v2 unchanged; success predicate/guard unchanged"
++    }
++  ]
++}
+diff --git a/configs/so101/scene2_dual_random_profile_v3.yaml b/configs/so101/scene2_dual_random_profile_v3.yaml
+new file mode 100644
+index 0000000..57e37cc
+--- /dev/null
++++ b/configs/so101/scene2_dual_random_profile_v3.yaml
+@@ -0,0 +1,80 @@
++schema_version: 1
++extends: configs/profiles/collection_50hz_three_camera.yaml
++evaluation:
++  certificate: configs/certification/scene2_dual_random_certificate_v3.json
++task:
++  type: dual_block_select_place
++sorting:
++  instruction: Put the red block into the red tray.
++  instruction_template: Put the {color} block into the {color} tray.
++  initial_positions_xy:
++  - - 0.25
++    - 0.1
++  - - 0.25
++    - -0.1
++  objects:
++    cube_0:
++      color: red
++    cube_1:
++      color: blue
++  timeout_s: 60.0
++  stable_success_s: 0.5
++  linear_speed_m_s: 0.02
++  angular_speed_rad_s: 0.2
++  block_jitter_m: 0.004
++  yaw_domain_degrees:
++  - 30.0
++  - 75.0
++  tray_sampling_positive:
++    x_m:
++    - 0.21
++    - 0.27
++    y_m:
++    - 0.22
++    - 0.28
++  tray_sampling_negative:
++    x_m:
++    - 0.21
++    - 0.27
++    y_m:
++    - -0.28
++    - -0.22
++  tray_table_margin_m: 0.02
++  tray_tray_gap_m: 0.03
++  block_tray_clearance_m: 0.01
++  block_block_min_distance_m: 0.06
++  arm_park_joint_tolerance_deg: 2.0
++  arm_park_gripper_tolerance_percent: 5.0
++  arm_clearance_m: 0.01
++  distractor_max_displacement_m: 0.002
++  distractor_max_speed_m_s: 0.02
++  distractor_max_angular_speed_rad_s: 0.2
++  scene2_slot_mode: center
++  scene2_block_tray_outer_clearance_m: 0.1
++grasp:
++  open_percent: 70.0
++  closed_percent: 0.0
++  hover_height_m: 0.06
++  place_hover_height_m: 0.04
++  release_clearance_m: 0.006
++  retreat_clearance_x_m: 0.012
++  scene2_release_open_percent: 50.0
++  scene2_vertical_withdraw: true
++  scene2_close_screen: true
++  scene2_release_open_candidates:
++  - 40.0
++  - 50.0
++  - 30.0
++  scene2_withdraw_directions:
++  - gripper_x_neg
++  - gripper_x_pos
++  - world_x_neg
++  - world_x_pos
++  scene2_withdraw_retreat_m: 0.06
++scene:
++  transfer:
++    marker: false
++domain_randomization:
++  enabled: false
++collection:
++  recording_type: scripted_dual_block_select_place_demonstration
+diff --git a/scripts/so101/scene2_common_v3.py b/scripts/so101/scene2_common_v3.py
+new file mode 100755
+index 0000000..066aa31
+--- /dev/null
++++ b/scripts/so101/scene2_common_v3.py
+@@ -0,0 +1,277 @@
++"""V3 per-scene release/withdraw search for the scene2 dual-block family.
++
++v3 builds on v2 and keeps every v1/v2 file untouched.  The only behavioural
++change is that release opening and withdraw direction are searched at the
++actual release pose instead of being fixed by the profile.  The success
++predicate and the 0.5 mm contact guard are unchanged.
++"""
++from __future__ import annotations
++
++from pathlib import Path
++
++import numpy as np
++
++import scene2_common as _v1
++import scene2_common_v2 as _v2
++from scene2_common_v2 import *  # noqa: F401,F403
++
++_b = _v1._b
++_OPEN_CANDIDATES = (40.0, 50.0, 30.0)
++_DIRECTIONS = ("gripper_x_neg", "gripper_x_pos", "world_x_neg", "world_x_pos")
++_RETREAT_M = 0.06
++
++
++def configure(root, *, python=None):
++    root = _v2.configure(root, python=python)
++    _v1.place_verdict = place_verdict
++    _v1.dual_block_expert_class = dual_block_expert_class
++    return root
++
++
++def provenance(root, protocol_path, config, certificate_path, adapter_path=None):
++    result = _v1.provenance(root, protocol_path, config, certificate_path,
++                            adapter_path=Path(__file__).resolve())
++    protocol = _v1.load_protocol(protocol_path)
++    profile = _v1.REPO_ROOT / protocol["source_binding"]["profile"]
++    result["profile_sha256"] = _v1.common.sha256_file(profile)
++    result["adapter_sha256"] = _v1.common.sha256_file(Path(__file__).resolve())
++    return result
++
++
++def _direction_vector(name, rotation):
++    if name == "gripper_x_neg":
++        return -rotation[:, 0][:2]
++    if name == "gripper_x_pos":
++        return rotation[:, 0][:2]
++    if name == "world_x_neg":
++        return np.array([-1.0, 0.0])
++    if name == "world_x_pos":
++        return np.array([1.0, 0.0])
++    if name == "world_y_neg":
++        return np.array([0.0, -1.0])
++    if name == "world_y_pos":
++        return np.array([0.0, 1.0])
++    raise ValueError(f"unknown withdraw direction {name!r}")
++
++
++def place_verdict(env, config, arm, target_name, slot, yaw):
++    profile = config["grasp"]
++    regions = _v1._b("regions")
++    cube_half = regions.cube_half(config)
++    support_z = float(slot.support_z)
++    release_z = support_z + cube_half + profile["release_clearance_m"]
++    place_hover_height = profile.get("place_hover_height_m", profile["hover_height_m"])
++    lift_height = profile["hover_height_m"]
++    opens = list(profile.get("scene2_release_open_candidates", _OPEN_CANDIDATES))
++    directions = list(profile.get("scene2_withdraw_directions", _DIRECTIONS))
++    retreat_m = float(profile.get("scene2_withdraw_retreat_m", _RETREAT_M))
++    rotation = _v1._b("rotation_z")(yaw)
++    offset = 0 if arm == "left" else 6
++    seed = env.data.qpos[env.robot.qpos_ids[offset:offset + 5]].copy()
++    ik = _v1._b("PoseIK")(env)
++    release = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z], rotation,
++                       seed_rad=seed, tolerance=0.0002, rotation_tolerance=0.01)
++    if not release.converged:
++        return {"passed": False, "reason": "release_ik",
++                "position_error_m": release.position_error_m}
++    place_hover = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z + place_hover_height],
++                           rotation, seed_rad=release.joints_rad, tolerance=0.0002,
++                           rotation_tolerance=0.01)
++    lift_hover = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z + lift_height], rotation,
++                          seed_rad=release.joints_rad, tolerance=0.0002,
++                          rotation_tolerance=0.01)
++    if not (place_hover.converged and lift_hover.converged):
++        return {"passed": False, "reason": "place_hover_ik"}
++    center = np.asarray(config["scene"]["trays"][slot.color], dtype=float)
++    inner = regions.tray_inner_half(config)
++    extents = np.abs(rotation) @ np.full(3, cube_half)
++    contained = bool(np.all(np.abs(np.asarray(slot.xy) - center) + extents[:2] <= inner))
++    if not contained:
++        return {"passed": False, "reason": "slot_containment", "extents": extents.tolist()}
++    home = env.robot.home()
++    closed = profile["closed_percent"]
++    low = _v1._arm_target(home, arm, release.joints_rad, closed)
++    durations = profile["stage_durations_s"]
++    descent = _v1._path(env, _v1._arm_target(home, arm, place_hover.joints_rad, closed),
++                        low, durations["lower"])
++    descent_screen = _v1._screen_joint(env, arm, descent, target_name)
++    release_checks = []
++    chosen_open = None
++    for open_percent in opens:
++        action = _v1._arm_target(home, arm, release.joints_rad, float(open_percent))
++        screen = _v1._screen_joint(env, arm, [action], target_name)
++        release_checks.append({"open_percent": float(open_percent),
++                               "passed": bool(screen["passed"]),
++                               "screen": _v1._compact_screen(screen)})
++        if screen["passed"]:
++            chosen_open = float(open_percent)
++            break
++    if chosen_open is None:
++        return {"passed": False, "reason": "release_open_contact",
++                "descent": _v1._compact_screen(descent_screen),
++                "release": release_checks}
++    high = _v1._arm_target(home, arm, lift_hover.joints_rad, chosen_open)
++    lift = _v1._path(env, low, high, durations["release"] / 2)
++    lift_screen = _v1._screen_joint(env, arm, lift, target_name)
++    if not lift_screen["passed"]:
++        return {"passed": False, "reason": "lift_path",
++                "descent": _v1._compact_screen(descent_screen),
++                "release": release_checks,
++                "lift": _v1._compact_screen(lift_screen)}
++    direction_checks = []
++    chosen_direction = None
++    lift_z = release_z + lift_height
++    for name in directions:
++        vector = _direction_vector(name, rotation)
++        retreat_xy = (float(slot.xy[0]) + float(vector[0]) * retreat_m,
++                      float(slot.xy[1]) + float(vector[1]) * retreat_m)
++        retreat = ik.solve(arm, [retreat_xy[0], retreat_xy[1], lift_z], rotation,
++                           seed_rad=lift_hover.joints_rad, tolerance=0.0005,
++                           rotation_tolerance=0.02)
++        if not retreat.converged:
++            direction_checks.append({"direction": name, "passed": False,
++                                     "reason": "retreat_ik"})
++            continue
++        out = _v1._arm_target(home, arm, retreat.joints_rad, chosen_open)
++        path = _v1._path(env, high, out,
++                         durations["release"] / 2 + durations["retreat"] / 2)
++        screen = _v1._screen_joint(env, arm, path, target_name)
++        direction_checks.append({"direction": name, "passed": bool(screen["passed"]),
++                                 "retreat_xy": [round(retreat_xy[0], 6), round(retreat_xy[1], 6)],
++                                 "screen": _v1._compact_screen(screen)})
++        if screen["passed"]:
++            chosen_direction = name
++            break
++    passed = bool(descent_screen["passed"] and chosen_direction is not None)
++    return {"passed": passed,
++            "reason": None if passed else ("place_path" if not descent_screen["passed"]
++                                            else "vertical_withdraw"),
++            "descent": _v1._compact_screen(descent_screen),
++            "release": release_checks,
++            "chosen_open_percent": chosen_open,
++            "lift": _v1._compact_screen(lift_screen),
++            "directions": direction_checks,
++            "chosen_direction": chosen_direction,
++            "release_z_m": release_z, "lift_z_m": lift_z,
++            "contained": contained, "extents": extents.tolist()}
++
++
++def dual_block_expert_class():
++    base = _v1._b("SingleBlockExpert")
++    regions = _v1._b("regions")
++
++    class DualBlockExpert(base):
++        def _slot(self, name):
++            return regions.TraySlot(name, self.scene.extra["target_color"],
++                                    tuple(self.scene.extra["slot_xy"]),
++                                    float(self.scene.extra["support_z"]))
++
++        def direct_episode(self, env, assignment):
++            from bimanual.control.errors import MotionFailure
++            from bimanual.control.motion import (MotionPlan, cartesian_actions,
++                                                 object_follow_stage, park_stages,
++                                                 pick_stages, place_stages)
++
++            entry = self._object(assignment.object_id)
++            slot = self._slot(assignment.slot_name)
++            profile = self.config["grasp"]
++            approach = profile.get("place_hover_height_m", profile["hover_height_m"])
++            release_z = (slot.support_z + self.config["sorting"]["cube_size_m"] / 2
++                         + profile["release_clearance_m"])
++            carry_target = [slot.xy[0], slot.xy[1], release_z + approach]
++            stages = pick_stages(env, assignment.supply_arm, entry.name,
++                                 entry.orientation_degrees)
++            for stage in stages:
++                if stage.name == "pick_descend":
++                    stage.metadata["allowed_object"] = entry.name
++                    pick_arm = stage.arm
++                    target = entry.name
++                    stage.screen = (
++                        lambda live, actions, _arm=pick_arm, _target=target:
++                        _v1._b("payload_path").screen_joint_path(
++                            live, _arm, actions, allowed_object=_target))
++            yield MotionPlan(arm=assignment.supply_arm, object_id=entry.name,
++                             stages=stages, label=f"direct_pick_{entry.name}")
++            yield MotionPlan(arm=assignment.supply_arm, object_id=entry.name,
++                             stages=object_follow_stage(
++                                 env, assignment.supply_arm, entry.name, carry_target,
++                                 label=f"direct_carry_{entry.name}"),
++                             label=f"direct_carry_{entry.name}")
++            place = place_stages(env, assignment.destination_arm, entry.name,
++                                 slot.xy, slot.support_z,
++                                 support_geoms={f"{slot.color}_tray_0", "table"})
++            opens = list(profile.get("scene2_release_open_candidates", _OPEN_CANDIDATES))
++            directions = list(profile.get("scene2_withdraw_directions", _DIRECTIONS))
++            retreat_m = float(profile.get("scene2_withdraw_retreat_m", _RETREAT_M))
++            lift_height = profile["hover_height_m"]
++            state = {"open": None, "direction": None}
++
++            def build_release(live, _arm=assignment.destination_arm, _opens=opens):
++                site = live.robot.grasp_ids[_arm]
++                target = live.data.site_xpos[site].copy()
++                checks = []
++                for open_percent in _opens:
++                    actions = cartesian_actions(
++                        live, _arm, [target], rotation=None,
++                        seconds=self.config["grasp"]["stage_durations_s"]["release"] / 2,
++                        gripper=float(open_percent), name="place_release")
++                    screen = _v1._b("payload_path").screen_joint_path(
++                        live, _arm, actions[0], allowed_object=entry.name)
++                    checks.append({"open_percent": float(open_percent),
++                                   "passed": bool(screen.get("passed")),
++                                   "screen": screen})
++                    if screen.get("passed"):
++                        state["open"] = float(open_percent)
++                        return actions[0]
++                raise MotionFailure("placement_failed",
++                                    "no release opening clears the tray wall",
++                                    stage="place_release", evidence={"release": checks})
++
++            def build_vertical(live, _arm=assignment.destination_arm,
++                               _directions=directions, _retreat=retreat_m):
++                if state["open"] is None:
++                    raise MotionFailure("placement_failed",
++                                        "withdraw ran before a release opening was chosen",
++                                        stage="place_withdraw")
++                site = live.robot.grasp_ids[_arm]
++                position = live.data.site_xpos[site].copy()
++                rotation = live.data.site_xmat[site].reshape(3, 3).copy()
++                high = position + np.array([0.0, 0.0, lift_height])
++                checks = []
++                for name in _directions:
++                    vector = _direction_vector(name, rotation)
++                    retreat = high + np.array([float(vector[0]) * _retreat,
++                                               float(vector[1]) * _retreat, 0.0])
++                    try:
++                        segments = cartesian_actions(
++                            live, _arm, [high, retreat], rotation=rotation, seconds=1.0,
++                            gripper=state["open"], name="place_withdraw")
++                    except MotionFailure as error:
++                        checks.append({"direction": name, "passed": False,
++                                       "error": str(error)[:160]})
++                        continue
++                    actions = segments[0] + segments[1]
++                    screen = _v1._b("payload_path").screen_joint_path(
++                        live, _arm, actions, allowed_object=entry.name)
++                    checks.append({"direction": name,
++                                   "passed": bool(screen.get("passed")),
++                                   "screen": screen})
++                    if screen.get("passed"):
++                        state["direction"] = name
++                        return actions
++                raise MotionFailure("ik_unreachable",
++                                    "no vertical withdraw direction clears the tray",
++                                    stage="place_withdraw", evidence={"withdraw": checks})
++
++            for stage in place:
++                if stage.name == "place_release":
++                    stage.build = build_release
++                if stage.name == "place_withdraw":
++                    stage.build = build_vertical
++            yield MotionPlan(arm=assignment.destination_arm, object_id=entry.name,
++                             stages=place, label=f"direct_place_{entry.name}")
++            yield MotionPlan(arm=assignment.destination_arm, object_id=entry.name,
++                             stages=park_stages(env, assignment.destination_arm),
++                             label=f"direct_park_{entry.name}")
++
++    return DualBlockExpert
+diff --git a/scripts/so101/scene2_certify_v3.py b/scripts/so101/scene2_certify_v3.py
+new file mode 100755
+index 0000000..f5e8326
+--- /dev/null
++++ b/scripts/so101/scene2_certify_v3.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""V3 wrapper: run scene2_certify.py against the v3 adapter."""
++import sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_certify as v1
++import scene2_common_v3 as s2
++v1.s2 = s2
++if __name__ == "__main__":
++    sys.exit(v1.main())
+diff --git a/scripts/so101/scene2_layout_pilot_v3.py b/scripts/so101/scene2_layout_pilot_v3.py
+new file mode 100755
+index 0000000..21e8c75
+--- /dev/null
++++ b/scripts/so101/scene2_layout_pilot_v3.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""V3 wrapper: run scene2_layout_pilot.py against the v3 adapter."""
++import sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_layout_pilot as v1
++import scene2_common_v3 as s2
++v1.s2 = s2
++if __name__ == "__main__":
++    sys.exit(v1.main())
+diff --git a/scripts/so101/scene2_settle_baseline_v3.py b/scripts/so101/scene2_settle_baseline_v3.py
+new file mode 100755
+index 0000000..6d68a27
+--- /dev/null
++++ b/scripts/so101/scene2_settle_baseline_v3.py
+@@ -0,0 +1,147 @@
++#!/usr/bin/env python3
++"""V3 baseline: distractor drift on 12 v3 layouts.
++
++Unlike the v1/v2 baseline this uses the actual v3 layout sampler (release and
++withdraw search included), because the 0.10 m outer clearance makes one-draw
++sampling too sparse.  The measured hold, threshold rule and success predicate
++are unchanged.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common_v3 as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol_v3.json")
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--scenes", type=int, default=12)
++    parser.add_argument("--seed-start", type=int, default=23800)
++    parser.add_argument("--hold-s", type=float, default=2.0)
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    certificate_path = (root / protocol["source_binding"]["certificate"]).resolve()
++    config = s2.load_config(root, protocol, certificate=certificate_path)
++    certificate, certificate_path = s2.load_certificate(config)
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to reuse existing baseline directory: {output}")
++    output.mkdir(parents=True)
++    provenance = s2.provenance(root, args.protocol, config, certificate_path)
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    contacts = s2._b("contacts")
++    mujoco = s2._b("mujoco")
++    started = time.time()
++    records, rejected = [], []
++    with BimanualEnv(config, images=False) as env:
++        stale = certification.check_certificate_current(certificate, env)
++        if stale:
++            raise SystemExit("certificate stale: " + "; ".join(stale))
++        s2.install_runtime(config, env)
++        for offset in range(args.scenes):
++            seed = args.seed_start + offset
++            arrangement = "red_positive_y" if offset % 2 == 0 else "red_negative_y"
++            try:
++                layout = s2.generate_layout(
++                    config, certificate, seed, arrangement, env=env,
++                    provenance_hashes=provenance, max_attempts=400)
++            except s2._b("SceneGenerationError") as error:
++                rejected.append({"seed": seed, "arrangement": arrangement,
++                                 "reason": getattr(error, "message", str(error))[:300]})
++                continue
++            trays, blocks = layout["trays"], layout["blocks"]
++            s2.set_scene_state(env, config, trays, blocks,
++                               settle_s=float(config["runtime"]["settle_s"]))
++            initial = s2.measure_initial(env, config, blocks)
++            if not initial["passed"]:
++                rejected.append({"seed": seed, "arrangement": arrangement,
++                                 "reason": "initial_" + ",".join(
++                                     name for name, ok in initial["checks"].items() if not ok)})
++                continue
++            baseline = {name: contacts.object_pose(env.model, env.data, name)[0].copy()
++                        for name in ("cube_0", "cube_1")}
++            max_displacement = {name: 0.0 for name in baseline}
++            max_speed = {name: 0.0 for name in baseline}
++            robot_contacts, false_grasp = [], []
++            steps = round(float(args.hold_s) * float(config["runtime"]["physics_hz"]))
++            for _ in range(steps):
++                mujoco.mj_step(env.model, env.data)
++                for name in baseline:
++                    position = contacts.object_pose(env.model, env.data, name)[0]
++                    max_displacement[name] = max(
++                        max_displacement[name],
++                        float(np.linalg.norm(position - baseline[name])))
++                    linear, angular, _, _ = contacts.object_speed(env.model, env.data, name)
++                    max_speed[name] = max(max_speed[name], max(linear, angular))
++                    touching = contacts.robot_contacts_with(env.model, env.data, name)
++                    if touching:
++                        robot_contacts.append({"object": name, "contacts": touching[:2]})
++                    if any(contacts.bilateral_grasp(env.model, env.data, name, arm)[0]
++                           for arm in ("left", "right")):
++                        false_grasp.append({"object": name})
++            mujoco.mj_forward(env.model, env.data)
++            records.append({
++                "seed": seed, "arrangement": arrangement,
++                "physical_sha256": layout["physical_sha256"],
++                "layout_sha256": layout["layout_sha256"],
++                "sampler_attempts": layout["checks"]["sampler_attempts"],
++                "trays": trays, "blocks": blocks,
++                "initial_checks": initial["checks"],
++                "hold_s": float(args.hold_s),
++                "max_displacement_m": {name: round(value, 9)
++                                       for name, value in max_displacement.items()},
++                "max_speed": {name: round(value, 9) for name, value in max_speed.items()},
++                "robot_contact_samples": len(robot_contacts),
++                "false_grasp_samples": len(false_grasp),
++            })
++    flat = [value for row in records for value in row["max_displacement_m"].values()]
++    maximum = max(flat) if flat else None
++    threshold = None if maximum is None else round(max(0.002, maximum + 0.001), 6)
++    payload = {
++        "schema_version": 1, "created": _now(),
++        "phase": "distractor_settle_baseline_v3",
++        "protocol_id": protocol["protocol_id"],
++        "protocol_sha256": s2.common.sha256_file(args.protocol),
++        "certificate_sha256": provenance["certificate_sha256"],
++        "adapter_sha256": provenance["adapter_sha256"],
++        "source_sha256": provenance["source_sha256"],
++        "seed_range": [args.seed_start, args.seed_start + args.scenes - 1],
++        "scenes_requested": args.scenes, "scenes_measured": len(records),
++        "rejected": rejected, "hold_s": float(args.hold_s),
++        "max_hold_displacement_m": maximum,
++        "threshold_rule": "max(0.002, measured_max + 0.001)",
++        "threshold_m": threshold,
++        "any_robot_contact": any(row["robot_contact_samples"] for row in records),
++        "any_false_grasp": any(row["false_grasp_samples"] for row in records),
++        "claims": "v3 layouts from the actual sampler; arms parked; no expert execution",
++        "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
++        "records": records,
++    }
++    s2.common.write_json(output / "baseline.json", payload)
++    print(json.dumps({key: value for key, value in payload.items()
++                      if key not in ("records", "rejected")}, indent=2))
++    return 0 if records and not payload["any_robot_contact"] and not payload["any_false_grasp"] else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_pregenerate_v3.py b/scripts/so101/scene2_pregenerate_v3.py
+new file mode 100755
+index 0000000..9b7e163
+--- /dev/null
++++ b/scripts/so101/scene2_pregenerate_v3.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""V3 wrapper: run scene2_pregenerate.py against the v3 adapter."""
++import sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_pregenerate as v1
++import scene2_common_v3 as s2
++v1.s2 = s2
++if __name__ == "__main__":
++    sys.exit(v1.main())
+diff --git a/scripts/so101/scene2_collect_v3.py b/scripts/so101/scene2_collect_v3.py
+new file mode 100755
+index 0000000..c43eff9
+--- /dev/null
++++ b/scripts/so101/scene2_collect_v3.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""V3 wrapper: run scene2_collect.py against the v3 adapter."""
++import sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_collect as v1
++import scene2_common_v3 as s2
++v1.s2 = s2
++if __name__ == "__main__":
++    sys.exit(v1.main())
+diff --git a/scripts/so101/scene2_audit_v3.py b/scripts/so101/scene2_audit_v3.py
+new file mode 100755
+index 0000000..b6f4ef8
+--- /dev/null
++++ b/scripts/so101/scene2_audit_v3.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""V3 wrapper: run scene2_audit.py against the v3 adapter."""
++import sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_audit as v1
++import scene2_common_v3 as s2
++v1.s2 = s2
++if __name__ == "__main__":
++    sys.exit(v1.main())
+diff --git a/tests/test_scene2_v3_contracts.py b/tests/test_scene2_v3_contracts.py
+new file mode 100644
+index 0000000..2728d3c
+--- /dev/null
++++ b/tests/test_scene2_v3_contracts.py
+@@ -0,0 +1,118 @@
++"""Static contracts for the v3 per-scene release/withdraw search."""
++from __future__ import annotations
++
++import json
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++V1_PROTOCOL = ROOT / "configs/so101/scene2_dual_random_protocol.json"
++V2_PROTOCOL = ROOT / "configs/so101/scene2_dual_random_protocol_v2.json"
++V3_PROTOCOL = ROOT / "configs/so101/scene2_dual_random_protocol_v3.json"
++V3_PROFILE = ROOT / "configs/so101/scene2_dual_random_profile_v3.yaml"
++V3_MODULE = ROOT / "scripts/so101/scene2_common_v3.py"
++V3_REPORTS = sorted((ROOT / "reports").glob("so101-scene2-dual-random-v3*.md"))
++
++
++class Scene2V3ProtocolContractTest(unittest.TestCase):
++    def setUp(self):
++        self.v1 = json.loads(V1_PROTOCOL.read_text(encoding="utf-8"))
++        self.v2 = json.loads(V2_PROTOCOL.read_text(encoding="utf-8"))
++        self.v3 = json.loads(V3_PROTOCOL.read_text(encoding="utf-8"))
++
++    def test_v1_v2_untouched(self):
++        self.assertEqual(self.v1["protocol_id"], "scene2_dual_random_v1")
++        self.assertEqual(self.v2["protocol_id"], "scene2_dual_random_v2")
++        self.assertEqual(self.v1["collection"]["physical_pilot"]["layouts"], 4)
++        self.assertEqual(self.v2["collection"]["physical_pilot"]["layouts"], 4)
++
++    def test_v3_rules(self):
++        self.assertEqual(self.v3["protocol_id"], "scene2_dual_random_v3")
++        self.assertEqual(self.v3["source_binding"]["profile"],
++                         "configs/so101/scene2_dual_random_profile_v3.yaml")
++        self.assertEqual(self.v3["source_binding"]["certificate"],
++                         "configs/certification/scene2_dual_random_certificate_v3.json")
++        self.assertEqual(self.v3["scene_layout"]["blocks"]["block_tray_outer_clearance_m"], 0.10)
++        grasp = self.v3["grasp"]
++        self.assertEqual(grasp["release_open_candidates"], [40.0, 50.0, 30.0])
++        self.assertEqual(grasp["withdraw_directions"],
++                         ["gripper_x_neg", "gripper_x_pos", "world_x_neg", "world_x_pos"])
++        self.assertEqual(grasp["withdraw_retreat_m"], 0.06)
++        self.assertEqual(self.v3["collection"]["seed_registry"]["layout_pilot"], [23200, 23439])
++        self.assertEqual(self.v3["collection"]["seed_registry"]["physical_pilot_layouts"],
++                         [23440, 23479])
++
++    def test_success_predicate_unchanged(self):
++        for key in ("requires_all_target", "requires_all_distractor", "not_sufficient"):
++            self.assertEqual(self.v1["success_predicate"][key],
++                             self.v3["success_predicate"][key])
++        self.assertEqual(self.v1["success_predicate"]["id"],
++                         self.v3["success_predicate"]["id"])
++
++    def test_v3_profile(self):
++        import yaml
++
++        profile = yaml.safe_load(V3_PROFILE.read_text(encoding="utf-8"))
++        self.assertEqual(profile["sorting"]["scene2_block_tray_outer_clearance_m"], 0.10)
++        self.assertEqual(profile["sorting"]["scene2_slot_mode"], "center")
++        self.assertEqual(profile["grasp"]["scene2_release_open_candidates"], [40.0, 50.0, 30.0])
++        self.assertEqual(profile["grasp"]["scene2_withdraw_retreat_m"], 0.06)
++        self.assertEqual(profile["sorting"]["distractor_max_displacement_m"], 0.002)
++
++
++class Scene2V3AdapterContractTest(unittest.TestCase):
++    def setUp(self):
++        self.source = V3_MODULE.read_text(encoding="utf-8")
++
++    def test_wrappers_and_overrides(self):
++        for name in ("certify", "layout_pilot", "pregenerate", "collect", "audit"):
++            self.assertTrue((ROOT / f"scripts/so101/scene2_{name}_v3.py").is_file(), name)
++        self.assertTrue((ROOT / "scripts/so101/scene2_settle_baseline_v3.py").is_file())
++        self.assertIn("_OPEN_CANDIDATES = (40.0, 50.0, 30.0)", self.source)
++        self.assertIn("_DIRECTIONS =", self.source)
++        self.assertIn("_v1.place_verdict = place_verdict", self.source)
++        self.assertIn("_v1.dual_block_expert_class = dual_block_expert_class", self.source)
++
++    def test_per_scene_search_is_present(self):
++        for token in ("release_checks", "chosen_open", "direction_checks",
++                      "chosen_direction", "build_release", "build_vertical",
++                      "state[\"open\"]", "state[\"direction\"]"):
++            self.assertIn(token, self.source)
++
++    def test_v3_layout_baseline_scenes(self):
++        layout = ROOT / "experiments/so101/scene2-dual-random-v3-layout-pilot.json"
++        baseline = ROOT / "experiments/so101/scene2-dual-random-v3-baseline.json"
++        scenes = ROOT / "experiments/so101/scene2-dual-random-v3-pilot-scenes.json"
++        self.assertTrue(layout.is_file())
++        self.assertTrue(baseline.is_file())
++        self.assertTrue(scenes.is_file())
++        layout_data = json.loads(layout.read_text(encoding="utf-8"))
++        baseline_data = json.loads(baseline.read_text(encoding="utf-8"))
++        scenes_data = json.loads(scenes.read_text(encoding="utf-8"))
++        self.assertEqual(layout_data["accepted"], 240)
++        self.assertEqual(layout_data["unique_physical_hashes"], 240)
++        self.assertEqual(baseline_data["clean_run"]["scenes_measured"], 12)
++        self.assertEqual(baseline_data["clean_run"]["threshold_m"], 0.002)
++        self.assertEqual(len(scenes_data["layouts"]), 4)
++        self.assertEqual(sum(len(value) for value in scenes_data["scenes"].values()), 8)
++
++    def test_v3_reports_and_private_paths(self):
++        self.assertTrue(V3_REPORTS, "v3 reports are missing")
++        for path in V3_REPORTS:
++            text = path.read_text(encoding="utf-8")
++            self.assertLess(len(text), 1000, path.name)
++            for token in ("/" + "home" + "/", "Desk" + "top", "cache/so101", "runs/so101"):
++                self.assertNotIn(token, text, path.name)
++        paths = [V3_PROTOCOL, V3_PROFILE, V3_MODULE,
++                 ROOT / "docs/so101-scene2-dual-random-v3.md"]
++        paths += sorted((ROOT / "experiments/so101").glob("scene2-dual-random-v3-*.json"))
++        for path in paths:
++            if not path.is_file():
++                continue
++            text = path.read_text(encoding="utf-8")
++            for token in ("/" + "home" + "/", "Desk" + "top", "cache/so101", "runs/so101"):
++                self.assertNotIn(token, text, path.name)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/so101-scene2-dual-random-v3.md b/docs/so101-scene2-dual-random-v3.md
+new file mode 100644
+index 0000000..d44fc86
+--- /dev/null
++++ b/docs/so101-scene2-dual-random-v3.md
+@@ -0,0 +1,15 @@
++# Scene2 v3 reproduction
++
++v3 uses the v3 protocol, profile and wrappers; the baseline is the full v3 sampler script.
++
++    export SO101_EGL_DEVICE=0
++    R=$SO101_SOURCE_ROOT; P=$SO101_PYTHON; O=<run>
++    Q=configs/so101/scene2_dual_random_protocol_v3.json
++    $P scripts/so101/scene2_certify_v3.py --root "$R" --protocol "$Q" --output <cert_v3>
++    $P scripts/so101/scene2_layout_pilot_v3.py --root "$R" --protocol "$Q" --output "$O/layout"
++    $P scripts/so101/scene2_settle_baseline_v3.py --root "$R" --protocol "$Q" --output "$O/baseline"
++    $P scripts/so101/scene2_pregenerate_v3.py --root "$R" --protocol "$Q" --output "$O/pilot_scenes.json"
++    $P scripts/so101/scene2_collect_v3.py --root "$R" --protocol "$Q" --scenes "$O/pilot_scenes.json" --output "$O/pilot"
++    $P scripts/so101/scene2_audit_v3.py --run "$O/pilot" --protocol "$Q"
++
++Hashes: protocol 48117757, profile 58bc734e, certificate f593c042, adapter a63f6021, scenes 0a3d78e3. v1 4/8, v2 2/8, v3 3/8. R3 local; reproduce-pending.
+diff --git a/reports/so101-scene2-dual-random-v3-scene.md b/reports/so101-scene2-dual-random-v3-scene.md
+new file mode 100644
+index 0000000..e4c1e15
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-v3-scene.md
+@@ -0,0 +1,11 @@
++# Scene2 v3 per-scene search pilot
++
++Claim: v3 4 layouts x 2 instructions = 8 condition episodes; 3/8; 1 layout both; R3 local; reproduce-pending.
++
++v3 changes: 0.10 m block-to-tray outer clearance; per-scene release open 40/50/30 and four withdraw directions at the actual pose. Predicate and 0.5 mm guard unchanged.
++
++Result: 3/8 (v1 4/8, v2 2/8); 3 place_release at 0.50-0.57 mm tray wall; 2 place_withdraw where the fixed 60 mm vertical waypoint is unreachable. Layout 2 passed both. v3 is a partial per-scene success; v1 remains the reference.
++
++Conclusion: parameter/search iterations plateau at 3-4/8; the tray inner clearance plus gripper envelope is structural. Next: redesign the tray/place geometry with the external model owner, or restrict the formal family to the measured feasible subset; re-pilot.
++
++[v3 pilot](../experiments/so101/scene2-dual-random-v3-pilot.json) · [images](assets/so101-scene2-dual-random-v3/layout_02_red_vs_blue.png).
+diff --git a/reports/so101-scene2-dual-random-v3-data.md b/reports/so101-scene2-dual-random-v3-data.md
+new file mode 100644
+index 0000000..b7184ee
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-v3-data.md
+@@ -0,0 +1,3 @@
++# Scene2 v3 data quality
++
++8 episodes, 5293 control frames at 50 Hz; dt 0.020 s, no long/short/unexplained gaps. Three failure episodes end with terminal partial frames (1/5/7 substeps); trace time plus substeps equals summary within 1e-14 s. applied == commanded exactly (max 0.0); state/action finite; joint jumps <=5.24 deg; gripper 70 percent at open. Three cameras 640x480/50 fps; decoded frames equal trace frames; central no duplicate; wrist 2-3 frames. Initial states 4/4. Target paths 0.166-0.219 m on successes and placed failures; distractor net 0.0. Predicate and summary agree on all 8. Raw data ignored; the tracked audit is [here](../experiments/so101/scene2-dual-random-v3-audit.json).
+diff --git a/reports/so101-scene2-dual-random-v3-engineering.md b/reports/so101-scene2-dual-random-v3-engineering.md
+new file mode 100644
+index 0000000..336cf0c
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-v3-engineering.md
+@@ -0,0 +1,9 @@
++# Scene2 v3 engineering notes
++
++v3 adds a 0.10 m outer clearance and per-scene release/withdraw search; predicate and guard unchanged.
++
++v3 3/8 (v1 4/8, v2 2/8). Layout 2 passed both; layout 3 red passed. Failures: 3 place_release at 0.50-0.57 mm tray wall; 2 place_withdraw where the fixed 60 mm vertical waypoint is unreachable for every direction (the search changes direction, not lift height). The release contact appears at the 500 Hz substep guard even when the control-frame static screen passed; the 40/50/30 openings do not clear this tray.
++
++Conclusion: the tray inner half 0.055 and the gripper jaw envelope are the limiting geometry; more parameter search is not converging. The next change is a shared external tray/place redesign (larger inner clearance or lower release/approach) or a formal family restricted to the measured feasible subset. Do not start formal collection.
++
++R3 local; reproduce-pending from a clean clone.

@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase_scope": [
+    "E1",
+    "E3",
+    "E4-data"
+  ],
+  "task": {
+    "name": "direct_sorting",
+    "instruction": "Sort the red cubes into the red tray and the blue cubes into the blue tray.",
+    "source": "external dual-SO101 MuJoCo project, scripted physical expert",
+    "transfer_protocol": false
+  },
+  "source_binding": {
+    "external_root_env": "SO101_SOURCE_ROOT",
+    "external_python_env": "SO101_PYTHON",
+    "profile": "configs/profiles/collection_50hz_three_camera.yaml",
+    "fingerprint_tool": "scripts/so101/source_fingerprint.py"
+  },
+  "control": {
+    "physics_hz": 500,
+    "control_hz": 50,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 120.0,
+    "nominal_realtime_claim": false
+  },
+  "observation": {
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "rgb": {
+      "dtype": "uint8",
+      "layout": "HWC",
+      "height": 480,
+      "width": 640,
+      "policy_resize": [
+        224,
+        224
+      ],
+      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
+    },
+    "state": {
+      "key": "observation.state",
+      "shape": [
+        12
+      ],
+      "order": [
+        "left_shoulder_pan.pos",
+        "left_shoulder_lift.pos",
+        "left_elbow_flex.pos",
+        "left_wrist_flex.pos",
+        "left_wrist_roll.pos",
+        "left_gripper.pos",
+        "right_shoulder_pan.pos",
+        "right_shoulder_lift.pos",
+        "right_elbow_flex.pos",
+        "right_wrist_flex.pos",
+        "right_wrist_roll.pos",
+        "right_gripper.pos"
+      ],
+      "units": [
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent"
+      ],
+      "timing": "measured joint state immediately before the action is issued"
+    }
+  },
+  "action": {
+    "key": "action",
+    "shape": [
+      12
+    ],
+    "semantics": "absolute joint-position target, left six then right six",
+    "units": [
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent"
+    ],
+    "label_rule": "clamped actuator target actually applied at that control frame; never the next measured state",
+    "chunk_horizon": 10,
+    "replan_steps": 10
+  },
+  "collection": {
+    "profile": "direct",
+    "direct_seed_range": [
+      13200,
+      13999
+    ],
+    "target_successes": 40,
+    "maximum_attempts": 400,
+    "attempt_budget_provenance": "clean60 measured 60 successes from 175 certified draws (34.3% layout acceptance); 40 successes need ~117 executed layouts, so 400 leaves headroom for expert failures and is a hard stop",
+    "measured_expert_wall_clock": {
+      "source_round": "clean60 collection 2026-10-28 (60 episodes, 14,940 s wall incl. layout rejects)",
+      "successful_episode_frames": 2733,
+      "successful_episode_wall_s": 224.5,
+      "expected_40_episode_execution_s": 8980,
+      "collection_wall_limit_s": 21600,
+      "note": "the wall limit is a watchdog on this round only; it is not a success criterion"
+    },
+    "diagnostics": true,
+    "split": {
+      "train": 32,
+      "validation": 8,
+      "unit": "episode",
+      "rule": "40 independently successful scenes appended after the preserved 60; default first 32 train / last 8 validation in collection order, adjusted only if needed to keep a role-preserving near-duplicate family on one side of the merged 80/20 split"
+    },
+    "normalisation": "computed from the merged 80 train episodes only",
+    "success_predicate": "external SortingTask.evaluate: tray geometry, support/contact, robot clearance, velocity and sustained stability",
+    "failure_policy": "every attempt and failure reason is kept; a failed attempt never becomes a demonstration",
+    "protocol_id": "clean100_spread_v1",
+    "repo_id": "local/so101_clean100_spread"
+  },
+  "evaluation": {
+    "purpose": "reserved independent clean-layout scenes; no learned-policy rollout in this round",
+    "seed_range": [
+      14000,
+      14199
+    ],
+    "episodes": 20,
+    "attempts_per_scene": 1,
+    "scene_freeze": "SceneSpec and SHA-256 written before any policy rollout",
+    "not_used_for": [
+      "training",
+      "hyper-parameter tuning",
+      "normalisation statistics"
+    ],
+    "timeout_s": 120.0,
+    "record_trace": true,
+    "record_video": false,
+    "success_predicate": "external SortingTask.evaluate, independent of the policy",
+    "report": "success count / 20 with Wilson 95% interval and failure categories"
+  },
+  "claims": {
+    "engineering_chain": "100 clean spread-layout scripted-expert demonstrations (60 preserved + 40 newly collected) -> audited train-only statistics from 80 train episodes",
+    "explicitly_not": [
+      "a benchmark success rate",
+      "a learned-policy result",
+      "clean100 training (not started in this round)",
+      "real-robot validation"
+    ]
+  },
+  "protocol_id": "clean100_spread_v1",
+  "scene_layout": {
+    "object_count": 4,
+    "minimum_pairwise_distance_m": 0.08,
+    "minimum_distance_provenance": "unchanged from clean60: measured by the wide layout pilot (520 certified sampler draws, public summary reports/so101-clean60-layout-pilot.md); 0.08 m is the registered threshold and is not renegotiated",
+    "cube_edge_m": 0.025,
+    "separation_in_cube_widths": 3.2,
+    "sampling_region": "unchanged certified pick regions and IK certificate; no region widening, no guard relaxation",
+    "boundary_margin_m": "as certified by the external sampler's own region and clearance checks",
+    "maximum_sampler_draws_for_60_layouts": 400,
+    "method": "reject certified direct scenes whose minimum pairwise cube-centre distance is below the registered minimum before any physical execution",
+    "reachable": "external certified pick regions plus per-scene grasp and hover IK; every admitted episode must complete physical sorting and replay",
+    "perturbations_enabled": false,
+    "visual_randomization_enabled": false,
+    "vary_positions_between_episodes": true,
+    "reuse_previous_episodes": false,
+    "maximum_sampler_draws_for_40_layouts": 400
+  },
+  "lineage": {
+    "base_protocol": "configs/so101/clean60_protocol.json",
+    "base_protocol_sha256": "06f870b7633aa366d4f45b7592d718898f60eee8bc0dcce4f129f41b993608ab",
+    "preserved_episodes": 60,
+    "new_episodes": 40,
+    "target_episodes": 100,
+    "preserved_split": {
+      "train": 48,
+      "validation": 12
+    },
+    "new_split": {
+      "train": 32,
+      "validation": 8
+    },
+    "merge_rule": "old episode indices 0..59 and bytes are preserved unchanged in a new versioned view; new collection episodes 60..99",
+    "family_rule": "role-preserving 12.5 mm near-duplicate families are computed over all 100 scenes; a family never crosses train/validation; only the new 32/8 assignment may be adjusted"
+  },
+  "seed_registry": {
+    "new_block": [
+      13200,
+      13999
+    ],
+    "new_block_provenance": "scanned every JSON/JSONL seed under runs/so101 on the pinned host on 2026-10-29: 13000-13999 contained zero seeds; clean60 used 12000-12174 inside its registered 12000-13199 block; clean60 evaluation reserved 14000-14199",
+    "disjoint_from": {
+      "e1_8100_8199": "used",
+      "e4t_8220_8779": "used",
+      "e1_eval_9100_9119": "reserved",
+      "e4t_future_test_9300_9349": "reserved",
+      "clean60_12000_13199": "used/reserved",
+      "clean60_eval_14000_14199": "reserved"
+    },
+    "pilot_policy": "a pilot scene is never reused as a demonstration; the main collection starts at 13200 and every executed seed is recorded"
+  },
+  "merge_target": {
+    "view_prefix": "clean100_view_",
+    "total_episodes": 100,
+    "train": 80,
+    "validation": 20,
+    "preserved_view": "clean60_view_v3_20261028T043918Z",
+    "preserved_view_sha256": "e6174226c1b4fc33a0c96b3bc41eb0a7a3a16babfe8bd0ed787095c8250c678e",
+    "preserved_episode_tree_sha256": "e6174226c1b4fc33a0c96b3bc41eb0a7a3a16babfe8bd0ed787095c8250c678e"
+  }
+}

@@ -21,6 +21,12 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import openpi_so101 as so101  # noqa: E402
+from model_scope import resolve_model_scope  # noqa: E402
+
+
+def _make_selfcheck_config(run_config: dict, **kwargs):
+    return so101.make_train_config(
+        **kwargs, **resolve_model_scope(run_config))
 
 
 def main() -> int:
@@ -37,7 +43,9 @@ def main() -> int:
     val_ids = sorted(int(row["episode_index"]) for row in meta["episodes"] if row["split"] == "validation")
     batch = int(run_config["batch_size"])
 
-    config = so101.make_train_config(
+    model_scope = resolve_model_scope(run_config)
+    config = _make_selfcheck_config(
+        run_config,
         mode=args.mode, run_root=args.view.parent / "selfcheck", train_view=args.view,
         base_checkpoint=args.base_checkpoint, exp_name="e4t_selfcheck",
         state_mode=run_config.get("state_mode", "on"), batch_size=batch,
@@ -88,6 +96,7 @@ def main() -> int:
             "pass": len(dataset.samples) == sum(int(row.get("eligible_windows", 0))
                                                 for row in meta["episodes"] if row["split"] == "train")},
         "state_mode": str(run_config.get("state_mode", "on")),
+        "model_scope": model_scope,
         "claim": "configuration and data-path self-check; not a training result",
     }
     results["all_passed"] = all(row["pass"] for row in results.values() if isinstance(row, dict))

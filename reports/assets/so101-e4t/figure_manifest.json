@@ -1,0 +1,149 @@
+{
+  "best_step_reported": 30000,
+  "branch": "so101",
+  "checkpoints": [
+    1,
+    5001,
+    10001,
+    15001,
+    20001,
+    25001,
+    30000
+  ],
+  "claim": "open-loop prediction curves on recorded expert observations; no policy action was executed in simulation",
+  "curves_only": false,
+  "figure_root": "openloop_figures",
+  "figures": [
+    "curve_error_steps.png",
+    "curve_flow_loss.png",
+    "curve_horizon.png",
+    "curve_horizon_gripper.png",
+    "curve_horizon_p95.png",
+    "curve_lr.png",
+    "curve_per_category.png",
+    "curve_phase_compare.png",
+    "curves.pdf",
+    "episode_016_h0.png",
+    "episode_016_h4.png",
+    "episode_016_h9.png",
+    "episode_017_h0.png",
+    "episode_017_h4.png",
+    "episode_017_h9.png",
+    "episode_018_h0.png",
+    "episode_018_h4.png",
+    "episode_018_h9.png",
+    "episode_019_h0.png",
+    "episode_019_h4.png",
+    "episode_019_h9.png",
+    "episode_024_h0.png",
+    "episode_024_h4.png",
+    "episode_024_h9.png",
+    "episode_037_h0.png",
+    "episode_037_h4.png",
+    "episode_037_h9.png",
+    "episode_038_h0.png",
+    "episode_038_h4.png",
+    "episode_038_h9.png",
+    "episode_039_h0.png",
+    "episode_039_h4.png",
+    "episode_039_h9.png",
+    "episode_048_h0.png",
+    "episode_048_h4.png",
+    "episode_048_h9.png",
+    "episode_049_h0.png",
+    "episode_049_h4.png",
+    "episode_049_h9.png",
+    "gripper_horizon_heatmap.png",
+    "gripper_horizon_heatmap_recovery.png",
+    "joint_horizon_heatmap.png",
+    "joint_horizon_heatmap_recovery.png",
+    "overlays_validation.pdf"
+  ],
+  "gate_line_deg": 2.0,
+  "overlay_episode_ids": [
+    16,
+    17,
+    18,
+    19,
+    24,
+    37,
+    38,
+    39,
+    48,
+    49
+  ],
+  "overlay_episode_split_source": "evaluation reports filtered by the requested --split",
+  "overlay_episode_splits": {
+    "16": "validation",
+    "17": "validation",
+    "18": "validation",
+    "19": "validation",
+    "24": "validation",
+    "37": "validation",
+    "38": "validation",
+    "39": "validation",
+    "48": "validation",
+    "49": "validation"
+  },
+  "overlay_files_by_episode": {
+    "16": [
+      "episode_016_h0.png",
+      "episode_016_h4.png",
+      "episode_016_h9.png"
+    ],
+    "17": [
+      "episode_017_h0.png",
+      "episode_017_h4.png",
+      "episode_017_h9.png"
+    ],
+    "18": [
+      "episode_018_h0.png",
+      "episode_018_h4.png",
+      "episode_018_h9.png"
+    ],
+    "19": [
+      "episode_019_h0.png",
+      "episode_019_h4.png",
+      "episode_019_h9.png"
+    ],
+    "24": [
+      "episode_024_h0.png",
+      "episode_024_h4.png",
+      "episode_024_h9.png"
+    ],
+    "37": [
+      "episode_037_h0.png",
+      "episode_037_h4.png",
+      "episode_037_h9.png"
+    ],
+    "38": [
+      "episode_038_h0.png",
+      "episode_038_h4.png",
+      "episode_038_h9.png"
+    ],
+    "39": [
+      "episode_039_h0.png",
+      "episode_039_h4.png",
+      "episode_039_h9.png"
+    ],
+    "48": [
+      "episode_048_h0.png",
+      "episode_048_h4.png",
+      "episode_048_h9.png"
+    ],
+    "49": [
+      "episode_049_h0.png",
+      "episode_049_h4.png",
+      "episode_049_h9.png"
+    ]
+  },
+  "overlay_horizons": [
+    0,
+    4,
+    9
+  ],
+  "phase": "E3",
+  "schema_version": 1,
+  "split": "validation",
+  "substage": "E4-T-T2-curves"
+}

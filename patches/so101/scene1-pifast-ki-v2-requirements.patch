@@ -1,0 +1,115 @@
+diff --git a/openpi/models/gemma.py b/openpi/models/gemma.py
+--- a/openpi/models/gemma.py
++++ b/openpi/models/gemma.py
+@@ -51,9 +51,12 @@
+     head_dim: int
+     lora_configs: dict[str, lora.LoRAConfig] = dataclasses.field(default_factory=dict)
+ 
+ 
+-Variant = Literal["dummy", "gemma_300m", "gemma_300m_lora", "gemma_2b", "gemma_2b_lora"]
++Variant = Literal[
++    "dummy", "gemma_300m", "gemma_300m_lora", "gemma_300m_lora_r64",
++    "gemma_2b", "gemma_2b_lora",
++]
+ 
+ 
+ def get_config(variant: Variant) -> Config:
+     """Returns config for specified gemma variant."""
+@@ -74,8 +77,21 @@
+             mlp_dim=4096,
+             num_heads=8,
+             num_kv_heads=1,
+             head_dim=256,
++        )
++    if variant == "gemma_300m_lora_r64":
++        return Config(
++            width=1024,
++            depth=18,
++            mlp_dim=4096,
++            num_heads=8,
++            num_kv_heads=1,
++            head_dim=256,
++            lora_configs={
++                "attn": lora.LoRAConfig(rank=64, alpha=64.0),
++                "ffn": lora.LoRAConfig(rank=64, alpha=64.0),
++            },
+         )
+     if variant == "gemma_2b":
+         return Config(
+             width=2048,
+diff --git a/joint_pi05_v3.py b/joint_pi05_v3.py
+--- a/joint_pi05_v3.py
++++ b/joint_pi05_v3.py
+@@ -1,6 +1,7 @@
+ """Ignored scheme-1 prototype: shared Pi05 trunk with FAST and flow losses."""
+ from dataclasses import replace
++import math
+ 
+ import einops
+ import flax.nnx as nnx
+ import jax
+@@ -14,8 +15,16 @@
+ FAST_SKIP_TOKENS = 128
+ FAST_TOKEN_COUNT = 2_048
+ FAST_TOKEN_START = PALIGEMMA_VOCAB_SIZE - 1 - FAST_SKIP_TOKENS - (FAST_TOKEN_COUNT - 1)
+ FAST_TOKEN_STOP = PALIGEMMA_VOCAB_SIZE - FAST_SKIP_TOKENS
++
++
++def flow_mse_12d(velocity, target_velocity):
++    """Compute Flow Matching MSE over the 12 physical dimensions only."""
++    if velocity.shape[-1] < 12 or target_velocity.shape[-1] < 12:
++        raise ValueError("Flow tensors must contain at least 12 action dimensions")
++    return jnp.mean(jnp.square(
++        velocity[..., :12] - target_velocity[..., :12]))
+ 
+ 
+ class FASTTokenResidual(nnx.Module):
+     """Zero-initialized residual rows over the frozen tied embedding table."""
+@@ -205,8 +214,44 @@
+         velocity = self.action_out_proj(expert[:, -self.action_horizon :])
+         dim = actions.shape[-1] if valid_action_dim is None else valid_action_dim
+         if not 0 < dim <= actions.shape[-1]:
+             raise ValueError("invalid action dimension")
+-        flow_loss = jnp.mean(
+-            jnp.square(velocity[..., :dim] - target_velocity[..., :dim])
+-        )
++        if dim == 12:
++            flow_loss = flow_mse_12d(velocity, target_velocity)
++        else:
++            flow_loss = jnp.mean(
++                jnp.square(velocity[..., :dim] - target_velocity[..., :dim])
++            )
+         return flow_loss, fast_loss
++
++    def joint_loss(
++        self,
++        rng,
++        observation,
++        actions,
++        action_region_mask,
++        *,
++        fast_ce_weight,
++        train=False,
++        ki=True,
++    ):
++        """Return the explicit Scene1 joint loss with 12-D flow supervision."""
++        if fast_ce_weight is None:
++            raise ValueError("fast_ce_weight must be set explicitly")
++        weight = float(fast_ce_weight)
++        if not math.isfinite(weight) or weight < 0.0:
++            raise ValueError("fast_ce_weight must be finite and non-negative")
++        flow_mse_12d, fast_ce = self.compute_losses(
++            rng,
++            observation,
++            actions,
++            action_region_mask,
++            train=train,
++            ki=ki,
++            valid_action_dim=12,
++        )
++        total = flow_mse_12d + weight * fast_ce
++        return total, {
++            "flow_mse_12d": flow_mse_12d,
++            "fast_ce": fast_ce,
++            "fast_ce_weight": weight,
++        }

@@ -16,11 +16,18 @@ pi05-reproduction · local deploy and experiment tracking
   ./scripts/run.sh smoke --suite ... run one LIBERO episode on the server, record to ledger
   ./scripts/run.sh release           remove this project's containers and network
   ./scripts/run.sh status            refresh phase gates, write reports/status.md
+  ./scripts/run.sh watch             本地只读训练监控页面（见 configs/monitor/example.env）
   ./scripts/run.sh baseline          verify third-party source against the lock
+  ./scripts/run.sh repro doctor      grade this checkout: R1 structural / R2 environment / R3 numerical
+  ./scripts/run.sh repro plan        print the commands that reach the next level
+  ./scripts/run.sh repro fetch-images|fetch-source|pin|verify-source
   ./scripts/run.sh record ...        append one run record (see scripts/track/record.py -h)
   ./scripts/run.sh env               print resolved deployment variables
   ./scripts/run.sh scan              public-repository security scan
   ./scripts/run.sh ssh [cmd...]      login, or run one command remotely
+
+Public reproduction needs no server and no key: ./scripts/run.sh repro doctor
+The deploy commands above require .env.local for this machine.
 EOF
 }
 
@@ -36,7 +43,14 @@ case "$cmd" in
   smoke)            exec python3 scripts/deploy/smoke.py "$@" ;;
   release)          exec python3 scripts/deploy/release.py "$@" ;;
   status)           exec python3 scripts/track/status.py "$@" ;;
+  watch)
+    # 本地监控配置只从环境或忽略的 configs/monitor/local.env 读取
+    if [ -f configs/monitor/local.env ]; then
+      set -a; . configs/monitor/local.env; set +a
+    fi
+    exec python3 scripts/track/train_watch.py "$@" ;;
   baseline)         exec python3 scripts/verify/source_lock.py "$@" ;;
+  repro)            exec python3 scripts/repro/repro.py "$@" ;;
   record)           exec python3 scripts/track/record.py "$@" ;;
   env)              exec python3 scripts/deploy/_env.py ;;
   scan)             exec bash scripts/security/scan.sh "$@" ;;

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-T2-event-smearing",
+  "created": "2026-10-26T18:18:00+08:00",
+  "question": "why the key-event timing gate reports no paired event while the gripper error is a third of a percentage point",
+  "method": "scripts/so101/e4t_event_smearing.py reads the per-noise-copy predictions the evaluator stores in arrays.npz and counts threshold crossings on the mean prediction and on each individual copy, inside the event-anchored windows",
+  "thresholds": {
+    "closed_percent": 10.0,
+    "open_percent": 25.0
+  },
+  "cases": {
+    "1": {
+      "windows": 82,
+      "expert_event_windows": 82,
+      "windows_whose_mean_prediction_crosses": 0,
+      "mean_crossing_share": 0.0,
+      "mean_offsets_frames": [],
+      "copies_with_a_crossing_histogram": {
+        "0": 82
+      },
+      "per_copy_offsets_frames": {
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": 0,
+        "within_3": 0
+      },
+      "checkpoint_train_state_step": 1,
+      "window_set": "event_anchored_supplementary",
+      "report_dir": "init_step1_anchored"
+    },
+    "10001": {
+      "windows": 82,
+      "expert_event_windows": 82,
+      "windows_whose_mean_prediction_crosses": 0,
+      "mean_crossing_share": 0.0,
+      "mean_offsets_frames": [],
+      "copies_with_a_crossing_histogram": {
+        "0": 30,
+        "1": 30,
+        "2": 18,
+        "3": 4
+      },
+      "per_copy_offsets_frames": {
+        "max": 4,
+        "median": 2.0,
+        "min": -4,
+        "n": 79,
+        "within_3": 73
+      },
+      "checkpoint_train_state_step": 10001,
+      "window_set": "event_anchored_supplementary",
+      "report_dir": "step010001_anchored"
+    }
+  },
+  "finding": "the gate is defined on the mean over the paired noise copies; a discrete close sampled on different frames by different copies averages into a ramp that need not cross both thresholds, so the mean shows 0 of 82 windows with a crossing at 10,001 updates while 52 of 82 windows contain a per-copy crossing, 73 of 79 of them within the 3-frame tolerance. At initialisation no copy crosses at all, so that failure is a real absence of gripper behaviour rather than an averaging artefact",
+  "gate_is_not_changed_by_this_analysis": true,
+  "pre_registered_gate_still_fails": true,
+  "claim": "offline diagnosis of recorded predictions; no learned action was executed in simulation",
+  "boundaries": {
+    "policy_actions_executed_in_simulation": false,
+    "thresholds_changed_after_training": false,
+    "real_robot_touched": false,
+    "public_push": false
+  }
+}

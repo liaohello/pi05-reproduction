@@ -112,34 +112,44 @@ class SO101DataConfig(_config.DataConfigFactory):
         )
 
 
-def make_model_config(state_mode: str = "off") -> pi0_config.Pi0Config:
+def make_model_config(state_mode: str = "off", *, paligemma_variant: str = "gemma_2b_lora",
+                      action_expert_variant: str = "gemma_300m", action_horizon: int = 10,
+                      dtype: str = "bfloat16") -> pi0_config.Pi0Config:
     if state_mode not in {"off", "on"}:
         raise ValueError(f"unknown state_mode {state_mode!r}")
+    for name, value in (("paligemma_variant", paligemma_variant),
+                        ("action_expert_variant", action_expert_variant)):
+        if value not in {"gemma_2b", "gemma_2b_lora", "gemma_300m", "gemma_300m_lora", "dummy"}:
+            raise ValueError(f"unknown {name} {value!r} for the pinned OpenPI runtime")
     return pi0_config.Pi0Config(
         pi05=True,
-        action_horizon=10,
+        action_horizon=int(action_horizon),
         discrete_state_input=state_mode == "on",
-        paligemma_variant="gemma_2b_lora",
-        action_expert_variant="gemma_300m_lora",
+        paligemma_variant=paligemma_variant,
+        action_expert_variant=action_expert_variant,
+        dtype=dtype,
     )
 
 
-def make_freeze_filter():
-    """Frozen vision+LLM backbone, trainable LoRA adapters and projections.
+def make_freeze_filter(model_config: pi0_config.Pi0Config, *, freeze_vision_encoder: bool = False):
+    """Freeze only original Gemma-2B language weights and optional vision weights.
 
-    OpenPI's convenience LoRA filter freezes only ``.*llm.*`` and therefore
-    leaves the SigLIP vision encoder fully trainable.  SO101 E2 freezes the
-    whole backbone (``.*llm.*`` and ``PaliGemma/img``) so the trainable target
-    is exactly the 20 LoRA tensors plus the action/time projections.
+    The pinned runtime stores both transformer towers under ``PaliGemma/llm``;
+    ``llm.*_1`` is the Gemma-300M action expert and LoRA tensors contain ``lora``
+    in their path. Avoid runtime-provided broad language rules because they can
+    can include the action expert, and its default vision rule varies by runtime.
     """
-    return nnx.All(
+    del model_config  # Scope is intentionally explicit and independent of runtime defaults.
+    language_base = nnx.All(
         nnx.Param,
-        nnx.Any(
-            nnx_utils.PathRegex(".*llm.*"),
-            nnx_utils.PathRegex(".*PaliGemma/img.*"),
-        ),
+        nnx_utils.PathRegex(".*llm.*"),
+        nnx.Not(nnx_utils.PathRegex(".*llm.*_1.*")),
         nnx.Not(nnx_utils.PathRegex(".*lora.*")),
     )
+    if freeze_vision_encoder:
+        vision = nnx.All(nnx.Param, nnx_utils.PathRegex(".*PaliGemma/img.*"))
+        return nnx.Any(language_base, vision)
+    return language_base
 
 
 def make_train_config(*, mode: str, run_root: Path, train_view: Path,
@@ -149,8 +159,19 @@ def make_train_config(*, mode: str, run_root: Path, train_view: Path,
                       lr_warmup_steps: int = 10, peak_lr: float = 5e-5,
                       decay_steps: int = 100, decay_lr: float = 5e-5,
                       dataset_label: str = "so101_e1_20",
-                      phase: str = "E2", num_workers: int = 0) -> _config.TrainConfig:
-    model_config = make_model_config(state_mode)
+                      phase: str = "E2", num_workers: int = 0,
+                      fsdp_devices: int = 1, paligemma_variant: str = "gemma_2b_lora",
+                      action_expert_variant: str = "gemma_300m",
+                      freeze_vision_encoder: bool = False, action_horizon: int = 10,
+                      seed: int = 42, gradient_clip_norm: float = 1.0,
+                      optimizer_name: str = "AdamW", ema_decay: float | None = None,
+                      dtype: str = "bfloat16") -> _config.TrainConfig:
+    model_config = make_model_config(state_mode, paligemma_variant=paligemma_variant,
+                                     action_expert_variant=action_expert_variant,
+                                     action_horizon=action_horizon, dtype=dtype)
+    if fsdp_devices < 1:
+        raise ValueError("fsdp_devices must be at least 1")
+
     if mode not in {"initial", "resume", "serve", "smoke", "probe"}:
         raise ValueError(f"unknown mode {mode}")
     steps = {"initial": 100, "resume": 101, "serve": 0, "smoke": 1, "probe": 1}[mode]
@@ -158,6 +179,12 @@ def make_train_config(*, mode: str, run_root: Path, train_view: Path,
         steps = int(steps_override)
     if mode == "resume" and steps_override is None:
         steps = 101
+    if optimizer_name != "AdamW":
+        raise ValueError(f"unsupported optimizer for this run: {optimizer_name!r}")
+    if gradient_clip_norm <= 0:
+        raise ValueError("gradient_clip_norm must be positive")
+    if action_horizon < 1:
+        raise ValueError("action_horizon must be positive")
     return _config.TrainConfig(
         name="pi05_so101_e2",
         project_name="so101",
@@ -178,22 +205,31 @@ def make_train_config(*, mode: str, run_root: Path, train_view: Path,
         overwrite=mode in {"initial", "smoke", "probe"},
         resume=mode == "resume",
         wandb_enabled=False,
-        ema_decay=None,
-        fsdp_devices=1,
-        seed=42,
+        ema_decay=ema_decay,
+        fsdp_devices=int(fsdp_devices),
+        seed=int(seed),
         assets_base_dir=str(Path(train_view) / "assets"),
         checkpoint_base_dir=str(Path(run_root) / "checkpoints"),
         lr_schedule=_optimizer.CosineDecaySchedule(
             warmup_steps=int(lr_warmup_steps), peak_lr=float(peak_lr),
             decay_steps=int(decay_steps), decay_lr=float(decay_lr)),
-        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
-        freeze_filter=make_freeze_filter(),
+        optimizer=_optimizer.AdamW(clip_gradient_norm=float(gradient_clip_norm)),
+        freeze_filter=make_freeze_filter(model_config, freeze_vision_encoder=freeze_vision_encoder),
         policy_metadata={
             "model": "pi05_so101_lora",
+            "paligemma_variant": paligemma_variant,
+            "action_expert_variant": action_expert_variant,
+            "freeze_vision_encoder": freeze_vision_encoder,
+            "fsdp_devices": int(fsdp_devices),
             "dataset": dataset_label,
             "phase": phase,
             "state_action_dim": ACTION_DIM,
-            "action_horizon": 10,
+            "action_horizon": int(action_horizon),
+            "optimizer": optimizer_name,
+            "gradient_clip_norm": float(gradient_clip_norm),
+            "ema_decay": ema_decay,
+            "seed": int(seed),
+            "dtype": dtype,
             "cameras": list(CAMERAS.values()),
             "control_hz": 50,
             "engineering_chain_only": True,

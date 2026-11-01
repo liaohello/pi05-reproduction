@@ -1,0 +1,345 @@
+--- a/scripts/so101/scene1_train_so101.py
++++ b/scripts/so101/scene1_train_so101.py
+@@ -218,6 +218,13 @@
+     parser.add_argument("--data-admission", type=Path, default=None)
+     parser.add_argument("--registered-config-sha256", default=None)
+     parser.add_argument("--registered-training-config", type=Path, default=None)
++    parser.add_argument("--pifast-plan", type=Path, default=None)
++    parser.add_argument("--pifast-plan-sha256", default=None)
++    parser.add_argument("--pifast-data-audit", type=Path, default=None)
++    parser.add_argument("--pifast-data-audit-sha256", default=None)
++    parser.add_argument("--fast-tokenizer-dir", type=Path, default=None)
++    parser.add_argument("--paligemma-tokenizer", type=Path, default=None)
++    parser.add_argument("--fast-ce-weight", type=float, default=None)
+     parser.add_argument("--require-clean-data", action="store_true")
+     parser.add_argument("--require-action-norm-audit", action="store_true")
+     parser.add_argument("--registered-base-sha256", default=None)
+@@ -261,6 +268,50 @@
+     run_root.mkdir(parents=True, exist_ok=True)
+     meta = json.loads((train_view / "meta.json").read_text(encoding="utf-8"))
+     registered_config = None
++    pifast_plan = None
++    pifast_data_audit = None
++    pifast_data_audit_sha256 = None
++    pifast_plan_sha256 = None
++    if args.pifast_plan is not None:
++        if args.registered_training_config is not None:
++            raise ValueError(
++                "pifast plan and legacy registered training config are mutually exclusive")
++        pifast_plan_sha256 = _sha_file(args.pifast_plan)
++        if pifast_plan_sha256 != args.pifast_plan_sha256:
++            raise ValueError("PI-FAST plan hash mismatch")
++        pifast_plan = json.loads(args.pifast_plan.read_text(encoding="utf-8"))
++        if pifast_plan.get("plan_id") != "scene1-pifast-ki-v2":
++            raise ValueError("unexpected PI-FAST plan identity")
++        if pifast_plan.get("supersedes") != (
++                "configs/so101/scene1_pifast_ki_training_v1.json"):
++            raise ValueError("PI-FAST v2 must explicitly supersede v1")
++        if args.mode in {"initial", "resume"} and not pifast_plan.get(
++                "execution_authorized"):
++            raise ValueError("formal PI-FAST training is not authorized by its plan")
++        if args.pifast_data_audit is None:
++            raise ValueError("PI-FAST training requires a data/FAST audit")
++        pifast_data_audit_sha256 = _sha_file(args.pifast_data_audit)
++        if pifast_data_audit_sha256 != args.pifast_data_audit_sha256:
++            raise ValueError("PI-FAST data/FAST audit hash mismatch")
++        pifast_data_audit = json.loads(
++            args.pifast_data_audit.read_text(encoding="utf-8"))
++        if pifast_data_audit.get("status") != "pass":
++            raise ValueError("PI-FAST data/FAST audit did not pass")
++        if pifast_data_audit.get("view_sha256") != meta.get("view_sha256"):
++            raise ValueError("PI-FAST data/FAST audit view hash differs")
++        expected_norm_sha = _sha_file(
++            train_view / "assets/so101/norm_stats.json")
++        if pifast_data_audit.get("norm_stats_sha256") != expected_norm_sha:
++            raise ValueError("PI-FAST data/FAST audit norm hash differs")
++        if args.fast_tokenizer_dir is None or args.paligemma_tokenizer is None:
++            raise ValueError("PI-FAST tokenizer resources are required")
++        if args.fast_ce_weight is None:
++            raise ValueError("fast_ce_weight must be supplied explicitly")
++        if args.mode in {"initial", "resume"}:
++            registered_weight = pifast_plan["loss"].get("fast_ce_weight")
++            if args.fast_ce_weight != registered_weight:
++                raise ValueError(
++                    "formal fast_ce_weight differs from the frozen plan")
+     if args.registered_training_config is not None:
+         registered_config = json.loads(
+             args.registered_training_config.read_text(encoding="utf-8"))
+@@ -273,19 +324,56 @@
+     validation_settings = None
+     probe_settings = None
+     full_settings = None
+-    if (registered_config is not None and registered_config.get("validation_loss")
++    if (pifast_plan is None and registered_config is not None
++            and registered_config.get("validation_loss")
+             and not args.require_validation_loss):
+         raise ValueError("registered validation config requires --require-validation-loss")
+     if args.require_validation_loss:
+-        if registered_config is None:
++        if registered_config is None and pifast_plan is None:
+             raise ValueError("Validation Loss requires the registered Scene1 config")
+-        registered_updates = int(registered_config["optimisation"]["updates"])
+-        checkpoint_steps = validation.checkpoint_steps(
+-            registered_config, registered_updates)
++        if pifast_plan is not None:
++            registered_updates = int(
++                pifast_plan["optimization"]["optimizer_updates"])
++            checkpoint_steps = tuple(
++                int(value)
++                for value in pifast_plan["checkpointing"]["save_steps"])
++            validation_config = pifast_plan["validation"]
++            validation_settings = {
++                "split": "validation",
++                "batch_size": int(validation_config["full_batch_size"]),
++                "seed": int(pifast_plan["optimization"]["seed"]),
++                "norm_stats_source": "train_only",
++                "train_false": bool(validation_config["train_false"]),
++                "gradient_updates": int(validation_config["gradient_updates"]),
++                "sample_weighting": "uniform_per_valid_sample",
++                "fixed_flow_time_and_noise": bool(
++                    validation_config["fixed_flow_time_and_noise"]),
++                "probe": {
++                    "metric": "val_loss_probe",
++                    "every_updates": int(
++                        validation_config["quick_probe_every_updates"]),
++                    "samples": int(validation_config["quick_probe_samples"]),
++                    "balanced_across_episodes": True,
++                    "record_prefix": "val_loss_probe",
++                    "requires_checkpoint": False,
++                },
++                "full": {
++                    "metric": "val_loss_full",
++                    "samples": int(validation_config["full_samples"]),
++                    "record_prefix": "val_loss_full",
++                    "requires_checkpoint": True,
++                    "checkpoint_steps": list(checkpoint_steps),
++                },
++            }
++        else:
++            registered_updates = int(registered_config["optimisation"]["updates"])
++            checkpoint_steps = validation.checkpoint_steps(
++                registered_config, registered_updates)
+         if (args.mode in {"initial", "resume"} and not args.checkpoint_probe
+                 and args.steps != registered_updates):
+             raise ValueError("formal training steps differ from the registered target")
+-        validation_settings = registered_config.get("validation_loss") or {}
++        if pifast_plan is None:
++            validation_settings = registered_config.get("validation_loss") or {}
+         expected_validation = {
+             "split": "validation",
+             "batch_size": 16,
+@@ -310,15 +398,23 @@
+             "requires_checkpoint": False,
+         }:
+             raise ValueError("validation_loss.probe settings differ from the plan")
++        expected_full_samples = (
++            int(pifast_plan["validation"]["full_samples"])
++            if pifast_plan is not None else 8300
++        )
+         if full_settings != {
+             "metric": "val_loss_full",
+-            "samples": 8300,
++            "samples": expected_full_samples,
+             "record_prefix": "val_loss_full",
+             "requires_checkpoint": True,
+             "checkpoint_steps": list(checkpoint_steps),
+         }:
+             raise ValueError("validation_loss.full settings differ from the plan")
+-        if registered_config["checkpointing"].get("retain_all_saved_steps") is not True:
++        if pifast_plan is not None:
++            if pifast_plan["checkpointing"].get("retain_all") is not True:
++                raise ValueError("every registered checkpoint must be retained")
++        elif registered_config["checkpointing"].get(
++                "retain_all_saved_steps") is not True:
+             raise ValueError("every registered checkpoint must be retained")
+         for name, actual in (
+             ("--validation-every", args.validation_every),
+@@ -341,6 +437,9 @@
+     ):
+         raise ValueError("--validation-benchmark requires probe mode and validation loss")
+     if args.require_clean_data:
++        if pifast_plan is not None:
++            raise ValueError(
++                "PI-FAST uses its registered data/FAST audit, not clean60 admission")
+         if registered_config is None:
+             raise ValueError("clean60 training requires its registered configuration")
+         problems = clean60.training_config_problems(registered_config)
+@@ -575,25 +674,121 @@
+         }
+         os.environ["SO101_TRAINING_SAMPLE_IDS"] = str(active_indices_path)
+ 
+-    config = openpi_so101.make_train_config(
+-        mode=args.mode, run_root=run_root, train_view=train_view,
+-        base_checkpoint=base_checkpoint, exp_name=args.exp_name,
+-        state_mode=args.state_mode, steps_override=args.steps,
+-        save_interval=(
+-            1 if args.require_validation_loss and (
+-                args.mode in {"initial", "resume"} or args.validation_benchmark)
+-            else args.save_interval
+-        ),
+-        batch_size=args.batch_size,
+-        lr_warmup_steps=args.lr_warmup_steps, peak_lr=args.peak_lr,
+-        decay_steps=args.decay_steps, decay_lr=args.decay_lr,
+-        dataset_label=args.dataset_label or meta.get("dataset_label", "so101"),
+-        phase=phase, num_workers=args.data_loader_workers,
+-        fsdp_devices=args.fsdp_devices, **model_scope,
+-        action_horizon=args.action_horizon, seed=args.seed,
+-        gradient_clip_norm=args.gradient_clip_norm, optimizer_name=args.optimizer,
+-        ema_decay=args.ema_decay, dtype=args.dtype,
+-    )
++    if pifast_plan is not None:
++        interface = pifast_plan["interface"]
++        optimization = pifast_plan["optimization"]
++        formal_pifast_run = (
++            args.mode in {"initial", "resume"} and not args.checkpoint_probe)
++        from scene1_pifast_ki_contract import plan_problems as plan_contract_problems
++
++        plan_problems = plan_contract_problems(
++            pifast_plan, formal=formal_pifast_run)
++        expected_values = {
++            "interface.action_horizon": (
++                interface["action_horizon"], args.action_horizon),
++            "interface.n_action_steps": (
++                interface["n_action_steps"], args.action_horizon),
++            "interface.internal_action_dim": (
++                interface["internal_action_dim"], 32),
++            "optimization.warmup_updates": (
++                optimization["warmup_updates"], args.lr_warmup_steps),
++            "optimization.peak_lr": (optimization["peak_lr"], args.peak_lr),
++            "optimization.cosine_decay_updates": (
++                optimization["cosine_decay_updates"], args.decay_steps),
++            "optimization.final_lr": (optimization["final_lr"], args.decay_lr),
++            "optimization.ema_enabled": (False, args.ema_decay is not None),
++            "runtime.fsdp_devices": (
++                pifast_plan["runtime"]["fsdp_devices"], args.fsdp_devices),
++            "model_scope.language.rank": (
++                pifast_plan["model_scope"]["language"]["rank"], 16),
++            "model_scope.action_expert.rank": (
++                pifast_plan["model_scope"]["action_expert"]["rank"], 64),
++            "model_scope.vision_encoder": (
++                pifast_plan["model_scope"]["vision_encoder"],
++                "frozen" if args.freeze_vision_encoder else "full_trainable"),
++        }
++        if formal_pifast_run:
++            expected_values.update({
++                "optimization.optimizer_updates": (
++                    optimization["optimizer_updates"], args.steps),
++                "optimization.global_batch_size": (
++                    optimization["global_batch_size"], args.batch_size),
++            })
++        for name, (expected, actual) in expected_values.items():
++            comparable = actual
++            if name == "optimization.ema_enabled":
++                comparable = bool(actual)
++            if expected != comparable:
++                plan_problems.append(
++                    f"{name}: plan={expected!r}, actual={comparable!r}")
++        if formal_pifast_run:
++            if args.steps != 40000:
++                plan_problems.append("formal optimizer update count is not 40000")
++            if args.batch_size != optimization["global_batch_size"]:
++                plan_problems.append("formal batch differs from selected plan")
++            if tuple(checkpoint_steps) != tuple(
++                    optimization_updates
++                    for optimization_updates in range(2000, 40001, 2000)):
++                plan_problems.append("formal checkpoint schedule is not 2000..40000")
++            if pifast_plan.get("resource", {}).get("minimum_memory_margin_mib", -1) < 100:
++                plan_problems.append("formal memory margin is below 100 MiB")
++            if not pifast_plan.get("resource", {}).get("wall_limit_s"):
++                plan_problems.append("formal wall-clock limit is not registered")
++        if args.registered_base_sha256 != (
++                pifast_plan["initialization"]["pi05_base"]["tree_sha256"]):
++            plan_problems.append("base checkpoint tree hash is not plan-bound")
++        if plan_problems:
++            raise ValueError(
++                "PI-FAST plan does not match concrete launch: "
++                + "; ".join(plan_problems))
++        import scene1_pifast_ki_runtime as pifast_runtime
++
++        config = pifast_runtime.make_train_config(
++            mode=args.mode,
++            run_root=run_root,
++            train_view=train_view,
++            base_checkpoint=base_checkpoint,
++            exp_name=args.exp_name,
++            steps=int(args.steps),
++            batch_size=int(args.batch_size),
++            save_interval=(
++                1 if args.require_validation_loss and (
++                    args.mode in {"initial", "resume"}
++                    or args.validation_benchmark)
++                else int(args.save_interval)
++            ),
++            warmup_steps=int(args.lr_warmup_steps),
++            peak_lr=float(args.peak_lr),
++            decay_steps=int(args.decay_steps),
++            decay_lr=float(args.decay_lr),
++            seed=int(args.seed),
++            fsdp_devices=int(args.fsdp_devices),
++            num_workers=int(args.data_loader_workers),
++            fast_ce_weight=float(args.fast_ce_weight),
++            fast_tokenizer_dir=args.fast_tokenizer_dir,
++            paligemma_tokenizer_path=args.paligemma_tokenizer,
++            dataset_label=args.dataset_label or "scene1_single_random_v1",
++        )
++    else:
++        config = openpi_so101.make_train_config(
++            mode=args.mode, run_root=run_root, train_view=train_view,
++            base_checkpoint=base_checkpoint, exp_name=args.exp_name,
++            state_mode=args.state_mode, steps_override=args.steps,
++            save_interval=(
++                1 if args.require_validation_loss and (
++                    args.mode in {"initial", "resume"} or args.validation_benchmark)
++                else args.save_interval
++            ),
++            batch_size=args.batch_size,
++            lr_warmup_steps=args.lr_warmup_steps, peak_lr=args.peak_lr,
++            decay_steps=args.decay_steps, decay_lr=args.decay_lr,
++            dataset_label=args.dataset_label or meta.get("dataset_label", "so101"),
++            phase=phase, num_workers=args.data_loader_workers,
++            fsdp_devices=args.fsdp_devices, **model_scope,
++            action_horizon=args.action_horizon, seed=args.seed,
++            gradient_clip_norm=args.gradient_clip_norm, optimizer_name=args.optimizer,
++            ema_decay=args.ema_decay, dtype=args.dtype,
++        )
+     if args.require_validation_loss and (
+         args.validation_batch_size % int(config.fsdp_devices) != 0
+     ):
+--- a/scripts/so101/scene1_validation.py
++++ b/scripts/so101/scene1_validation.py
+@@ -159,15 +159,15 @@
+ 
+ 
+ def validation_batch_losses(state, observation, actions, batch_key):
+-    """Call the training model's Flow Matching loss once per fixed batch."""
++    """Call the model's Flow-only validation loss once per fixed batch."""
+     import flax.nnx as nnx
+     import jax.numpy as jnp
+ 
+     model = nnx.merge(state.model_def, state.params)
+     model.eval()
+-    chunked = model.compute_loss(
+-        batch_key, observation, actions, train=False)
+-    return jnp.mean(chunked, axis=-1)
++    loss_fn = getattr(model, "compute_flow_loss", model.compute_loss)
++    losses = loss_fn(batch_key, observation, actions, train=False)
++    return jnp.mean(losses, axis=-1) if losses.ndim > 1 else losses
+ 
+ 
+ def weighted_validation_loss(
+--- a/scripts/so101/scene1_model_scope.py
++++ b/scripts/so101/scene1_model_scope.py
+@@ -10,7 +10,12 @@
+ import re
+ 
+ _PALIGEMMA = {"gemma_2b", "gemma_2b_lora", "dummy"}
+-_ACTION = {"gemma_300m", "gemma_300m_lora", "dummy"}
++_ACTION = {
++    "gemma_300m",
++    "gemma_300m_lora",
++    "gemma_300m_lora_r64",
++    "dummy",
++}
+ _HISTORICAL = {
+     "paligemma_variant": "gemma_2b_lora",
+     "action_expert_variant": "gemma_300m_lora",

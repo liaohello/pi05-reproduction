@@ -1,0 +1,36 @@
+{
+  "action_chunk_problems": 0,
+  "action_chunk_shape": [
+    3,
+    12
+  ],
+  "alignment_mismatches": 0,
+  "cameras": [
+    "observation.images.central",
+    "observation.images.left_wrist",
+    "observation.images.right_wrist"
+  ],
+  "certificate_hashes": {
+    "config_sha256": "37d550db85b02a689ea90ffafff50761a5a9599e1299b27daa1ab1a065ffabb7",
+    "grasp_sha256": "ffd4fe70890491d38c05cf504b6a5aaeeb28f29b1cc5a5fd63662913ecd59147",
+    "model_sha256": "fa2239f2de86f843589c4e4d67ce0535382ce90d056b71ae92fbfc80a1b8368e",
+    "scene_sha256": "b79db31c5e08683a5c6bb09076671209f50f89878a6e51a0a4b38e22213420f6"
+  },
+  "claim": "scripted expert demonstrations audited and replayed; not a policy result",
+  "episodes": 20,
+  "expert_revisions": [
+    "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2"
+  ],
+  "expert_source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+  "frame_count_mismatches": 0,
+  "frames": 54141,
+  "image_problems": 0,
+  "ok": true,
+  "phase": "E1-audit",
+  "replay_passed": 20,
+  "replay_total": 20,
+  "schema_version": 1,
+  "state_shape": [
+    12
+  ]
+}

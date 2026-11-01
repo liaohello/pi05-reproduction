@@ -1,0 +1,3666 @@
+# Scene2 workstream C patch
+# Base: b0d869c (working tree also contains other workstreams' changes)
+# This patch contains the new scene2 code, configuration and reports only.
+# Large evidence JSON and PNG assets are listed by hash in
+# experiments/so101/scene2-dual-random-artifacts.json; raw runs are ignored.
+# The shared experiments/ledger.jsonl is appended in the working tree, not in this patch.
+
+diff --git a/configs/so101/scene2_dual_random_protocol.json b/configs/so101/scene2_dual_random_protocol.json
+new file mode 100644
+index 0000000..d75e0b0
+--- /dev/null
++++ b/configs/so101/scene2_dual_random_protocol.json
+@@ -0,0 +1,510 @@
++{
++  "schema_version": 1,
++  "branch": "so101-scene2-dual-random",
++  "experiment_prefix": "so101-scene2-dual-random-scene-",
++  "protocol_id": "scene2_dual_random_v1",
++  "status": "layout_pilot_passed_pending_physical_pilot",
++  "task": {
++    "name": "dual_block_select_place",
++    "instruction_template": "Put the {color} block into the {color} tray.",
++    "instruction_values": {
++      "red": "Put the red block into the red tray.",
++      "blue": "Put the blue block into the blue tray."
++    },
++    "objects_per_episode": 2,
++    "target": "the instructed colour; placed into its same-colour tray",
++    "distractor": "the other colour; never grasped and never moved by the expert",
++    "source": "external dual-SO101 MuJoCo project, scripted physical expert through this branch adapter",
++    "transfer_protocol": false,
++    "handover_between_arms": false,
++    "external_force_perturbation": false,
++    "visual_randomization": false
++  },
++  "record_conflicts": [
++    {
++      "source": "model-line prototype experiment_state.json (ignored; not tracked here)",
++      "recorded_instructions": [
++        "Place the red block in the tray.",
++        "Place the blue block in the tray."
++      ],
++      "recorded_tray_rule": "one tray, position random; the recorded text does not bind tray colour to target colour",
++      "this_branch": "two coloured trays; target goes into the same-colour tray; instructions name the tray colour",
++      "resolution": "the later confirmed rule in this protocol governs scene2 data; the model-line prototype file is ignored and was not modified"
++    }
++  ],
++  "source_binding": {
++    "external_root_env": "SO101_SOURCE_ROOT",
++    "external_python_env": "SO101_PYTHON",
++    "profile": "configs/so101/scene2_dual_random_profile.yaml",
++    "certificate": "configs/certification/scene2_dual_random_certificate.json",
++    "snapshot_policy": "independent ignored snapshot under the cache root; the shared checkout, the scene1 snapshot and other workstreams' files are never modified",
++    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d",
++    "source_files": 113,
++    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
++    "expert_files": 37,
++    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
++    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
++    "provenance_note": "the scene1 protocol records source_sha256 201898ff... with 109 files; the current shared snapshot measured here has 113 files and 908d940d... The difference is not silently adopted: this branch pins and records the tree it actually executes."
++  },
++  "control": {
++    "physics_hz": 500,
++    "control_hz": 50,
++    "recording_fps": 50,
++    "settle_s": 0.4,
++    "timeout_s": 60.0,
++    "nominal_realtime_claim": false
++  },
++  "grasp": {
++    "open_percent": 70.0,
++    "closed_percent": 0.0,
++    "hover_height_m": 0.06,
++    "place_hover_height_m": 0.04,
++    "release_clearance_m": 0.006,
++    "retreat_clearance_x_m": 0.012,
++    "target_band_contact_in_descend": "allowed only for the target block's CAD collision bands (index <= 1); the distractor, trays, table and arm-arm contacts stay hard",
++    "basis": "engineering scan: the centre grasp descend grazes the target fixed finger by 0.6-1.3 mm; the grasp is intended, so the target band contact is admitted while every non-target contact keeps the 0.5 mm guard"
++  },
++  "pre_pilot_engineering_scan": {
++    "status": "engineering_only_not_pilot_data",
++    "fixed_layout": "one candidate layout, both arms, open 50/70/90, yaw 0/15/30/45/60/68/75",
++    "findings": [
++      "pick descend target-band contact was 0.6-1.3 mm at every open percentage; open width did not remove it",
++      "place withdraw passed at open=70 for yaw 30-75 and failed at 0/15 on the tray wall",
++      "one full runtime smoke episode succeeded (blue target); the red-target smoke placed the target but failed withdraw with 0.7-0.9 mm tray/cube contact"
++    ],
++    "decisions": [
++      "open_percent 70",
++      "yaw candidate [30,75]",
++      "target-band contact admitted in the grasp descend only",
++      "no guard relaxation for trays, table, arm-arm or the distractor"
++    ]
++  },
++  "observation": {
++    "cameras": [
++      "observation.images.central",
++      "observation.images.left_wrist",
++      "observation.images.right_wrist"
++    ],
++    "rgb": {
++      "dtype": "uint8",
++      "layout": "HWC",
++      "height": 480,
++      "width": 640,
++      "policy_resize": [
++        224,
++        224
++      ],
++      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
++    },
++    "state": {
++      "key": "observation.state",
++      "shape": [
++        12
++      ],
++      "order": [
++        "left_shoulder_pan.pos",
++        "left_shoulder_lift.pos",
++        "left_elbow_flex.pos",
++        "left_wrist_flex.pos",
++        "left_wrist_roll.pos",
++        "left_gripper.pos",
++        "right_shoulder_pan.pos",
++        "right_shoulder_lift.pos",
++        "right_elbow_flex.pos",
++        "right_wrist_flex.pos",
++        "right_wrist_roll.pos",
++        "right_gripper.pos"
++      ],
++      "units": [
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "percent",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "degree",
++        "percent"
++      ],
++      "timing": "measured joint state immediately before the action is issued"
++    }
++  },
++  "action": {
++    "key": "action",
++    "shape": [
++      12
++    ],
++    "semantics": "absolute joint-position target, left six then right six",
++    "units": [
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "percent",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "degree",
++      "percent"
++    ],
++    "label_rule": "the clamped actuator target actually applied at that control frame; never the next measured state",
++    "chunk_horizon": "left to the model line; no chunk length is frozen by this protocol",
++    "replan_steps": "left to the model line"
++  },
++  "scene_layout": {
++    "object_count": 2,
++    "cube_edge_m": 0.025,
++    "cube_mass_kg": 0.012,
++    "arrangements": {
++      "values": [
++        "red_positive_y",
++        "red_negative_y"
++      ],
++      "rule": "the red tray occupies one side and the blue tray the other; the arrangement is sampled independently of the instruction",
++      "balance": "formal collection must split evenly; the 4-scene pilot uses 2 of each"
++    },
++    "trays": {
++      "count": 2,
++      "orientation": "axis-aligned; positions random, orientation fixed",
++      "positive_y_sampling": {
++        "x_m": [
++          0.21,
++          0.27
++        ],
++        "y_m": [
++          0.22,
++          0.28
++        ]
++      },
++      "negative_y_sampling": {
++        "x_m": [
++          0.21,
++          0.27
++        ],
++        "y_m": [
++          -0.28,
++          -0.22
++        ]
++      },
++      "constraints": [
++        "tray footprint inside the table by at least 0.02 m",
++        "tray-tray outer-edge gap at least 0.03 m",
++        "each block outside both tray keepouts plus 0.01 m",
++        "chosen slot release, hover, descent and withdrawal IK and collision screening"
++      ],
++      "candidate_region_status": "frozen_after_layout_pilot",
++      "frozen_sampling": {
++        "positive_y": {
++          "x_m": [
++            0.21,
++            0.27
++          ],
++          "y_m": [
++            0.22,
++            0.28
++          ]
++        },
++        "negative_y": {
++          "x_m": [
++            0.21,
++            0.27
++          ],
++          "y_m": [
++            -0.28,
++            -0.22
++          ]
++        }
++      }
++    },
++    "blocks": {
++      "target_xy_source": "certified pick points of the arm on the target tray's side; jitter 0.004 m",
++      "distractor_xy_source": "certified pick points of the arm on the other tray's side; jitter 0.004 m",
++      "minimum_pairwise_distance_m": 0.06,
++      "yaw": {
++        "distribution": "continuous uniform",
++        "domain_degrees": [
++          30.0,
++          75.0
++        ],
++        "domain_status": "frozen_after_layout_pilot",
++        "domain_basis": "the engineering scan found place-withdraw clearance at open=70 percent for 30-75 degrees and hard tray-wall rejection at 0/15 degrees; the scan is not pilot data and the accepted distribution is still reported separately from the draw distribution",
++        "applies_to": [
++          "target",
++          "distractor"
++        ]
++      },
++      "per_scene_checks": [
++        "target grasp IK and hover IK at the sampled yaw",
++        "target approach and lift path screening with the distractor present and the other arm parked",
++        "target place release and hover IK at the sampled yaw",
++        "target descent and withdrawal screening with the distractor present",
++        "containment of the rotated cube footprint in the same-colour tray",
++        "initial settling: no robot contact with either block, no block-block contact, speeds below limits"
++      ]
++    },
++    "colour_decoupling": {
++      "rule": "the instruction colour and the tray arrangement are sampled independently; the active arm is the arm on the target tray's side",
++      "consequence": "across scenes each colour is executed by both arms and placed on both table sides; no colour is bound to one arm or one position",
++      "within_scene": "the two counterfactual instructions of one layout necessarily use different arms because the trays are on opposite sides"
++    },
++    "active_arm_rule": {
++      "selection": "left if the target tray centre has y > 0, right if y < 0",
++      "other_arm": "home park pose [0, -25, 40, -15, 0] degrees, gripper 40 percent; certified park; no handover and no second-arm motion",
++      "safety": "the parked TCP is about 0.22 m above the table surface; initial settling and the success predicate both check no robot-block or robot-tray contact"
++    },
++    "perturbations_enabled": false,
++    "visual_randomization_enabled": false,
++    "vary_positions_between_episodes": true,
++    "reuse_previous_episodes": false,
++    "duplicate_scene_policy": "a layout SHA-256 may appear once; the two target conditions of one layout are a registered counterfactual pair, not duplicates"
++  },
++  "success_predicate": {
++    "id": "dual_block_select_place_physical_v1",
++    "requires_all_target": [
++      "the target block is inside its same-colour tray using the rotated footprint against the tray inner half-size",
++      "the target block is supported by that tray's floor geom ({colour}_tray_0)",
++      "no contact between the target block and either arm (released)",
++      "target linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
++      "both arms are at the registered home park pose within 2.0 degrees and 5.0 gripper percent",
++      "no contact between either arm and either tray",
++      "both TCP sites are at least 0.01 m from the target block centre and from the outer rectangle of both trays",
++      "all of the above hold continuously for at least 0.5 s"
++    ],
++    "requires_all_distractor": [
++      "no contact between the distractor block and either arm",
++      "no bilateral gripper grasp of the distractor by either arm",
++      "distractor supported by the table (or a tray floor, never outside the table)",
++      "distractor linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
++      "distractor displacement from its post-settle initial pose <= the registered baseline threshold",
++      "distractor not out of bounds",
++      "distractor checks hold over the same 0.5 s success window"
++    ],
++    "distractor_baseline": {
++      "status": "frozen_before_physical_pilot",
++      "method": "12 independent layouts from the same sampler, both arms parked at home, 0.4 s settle then 2.0 s hold; post-settle displacement, speed, robot contact and false grasp measured every physics step",
++      "seed_range": [
++        20800,
++        20854
++      ],
++      "scenes_measured": 12,
++      "measured_max_hold_displacement_m": 2e-09,
++      "measured_any_robot_contact": false,
++      "measured_any_false_grasp": false,
++      "threshold_m": 0.002,
++      "threshold_rule": "max(0.002, measured_max + 0.001); the 2 mm floor governs because the measured drift is below 1 mm",
++      "scope_note": "the baseline has no arm motion; arm-induced table vibration is not included and is reported in the physical pilot",
++      "record": "tracked summary in experiments/so101/scene2-dual-random-baseline.json; full record in the ignored run directory"
++    },
++    "not_sufficient": [
++      "expert return code",
++      "visual appearance in a camera",
++      "target tray state alone without the distractor checks",
++      "a single frame of support or containment"
++    ],
++    "failure_reasons": [
++      "object_out_of_bounds",
++      "wrong_tray",
++      "not_supported",
++      "robot_contact",
++      "not_stable",
++      "arm_not_clear",
++      "grasp_failed",
++      "payload_lost",
++      "ik_unreachable",
++      "path_collision",
++      "placement_failed",
++      "timeout",
++      "distractor_contact",
++      "distractor_grasped",
++      "distractor_displaced",
++      "distractor_unstable",
++      "distractor_out_of_bounds",
++      "replay_mismatch"
++    ]
++  },
++  "scene_family": {
++    "definition": "family_key = layout_sha256 over both blocks (names, colours, XY, yaw), both tray poses, arrangement, seed, model and certificate hashes",
++    "rule": "the red-target and blue-target episodes of one layout are a counterfactual pair and never cross train/validation",
++    "split_algorithm": "to be registered with the formal collection; whole layout families only",
++    "frozen_before": "any normalisation statistic or training update",
++    "pilot_is_not_validation": true
++  },
++  "collection": {
++    "seed_registry": {
++      "layout_pilot": [
++        20000,
++        20239
++      ],
++      "physical_pilot_layouts": [
++        20240,
++        20279
++      ],
++      "distractor_baseline": [
++        20800,
++        20899
++      ],
++      "engineering_smoke": [
++        20990,
++        20999
++      ],
++      "evaluation_reserved": [
++        21100,
++        21199
++      ],
++      "superseded_seed_use": {
++        "baseline_attempt_1": [
++          20980,
++          21004
++        ],
++        "status": "discarded; not used for the threshold and not reused; the original evaluation reservation 21000-21099 was released and moved to 21100-21199"
++      },
++      "disjoint_from": {
++        "e1": "8100-8199 and 9100-9119",
++        "e4t": "8220-8779 and 9300-9349",
++        "clean60": "12000-13199 and 14000-14199",
++        "clean100": "13200-13999",
++        "scene1": "15050-16099"
++      },
++      "pilot_policy": "a pilot layout is never reused as a demonstration; every candidate and every executed episode is recorded"
++    },
++    "layout_pilot": {
++      "status": "pending",
++      "seeds": 240,
++      "seed_start": 20000,
++      "maximum_attempts_per_layout": 400,
++      "wall_clock_limit_s": 10800,
++      "acceptance_gate_value": 0.5,
++      "acceptance_gate": "at least 0.50 of attempted seeds produce a fully checked layout with both target conditions feasible; otherwise narrow the yaw or tray domain, record the amendment and rerun",
++      "record": "per-seed tray poses, both block XY/yaw, per-target IK and collision verdicts, initial-settling metrics, sampler draws and rejection reasons",
++      "completed": {
++        "date": "2026-10-29",
++        "attempted": 240,
++        "accepted": 240,
++        "acceptance_rate": 1.0,
++        "unique_physical_hashes": 240,
++        "by_arrangement": {
++          "red_positive_y": 120,
++          "red_negative_y": 120
++        },
++        "by_color_arm": {
++          "red": {
++            "left": 120,
++            "right": 120
++          },
++          "blue": {
++            "left": 120,
++            "right": 120
++          }
++        },
++        "sampler_attempts_mean": 4.375,
++        "sampler_attempts_max": 30,
++        "draw_rejections": {
++          "cube_0_tray_keepout": 756,
++          "cube_1_tray_keepout": 432,
++          "cube_0_pick_region": 166,
++          "cube_1_pick_region": 104,
++          "place_blue_checks": 68,
++          "place_red_checks": 62,
++          "pick_red_pick_path": 10,
++          "pick_blue_pick_path": 6,
++          "pick_red_hover_ik": 10,
++          "pick_blue_hover_ik": 6
++        },
++        "accepted_yaw_bands_5deg": {
++          "30-35": 53,
++          "35-40": 53,
++          "40-45": 43,
++          "45-50": 57,
++          "50-55": 53,
++          "55-60": 66,
++          "60-65": 49,
++          "65-70": 53,
++          "70-75": 53
++        },
++        "draw_yaw_bands_5deg": {
++          "30-35": 428,
++          "35-40": 456,
++          "40-45": 396,
++          "45-50": 542,
++          "50-55": 446,
++          "55-60": 506,
++          "60-65": 460,
++          "65-70": 488,
++          "70-75": 478
++        },
++        "yaw_bias_note": "the draw is uniform on [30,75); the accepted set is rejection-biased and is not described as uniform",
++        "all_accepted_have_both_conditions": true,
++        "all_accepted_initial_checks_passed": true,
++        "wall_time_s": 40.45,
++        "record": "tracked summary in experiments/so101/scene2-dual-random-layout-pilot.json; full traces in the ignored run directory"
++      }
++    },
++    "physical_pilot": {
++      "status": "pending_pregeneration",
++      "layouts": 4,
++      "episodes": 8,
++      "max_layout_candidates": 40,
++      "layout_wall_clock_limit_s": 3600,
++      "episode_wall_clock_limit_s": 14400,
++      "episode_attempt_cap": 8,
++      "rule": "each layout is executed once with the red instruction and once with the blue instruction; no episode is retried after a physical failure",
++      "success_gate": "report the exact count out of 8; do not relax a check to reach 8",
++      "initial_state_fingerprint": "the two conditions must reproduce the same post-settle state fingerprint; a mismatch invalidates the pair",
++      "pilot_is_not_formal_validation": true
++    },
++    "formal": {
++      "status": "not_started",
++      "target_episodes": null,
++      "train": null,
++      "validation": null,
++      "maximum_attempts": null,
++      "normalisation": "not computed in this phase; only frozen-split train data may supply it",
++      "forbidden": [
++        "clean60 norm",
++        "clean60 checkpoint",
++        "clean100 norm",
++        "clean100 checkpoint"
++      ]
++    }
++  },
++  "data_interface": {
++    "raw_control_tick": "one row per control frame at 50 Hz; 10 physics substeps per row when complete",
++    "timestamps": "simulation time from the environment; wall-clock start/end per episode; no synthetic index is treated as proof of no dropped frames",
++    "three_cameras": "central, left_wrist, right_wrist at 640x480 RGB, captured before the action is applied",
++    "state_action_order": "left six then right six; degrees for joints and percent for grippers",
++    "action_label": "clamped absolute target actually applied that frame",
++    "objects": "both blocks: position, quaternion, linear and angular velocity per control frame",
++    "events": "stage start/end, contact-monitor facts, failures, initial/final state",
++    "chunk_length": "model line decides; this branch supplies contiguous raw trajectories",
++    "pilot_dataset": "if written, labelled pilot_only and excluded from training and validation"
++  },
++  "claims": {
++    "engineering_chain": "dual-block counterfactual scripted-expert pilot with randomised block XY/yaw, randomised tray poses and colour-independent arm assignment",
++    "explicitly_not": [
++      "a benchmark success rate",
++      "a formal training or validation split",
++      "policy language-conditioning evidence",
++      "a dual-arm handover result",
++      "real-robot validation"
++    ]
++  },
++  "pilot_amendments": [
++    {
++      "id": "baseline_seed_conflict",
++      "date": "2026-10-29",
++      "change": "the first baseline attempt consumed seeds 21000-21004 inside the original evaluation reservation; that run was discarded, the clean baseline used 20800-20899, and evaluation is reserved on 21100-21199",
++      "effect": "no pilot or training data used the superseded seeds; the threshold comes only from the clean run"
++    },
++    {
++      "id": "pre_pilot_open_yaw_scan",
++      "date": "2026-10-29",
++      "change": "engineering scan set open_percent=70 and candidate yaw [30,75], and admitted target CAD-band contact only in the grasp descend",
++      "effect": "registered before the layout pilot; the layout pilot still measures the accepted distribution and the physical pilot judges success with the unchanged predicate"
++    }
++  ]
++}
+diff --git a/configs/so101/scene2_dual_random_profile.yaml b/configs/so101/scene2_dual_random_profile.yaml
+new file mode 100644
+index 0000000..e607515
+--- /dev/null
++++ b/configs/so101/scene2_dual_random_profile.yaml
+@@ -0,0 +1,66 @@
++schema_version: 1
++extends: configs/profiles/collection_50hz_three_camera.yaml
++
++# Workstream C scene profile: two blocks (target + distractor), two trays whose
++# colours can occupy either table side.  The adapter replaces the task and the
++# scene sampler; the external source and the shared scene1 profile are untouched.
++evaluation:
++  certificate: configs/certification/scene1_single_random_certificate_v2.json
++
++task:
++  type: dual_block_select_place
++
++sorting:
++  instruction: "Put the red block into the red tray."
++  instruction_template: "Put the {color} block into the {color} tray."
++  initial_positions_xy:
++    - [0.25, 0.10]
++    - [0.25, -0.10]
++  objects:
++    cube_0:
++      color: red
++    cube_1:
++      color: blue
++  timeout_s: 60.0
++  stable_success_s: 0.5
++  linear_speed_m_s: 0.02
++  angular_speed_rad_s: 0.2
++  block_jitter_m: 0.004
++  yaw_domain_degrees: [30.0, 75.0]
++  tray_sampling_positive:
++    x_m: [0.21, 0.27]
++    y_m: [0.22, 0.28]
++  tray_sampling_negative:
++    x_m: [0.21, 0.27]
++    y_m: [-0.28, -0.22]
++  tray_table_margin_m: 0.02
++  tray_tray_gap_m: 0.03
++  block_tray_clearance_m: 0.01
++  block_block_min_distance_m: 0.06
++  arm_park_joint_tolerance_deg: 2.0
++  arm_park_gripper_tolerance_percent: 5.0
++  arm_clearance_m: 0.01
++  distractor_max_displacement_m: 0.002
++  distractor_max_speed_m_s: 0.02
++  distractor_max_angular_speed_rad_s: 0.2
++
++grasp:
++  # The reference gripper is closed at 0 percent.  Seventy percent stays inside
++  # the CAD joint range and gives the withdrawn fingers clearance from the tray
++  # walls measured by the scene2 pre-pilot scan; the close stage still goes to 0.
++  open_percent: 70.0
++  closed_percent: 0.0
++  hover_height_m: 0.060
++  place_hover_height_m: 0.040
++  release_clearance_m: 0.006
++  retreat_clearance_x_m: 0.012
++
++scene:
++  transfer:
++    marker: false
++
++domain_randomization:
++  enabled: false
++
++collection:
++  recording_type: scripted_dual_block_select_place_demonstration
+diff --git a/scripts/so101/scene2_common.py b/scripts/so101/scene2_common.py
+new file mode 100644
+index 0000000..8238ffa
+--- /dev/null
++++ b/scripts/so101/scene2_common.py
+@@ -0,0 +1,1055 @@
++"""Workstream C adapter: two blocks, two colour-randomised trays, one target.
++
++The external dual-SO101 checkout is imported, never edited.  This module adds
++only the scene layer that the external stack does not provide:
++
++* a two-block scene sampler with per-scene IK and collision screening,
++* a task whose success rule checks the target and the distractor separately,
++* an expert wrapper that places into the sampled slot rather than a nominal one,
++* scene/condition hashes and a post-settle initial-state fingerprint.
++
++The external ``SingleBlockPlaceTask`` is deliberately not used: it hard-codes
++``cube_0`` and one tray pair.  The external expert primitives are reused.
++"""
++from __future__ import annotations
++
++import copy
++import hashlib
++import importlib
++import json
++import math
++import os
++import sys
++from collections import Counter
++from contextlib import contextmanager
++from pathlib import Path
++
++import numpy as np
++
++REPO_ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import so101_common as common  # noqa: E402
++
++_BOUND: dict[str, object] = {}
++
++
++def _b(name: str):
++    if not _BOUND:
++        raise RuntimeError("call configure(root) before importing external modules")
++    return _BOUND[name]
++
++
++def configure(root, *, python: str | None = None) -> Path:
++    """Bind the external checkout once and cache the modules this adapter uses."""
++    root = common.setup_external(root)
++    _BOUND.clear()
++    _BOUND.update({
++        "root": root,
++        "mujoco": importlib.import_module("mujoco"),
++        "regions": importlib.import_module("bimanual.tasks.sorting.regions"),
++        "certification": importlib.import_module("bimanual.tasks.sorting.certification"),
++        "contacts": importlib.import_module("bimanual.control.contacts"),
++        "payload_path": importlib.import_module("bimanual.control.payload_path"),
++        "PoseIK": importlib.import_module("bimanual.control.ik").PoseIK,
++        "rotation_z": importlib.import_module("bimanual.control.motion").rotation_z,
++        "joint_trajectory": importlib.import_module("bimanual.control.trajectory").joint_trajectory,
++        "ObjectSpec": importlib.import_module("bimanual.tasks.sorting.scene_sampling").ObjectSpec,
++        "SceneSpec": importlib.import_module("bimanual.tasks.sorting.scene_sampling").SceneSpec,
++        "SceneGenerationError": importlib.import_module(
++            "bimanual.tasks.sorting.scene_sampling").SceneGenerationError,
++        "BimanualEnv": importlib.import_module("bimanual.sim.environment").BimanualEnv,
++        "EpisodeRunner": importlib.import_module("bimanual.recording.episode").EpisodeRunner,
++        "episode_module": importlib.import_module("bimanual.recording.episode"),
++        "SingleBlockExpert": importlib.import_module("bimanual.experts.single_block").SingleBlockExpert,
++        "Assignment": importlib.import_module("bimanual.experts.allocation").Assignment,
++        "source_fingerprint": importlib.import_module("source_fingerprint"),
++        "python": python or os.environ.get("SO101_PYTHON") or sys.executable,
++    })
++    return root
++
++
++def load_protocol(path: Path) -> dict:
++    return common.load_json(path)
++
++
++def load_config(root: Path, protocol: dict, *, certificate: Path | None = None) -> dict:
++    from bimanual.config import load_config as external_load_config
++
++    profile = REPO_ROOT / protocol["source_binding"]["profile"]
++    config = external_load_config(root=root, profile=str(profile))
++    config["runtime"]["physics_hz"] = int(protocol["control"]["physics_hz"])
++    config["runtime"]["control_hz"] = int(protocol["control"]["control_hz"])
++    config["recording"]["fps"] = int(protocol["control"]["recording_fps"])
++    config["runtime"]["settle_s"] = float(protocol["control"]["settle_s"])
++    config["sorting"]["timeout_s"] = float(protocol["control"]["timeout_s"])
++    config.setdefault("domain_randomization", {})["enabled"] = False
++    config["scene"]["transfer"]["marker"] = False
++    if certificate is not None:
++        config["evaluation"]["certificate"] = str(Path(certificate).expanduser().resolve())
++    return config
++
++
++def load_certificate(config: dict):
++    regions = _b("regions")
++    path = Path(config["evaluation"]["certificate"])
++    if not path.is_absolute():
++        path = Path(config["root"]) / path
++    if not path.is_file():
++        raise FileNotFoundError(f"scene2 certificate not found: {path}")
++    return regions.load_certificate(path), path
++
++
++def provenance(root: Path, protocol_path: Path, config: dict, certificate_path: Path,
++               adapter_path: Path | None = None) -> dict:
++    """Hashes that bind a generated scene to the code, config and assets used."""
++    fp = _b("source_fingerprint").fingerprint(root, _b("python"))
++    adapter = adapter_path or Path(__file__).resolve()
++    payload = {
++        "protocol_id": _b("config_protocol_id") if "config_protocol_id" in _BOUND else None,
++        "protocol_sha256": common.sha256_file(protocol_path),
++        "profile_sha256": common.sha256_file(REPO_ROOT / "configs/so101/scene2_dual_random_profile.yaml"),
++        "adapter_sha256": common.sha256_file(adapter),
++        "certificate_sha256": common.sha256_file(certificate_path),
++        "source_sha256": fp["source_sha256"],
++        "source_files": fp["source_files"],
++        "expert_sha256": fp["expert_sha256"],
++        "expert_files": fp["expert_files"],
++        "model_sha256": fp["model_sha256"],
++        "config_sha256": fp["config_sha256"],
++        "config_files": fp["config_files"],
++        "packages": fp["packages"],
++    }
++    return payload
++
++
++def set_protocol_id(protocol_id: str) -> None:
++    _BOUND["config_protocol_id"] = protocol_id
++
++
++# ---------------------------------------------------------------------------
++# geometry helpers
++# ---------------------------------------------------------------------------
++def other_arm(arm: str) -> str:
++    return "right" if arm == "left" else "left"
++
++
++def arm_for_y(y: float) -> str:
++    return "left" if float(y) > 0.0 else "right"
++
++
++def arrangement_sides(arrangement: str) -> dict:
++    if arrangement == "red_positive_y":
++        return {"red": 1.0, "blue": -1.0}
++    if arrangement == "red_negative_y":
++        return {"red": -1.0, "blue": 1.0}
++    raise ValueError(f"unknown arrangement {arrangement!r}")
++
++
++def _tray_outer_half(config: dict) -> np.ndarray:
++    inner = np.asarray(config["scene"]["trays"]["inner_half_size"], dtype=float)
++    return inner + 0.006
++
++
++def _tray_fits_table(config: dict, xy) -> bool:
++    table = config["scene"]["table"]
++    center = np.asarray(table["center_xy"], dtype=float)
++    half = np.asarray(table["half_size_xy"], dtype=float)
++    outer = _tray_outer_half(config)
++    margin = float(config["sorting"].get("tray_table_margin_m", 0.02))
++    delta = np.abs(np.asarray(xy, dtype=float) - center)
++    return bool(np.all(delta + outer <= half - margin))
++
++
++def _tray_gap(config: dict, first, second) -> float:
++    outer = _tray_outer_half(config)
++    dx = max(0.0, abs(float(first[0]) - float(second[0])) - 2.0 * outer[0])
++    dy = max(0.0, abs(float(first[1]) - float(second[1])) - 2.0 * outer[1])
++    return float(math.hypot(dx, dy))
++
++
++def tray_keepout_boxes(config: dict, trays: dict):
++    regions = _b("regions")
++    clearance = float(config["sorting"].get("block_tray_clearance_m", 0.01))
++    half = regions.tray_inner_half(config) + 0.02 + clearance
++    boxes = []
++    for color in ("red", "blue"):
++        center = np.asarray(trays[color], dtype=float)
++        boxes.append(regions.RegionSpec(f"{color}_tray_keepout",
++                                        float(center[0] - half[0]), float(center[0] + half[0]),
++                                        float(center[1] - half[1]), float(center[1] + half[1])))
++    return boxes
++
++
++def block_position_valid(config: dict, arm: str, xy, trays: dict) -> tuple[bool, str | None]:
++    regions = _b("regions")
++    table = config["scene"]["table"]
++    center = np.asarray(table["center_xy"], dtype=float)
++    half = np.asarray(table["half_size_xy"], dtype=float)
++    if np.any(np.abs(np.asarray(xy, dtype=float) - center) > half - 0.06):
++        return False, "table_bounds"
++    if not regions.pick_region(config, arm).contains(xy):
++        return False, "pick_region"
++    for box in tray_keepout_boxes(config, trays):
++        if box.contains(xy):
++            return False, "tray_keepout"
++    return True, None
++
++
++def _color_rgba(color: str):
++    return [0.85, 0.08, 0.06, 1.0] if color == "red" else [0.08, 0.25, 0.90, 1.0]
++
++
++def sample_trays(config: dict, rng, arrangement: str) -> dict:
++    SceneGenerationError = _b("SceneGenerationError")
++    sides = arrangement_sides(arrangement)
++    trays = {}
++    for color in ("red", "blue"):
++        entry = config["sorting"]["tray_sampling_positive" if sides[color] > 0
++                                 else "tray_sampling_negative"]
++        chosen = None
++        for _ in range(2000):
++            xy = (float(rng.uniform(*entry["x_m"])), float(rng.uniform(*entry["y_m"])))
++            if _tray_fits_table(config, xy):
++                chosen = xy
++                break
++        if chosen is None:
++            raise SceneGenerationError(f"no table-legal position for the {color} tray")
++        trays[color] = chosen
++    gap = _tray_gap(config, trays["red"], trays["blue"])
++    minimum = float(config["sorting"].get("tray_tray_gap_m", 0.03))
++    if gap < minimum:
++        raise SceneGenerationError(f"tray gap {gap:.4f} m below {minimum:.4f} m")
++    return trays
++
++
++@contextmanager
++def trays_at(env, trays: dict):
++    """Move the two tray bodies for screening, then restore them."""
++    mujoco = _b("mujoco")
++    bodies = {color: env.model.body(f"{color}_tray").id for color in ("red", "blue")}
++    previous = {color: env.model.body_pos[index].copy() for color, index in bodies.items()}
++    z = float(env.config["scene"]["table"]["surface_z"])
++    try:
++        for color, index in bodies.items():
++            env.model.body_pos[index] = [float(trays[color][0]), float(trays[color][1]), z]
++        mujoco.mj_forward(env.model, env.data)
++        yield
++    finally:
++        for color, index in bodies.items():
++            env.model.body_pos[index] = previous[color]
++        mujoco.mj_forward(env.model, env.data)
++
++
++def set_scene_state(env, config: dict, trays: dict, blocks: list[dict], *,
++                    settle_s: float = 0.0) -> None:
++    """Install a candidate initial state and optionally settle it."""
++    mujoco = _b("mujoco")
++    mujoco.mj_resetData(env.model, env.data)
++    table_z = float(config["scene"]["table"]["surface_z"])
++    half = float(config["sorting"]["cube_size_m"]) / 2.0
++    for color, xy in trays.items():
++        env.model.body_pos[env.model.body(f"{color}_tray").id] = [float(xy[0]), float(xy[1]), table_z]
++    for block in blocks:
++        name = block["name"]
++        address = env.model.jnt_qposadr[env.model.joint(f"{name}_free").id]
++        yaw = math.radians(float(block["yaw_degrees"])) / 2.0
++        env.data.qpos[address:address + 3] = [
++            float(block["xy"][0]), float(block["xy"][1]), table_z + half + 0.001]
++        env.data.qpos[address + 3:address + 7] = [math.cos(yaw), 0.0, 0.0, math.sin(yaw)]
++        env.data.qvel[address:address + 6] = 0.0
++        env.model.geom_rgba[env.model.geom(f"{name}_geom").id] = _color_rgba(block["color"])
++    env.data.qpos[env.robot.qpos_ids] = env.robot.to_radians(env.robot.home())
++    env.data.qvel[env.robot.dof_ids] = 0.0
++    # mj_resetData clears ctrl; without this the position servos would drive the
++    # arms away from home during the settle and corrupt the initial-state screen.
++    env.last_action = env.robot.apply_action(env.data, env.robot.home())
++    mujoco.mj_forward(env.model, env.data)
++    for _ in range(round(float(settle_s) * float(config["runtime"]["physics_hz"]))):
++        mujoco.mj_step(env.model, env.data)
++    mujoco.mj_forward(env.model, env.data)
++
++
++def _arm_public(model, data, arm: str, config: dict) -> np.ndarray:
++    from bimanual.types import JOINT_NAMES
++
++    values = []
++    for joint in JOINT_NAMES:
++        index = model.jnt_qposadr[model.joint(f"{arm}_{joint}").id]
++        values.append(float(data.qpos[index]))
++    degrees = np.rad2deg(np.asarray(values[:5], dtype=float))
++    closed = float(config["robot"]["gripper_closed_rad"])
++    opened = float(config["robot"]["gripper_open_rad"])
++    gripper = (values[5] - closed) / (opened - closed) * 100.0
++    return np.concatenate([degrees, [gripper]])
++
++
++def _tray_contact_count(model, data) -> list[dict]:
++    found = []
++    for contact in data.contact:
++        names = [model.geom(int(index)).name for index in (contact.geom1, contact.geom2)]
++        robot = any(name.startswith(("left_", "right_")) for name in names)
++        tray = any(name.startswith(("red_tray_", "blue_tray_")) for name in names)
++        if robot and tray:
++            found.append({"geoms": names, "penetration_m": float(-contact.dist)})
++    return found
++
++
++def _cube_cube_contacts(model, data, names: list[str]) -> list[dict]:
++    found = []
++    for contact in data.contact:
++        geoms = [model.geom(int(index)).name for index in (contact.geom1, contact.geom2)]
++        blocks = [name for name in names if any(g.startswith(name + "_") for g in geoms)]
++        if len(blocks) == 2:
++            found.append({"geoms": geoms, "penetration_m": float(-contact.dist)})
++    return found
++
++
++def measure_initial(env, config: dict, blocks: list[dict]) -> dict:
++    contacts = _b("contacts")
++    regions = _b("regions")
++    table = config["scene"]["table"]
++    records = {}
++    for block in blocks:
++        name = block["name"]
++        position, rotation = contacts.object_pose(env.model, env.data, name)
++        linear, angular, _, _ = contacts.object_speed(env.model, env.data, name)
++        supported, supports = contacts.object_support(env.model, env.data, name, {"table"})
++        yaw = float(np.rad2deg(np.arctan2(rotation[1, 0], rotation[0, 0])))
++        out_of_bounds = bool(
++            position[2] < table["surface_z"] - 0.10
++            or np.any(np.abs(position[:2] - np.asarray(table["center_xy"]))
++                      > np.asarray(table["half_size_xy"]) + 0.1))
++        records[name] = {
++            "color": block["color"],
++            "position_xy": [float(position[0]), float(position[1])],
++            "position_z": float(position[2]),
++            "yaw_degrees": yaw,
++            "supported": bool(supported),
++            "support_geoms": supports,
++            "robot_contacts": contacts.robot_contacts_with(env.model, env.data, name),
++            "linear_speed_m_s": linear,
++            "angular_speed_rad_s": angular,
++            "out_of_bounds": out_of_bounds,
++            "commanded_xy_error_m": float(np.linalg.norm(
++                np.asarray(position[:2]) - np.asarray(block["xy"], dtype=float))),
++            "commanded_yaw_error_degrees": abs(yaw - float(block["yaw_degrees"])),
++        }
++    parked = {}
++    home_deg = np.asarray(config["robot"]["home_degrees"], dtype=float)
++    home_grip = float(config["robot"]["home_gripper_percent"])
++    for arm in ("left", "right"):
++        state = _arm_public(env.model, env.data, arm, config)
++        parked[arm] = {
++            "joint_error_deg": float(np.max(np.abs(state[:5] - home_deg))),
++            "gripper_error_percent": float(abs(state[5] - home_grip)),
++        }
++    limits = float(config["sorting"].get("linear_speed_m_s", 0.02))
++    angular_limits = float(config["sorting"].get("angular_speed_rad_s", 0.2))
++    checks = {
++        "all_on_table": all(row["supported"] for row in records.values()),
++        "no_robot_block_contact": all(not row["robot_contacts"] for row in records.values()),
++        "no_block_block_contact": not _cube_cube_contacts(env.model, env.data, list(records)),
++        "no_robot_tray_contact": not _tray_contact_count(env.model, env.data),
++        "all_slow": all(row["linear_speed_m_s"] <= limits
++                        and row["angular_speed_rad_s"] <= angular_limits
++                        for row in records.values()),
++        "all_in_bounds": all(not row["out_of_bounds"] for row in records.values()),
++        "xy_error_within_5mm": all(row["commanded_xy_error_m"] <= 0.005
++                                   for row in records.values()),
++        "yaw_error_within_2deg": all(row["commanded_yaw_error_degrees"] <= 2.0
++                                      for row in records.values()),
++        "arms_at_home": all(row["joint_error_deg"] <= 2.0
++                            and row["gripper_error_percent"] <= 5.0
++                            for row in parked.values()),
++    }
++    return {"objects": records, "arms": parked, "checks": checks,
++            "passed": all(checks.values())}
++
++
++def initial_fingerprint(env, scene) -> dict:
++    """Hash the post-settle integration state plus object and tray poses."""
++    contacts = _b("contacts")
++    snapshot = env.snapshot()
++    payload = {
++        "snapshot_sha256": hashlib.sha256(np.asarray(snapshot, dtype=np.float64).tobytes()).hexdigest(),
++        "objects": {},
++        "trays": {},
++    }
++    for entry in scene.objects:
++        position, rotation = contacts.object_pose(env.model, env.data, entry.name)
++        payload["objects"][entry.name] = {
++            "position": [float(value) for value in position],
++            "rotation": [[float(value) for value in row] for row in rotation],
++        }
++    for color in ("red", "blue"):
++        body = env.model.body(f"{color}_tray").id
++        payload["trays"][color] = [float(value) for value in env.model.body_pos[body][:3]]
++    payload["fingerprint_sha256"] = hashlib.sha256(
++        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++    return payload
++
++
++# ---------------------------------------------------------------------------
++# screening
++# ---------------------------------------------------------------------------
++def _arm_target(base, arm: str, joints=None, gripper=None):
++    result = np.asarray(base, dtype=float).copy()
++    offset = 0 if arm == "left" else 6
++    if joints is not None:
++        result[offset:offset + 5] = np.rad2deg(joints)
++    if gripper is not None:
++        result[offset + 5] = gripper
++    return result
++
++
++def _path(env, start, target, seconds: float) -> list:
++    frames = max(2, round(seconds * env.config["runtime"]["control_hz"]))
++    return list(_b("joint_trajectory")(start, target, seconds,
++                                       env.config["runtime"]["control_hz"]))[:frames]
++
++
++def _screen_joint(env, arm: str, actions: list, allowed_object: str | None) -> dict:
++    return _b("payload_path").screen_joint_path(env, arm, actions,
++                                                 allowed_object=allowed_object)
++
++
++def pick_verdict(env, config: dict, arm: str, target_name: str, xy, yaw: float) -> dict:
++    profile = config["grasp"]
++    regions = _b("regions")
++    # A free block rests on the table, not on the 4 mm tray floor.
++    z = float(config["scene"]["table"]["surface_z"]) + regions.cube_half(config)
++    rotation = _b("rotation_z")(yaw)
++    offset = 0 if arm == "left" else 6
++    seed = env.data.qpos[env.robot.qpos_ids[offset:offset + 5]].copy()
++    ik = _b("PoseIK")(env)
++    grasp = ik.solve(arm, [xy[0], xy[1], z], rotation, seed_rad=seed,
++                     tolerance=0.0002, rotation_tolerance=0.01)
++    if not grasp.converged:
++        return {"passed": False, "reason": "grasp_ik",
++                "position_error_m": grasp.position_error_m}
++    hover = ik.solve(arm, [xy[0], xy[1], z + profile["hover_height_m"]], rotation,
++                     seed_rad=grasp.joints_rad, tolerance=0.0002, rotation_tolerance=0.01)
++    if not hover.converged:
++        return {"passed": False, "reason": "hover_ik",
++                "position_error_m": hover.position_error_m}
++    home = env.robot.home()
++    opened = profile["open_percent"]
++    low = _arm_target(home, arm, grasp.joints_rad, opened)
++    high = _arm_target(home, arm, hover.joints_rad, opened)
++    durations = profile["stage_durations_s"]
++    approach = _path(env, home, high, durations["approach"])
++    descend = _path(env, high, low, durations["descend"])
++    lift = _path(env, low, high, durations["lift"])
++    approach_screen = _screen_joint(env, arm, approach, None)
++    # The descend ends at the grasp pose.  A CAD band touching the *target* there
++    # is the intended grasp; non-band geoms, the distractor, trays and the table
++    # remain hard.  This mirrors the runtime descend-stage adapter below.
++    descend_screen = _screen_joint(env, arm, descend, target_name)
++    lift_screen = _screen_joint(env, arm, lift, target_name)
++    passed = bool(approach_screen["passed"] and descend_screen["passed"]
++                  and lift_screen["passed"])
++    return {"passed": passed,
++            "reason": None if passed else "pick_path",
++            "approach": _compact_screen(approach_screen),
++            "descend": _compact_screen(descend_screen),
++            "lift": _compact_screen(lift_screen),
++            "grasp_position_error_m": grasp.position_error_m,
++            "hover_position_error_m": hover.position_error_m}
++
++
++def place_verdict(env, config: dict, arm: str, target_name: str, slot, yaw: float) -> dict:
++    profile = config["grasp"]
++    regions = _b("regions")
++    cube_half = regions.cube_half(config)
++    support_z = float(slot.support_z)
++    release_z = support_z + cube_half + profile["release_clearance_m"]
++    hover_height = profile.get("place_hover_height_m", profile["hover_height_m"])
++    rotation = _b("rotation_z")(yaw)
++    offset = 0 if arm == "left" else 6
++    seed = env.data.qpos[env.robot.qpos_ids[offset:offset + 5]].copy()
++    ik = _b("PoseIK")(env)
++    release = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z], rotation, seed_rad=seed,
++                       tolerance=0.0002, rotation_tolerance=0.01)
++    if not release.converged:
++        return {"passed": False, "reason": "release_ik",
++                "position_error_m": release.position_error_m}
++    hover = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z + hover_height], rotation,
++                     seed_rad=release.joints_rad, tolerance=0.0002, rotation_tolerance=0.01)
++    if not hover.converged:
++        return {"passed": False, "reason": "place_hover_ik",
++                "position_error_m": hover.position_error_m}
++    center = np.asarray(config["scene"]["trays"][slot.color], dtype=float)
++    inner = regions.tray_inner_half(config)
++    extents = np.abs(rotation) @ np.full(3, cube_half)
++    contained = bool(np.all(np.abs(np.asarray(slot.xy) - center) + extents[:2] <= inner))
++    if not contained:
++        return {"passed": False, "reason": "slot_containment", "extents": extents.tolist()}
++    home = env.robot.home()
++    closed = profile["closed_percent"]
++    opened = profile["open_percent"]
++    low = _arm_target(home, arm, release.joints_rad, closed)
++    high = _arm_target(home, arm, hover.joints_rad, closed)
++    durations = profile["stage_durations_s"]
++    descent = _path(env, high, low, durations["lower"])
++    descent_screen = _screen_joint(env, arm, descent, target_name)
++    withdraw = []
++    for sign in (-1.0, 1.0):
++        sideways_xy = np.asarray(slot.xy, dtype=float) + rotation[:, 0][:2] * profile["retreat_clearance_x_m"] * sign
++        sideways = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z], rotation,
++                            seed_rad=release.joints_rad, tolerance=0.0005, rotation_tolerance=0.02)
++        lifted = None
++        if sideways.converged:
++            lifted = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z + hover_height], rotation,
++                              seed_rad=sideways.joints_rad, tolerance=0.0008, rotation_tolerance=0.03)
++        if not (sideways.converged and lifted.converged):
++            withdraw.append({"sign": sign, "passed": False, "reason": "withdraw_ik"})
++            continue
++        out = _arm_target(home, arm, sideways.joints_rad, opened)
++        up = _arm_target(home, arm, lifted.joints_rad, opened)
++        release_path = _path(env, low, out, durations["release"] / 2)
++        retreat_path = _path(env, out, up, durations["release"] / 2)
++        release_screen = _screen_joint(env, arm, release_path, target_name)
++        retreat_screen = _screen_joint(env, arm, retreat_path, target_name)
++        passed = bool(release_screen["passed"] and retreat_screen["passed"])
++        withdraw.append({"sign": sign, "passed": passed,
++                         "release": _compact_screen(release_screen),
++                         "retreat": _compact_screen(retreat_screen)})
++    passed = bool(descent_screen["passed"] and any(entry["passed"] for entry in withdraw))
++    return {"passed": passed,
++            "reason": None if passed else ("place_path" if not descent_screen["passed"] else "withdraw_path"),
++            "descent": _compact_screen(descent_screen), "withdraw": withdraw,
++            "release_z_m": release_z, "hover_z_m": release_z + hover_height,
++            "contained": contained, "extents": extents.tolist(),
++            "release_position_error_m": release.position_error_m,
++            "hover_position_error_m": hover.position_error_m}
++
++
++def _compact_screen(screen: dict) -> dict:
++    result = {"passed": bool(screen.get("passed")), "samples": screen.get("samples")}
++    if screen.get("contacts"):
++        result["contacts"] = screen["contacts"][:4]
++    if screen.get("first_index") is not None:
++        result["first_index"] = screen["first_index"]
++    return result
++
++
++# ---------------------------------------------------------------------------
++# scene generation
++# ---------------------------------------------------------------------------
++def sample_candidate(config: dict, certificate, rng, arrangement: str,
++                     trace: dict | None = None) -> dict:
++    """Draw trays, both block poses and both yaws; no IK checks yet.
++
++    ``trace`` is filled before any rejection so the pilot can report the yaw/XY
++    distribution of *draws*, not only of accepted layouts.
++    """
++    SceneGenerationError = _b("SceneGenerationError")
++    domains = config["sorting"]["yaw_domain_degrees"]
++    trays = sample_trays(config, rng, arrangement)
++    if trace is not None:
++        trace["trays"] = {color: [round(float(xy[0]), 6), round(float(xy[1]), 6)]
++                          for color, xy in trays.items()}
++    sides = arrangement_sides(arrangement)
++    blocks = []
++    for name, color in (("cube_0", "red"), ("cube_1", "blue")):
++        arm = arm_for_y(trays[color][1])
++        points = certificate.points(arm)
++        if not points:
++            raise SceneGenerationError(f"certificate has no pick points for {arm}")
++        point = points[int(rng.integers(0, len(points)))]
++        jitter = float(config["sorting"].get("block_jitter_m", 0.004))
++        xy = (float(point[0]) + float(rng.uniform(-jitter, jitter)),
++              float(point[1]) + float(rng.uniform(-jitter, jitter)))
++        yaw = float(rng.uniform(float(domains[0]), float(domains[1])))
++        blocks.append({"name": name, "color": color, "xy": [round(xy[0], 6), round(xy[1], 6)],
++                       "yaw_degrees": round(yaw, 6), "arm": arm,
++                       "source_region": f"{arm}_source", "side": int(sides[color])})
++        if trace is not None:
++            trace.setdefault("blocks", []).append(
++                {"name": name, "color": color, "xy": blocks[-1]["xy"],
++                 "yaw_degrees": blocks[-1]["yaw_degrees"], "arm": arm})
++    for block in blocks:
++        valid, reason = block_position_valid(config, block["arm"], block["xy"], trays)
++        if not valid:
++            raise SceneGenerationError(f"{block['name']}_{reason}")
++    minimum = float(config["sorting"].get("block_block_min_distance_m", 0.06))
++    distance = math.dist(blocks[0]["xy"], blocks[1]["xy"])
++    if trace is not None:
++        trace["separation_m"] = round(distance, 6)
++    if distance < minimum:
++        raise SceneGenerationError(f"block separation {distance:.4f} m below {minimum:.4f} m")
++    return {"arrangement": arrangement, "trays": trays, "blocks": blocks}
++
++
++def generate_layout(config: dict, certificate, seed: int, arrangement: str, *, env,
++                    provenance_hashes: dict, max_attempts: int = 400,
++                    trace: list | None = None) -> dict:
++    """Return a fully screened layout that supports both target instructions."""
++    SceneGenerationError = _b("SceneGenerationError")
++    regions = _b("regions")
++    rng = np.random.default_rng(
++        np.random.SeedSequence([int(seed), 0x5CE2, 0 if arrangement == "red_positive_y" else 1]))
++    rejected = Counter()
++    local_trace = [] if trace is None else trace
++    for attempt in range(1, int(max_attempts) + 1):
++        entry = {"attempt": attempt, "result": None}
++        try:
++            candidate = sample_candidate(config, certificate, rng, arrangement, trace=entry)
++        except SceneGenerationError as error:
++            message = getattr(error, "message", str(error))
++            reason = message.split(":")[0].strip() or "sample_reject"
++            rejected[reason] += 1
++            entry["result"] = reason
++            entry["message"] = message[:200]
++            local_trace.append(entry)
++            continue
++        trays = candidate["trays"]
++        blocks = candidate["blocks"]
++        effective = copy.deepcopy(config)
++        effective["scene"]["trays"] = {"red": list(trays["red"]), "blue": list(trays["blue"]),
++                                       "inner_half_size": list(config["scene"]["trays"]["inner_half_size"])}
++        set_scene_state(env, config, trays, blocks, settle_s=0.0)
++        condition_checks = {}
++        failed = None
++        slots = {}
++        for target in blocks:
++            arm = target["arm"]
++            pick = pick_verdict(env, effective, arm, target["name"],
++                                target["xy"], target["yaw_degrees"])
++            condition_checks[target["color"]] = {"pick": pick, "slots": []}
++            if not pick["passed"]:
++                failed = f"pick_{target['color']}_{pick['reason']}"
++                break
++            chosen = None
++            for slot in regions.tray_slots(effective, target["color"]):
++                verdict = place_verdict(env, effective, arm, target["name"], slot,
++                                        target["yaw_degrees"])
++                condition_checks[target["color"]]["slots"].append(
++                    {"slot": slot.name, **{key: value for key, value in verdict.items()
++                                           if key not in ("descent", "withdraw")}})
++                if verdict["passed"]:
++                    chosen = {"name": slot.name, "xy": [round(float(slot.xy[0]), 6),
++                                                        round(float(slot.xy[1]), 6)],
++                              "support_z": float(slot.support_z)}
++                    break
++            if chosen is None:
++                failed = f"place_{target['color']}_checks"
++                break
++            slots[target["color"]] = chosen
++        if failed is not None:
++            rejected[failed] += 1
++            entry["result"] = failed
++            local_trace.append(entry)
++            continue
++        set_scene_state(env, config, trays, blocks,
++                        settle_s=float(config["runtime"]["settle_s"]))
++        initial = measure_initial(env, config, blocks)
++        if not initial["passed"]:
++            failed = "initial_" + ",".join(name for name, ok in initial["checks"].items() if not ok)
++            rejected[failed] += 1
++            entry["result"] = failed
++            local_trace.append(entry)
++            continue
++        entry["result"] = "accepted"
++        entry["yaw"] = [block["yaw_degrees"] for block in blocks]
++        local_trace.append(entry)
++        if trace is not None:
++            trace.extend(local_trace)
++        layout = {
++            "schema_version": 1,
++            "protocol_id": _BOUND.get("config_protocol_id"),
++            "seed": int(seed),
++            "arrangement": arrangement,
++            "trays": {color: [round(float(xy[0]), 6), round(float(xy[1]), 6)]
++                      for color, xy in trays.items()},
++            "blocks": blocks,
++            "slots": slots,
++            "checks": {
++                "sampler_attempts": attempt,
++                "rejected": dict(rejected),
++                "tray_gap_m": round(_tray_gap(config, trays["red"], trays["blue"]), 6),
++                "conditions": condition_checks,
++                "initial": initial,
++            },
++        }
++        physical = {
++            "seed": layout["seed"],
++            "arrangement": layout["arrangement"],
++            "trays": layout["trays"],
++            "blocks": [{key: block[key] for key in
++                        ("name", "color", "xy", "yaw_degrees", "arm")}
++                       for block in layout["blocks"]],
++        }
++        layout["physical_sha256"] = common.sha256_json(physical)
++        layout["layout_sha256"] = common.sha256_json({"physical": physical,
++                                                      "provenance": provenance_hashes})
++        return layout
++    if trace is not None:
++        trace.extend(local_trace)
++    raise SceneGenerationError(
++        f"no legal dual-block layout for seed {seed} arrangement {arrangement} "
++        f"after {max_attempts} attempts; rejections {dict(rejected)}")
++
++
++def build_scene(config: dict, layout: dict, target_color: str) -> object:
++    """Build the condition SceneSpec; both conditions share the layout identity."""
++    if target_color not in ("red", "blue"):
++        raise ValueError(target_color)
++    SceneSpec = _b("SceneSpec")
++    ObjectSpec = _b("ObjectSpec")
++    target = next(block for block in layout["blocks"] if block["color"] == target_color)
++    distractor = next(block for block in layout["blocks"] if block["color"] != target_color)
++    target_arm = target["arm"]
++    other = other_arm(target_arm)
++    slot = layout["slots"][target_color]
++    instruction = config["sorting"]["instruction_template"].format(color=target_color)
++    target_entry = ObjectSpec(
++        name=target["name"], color=target["color"], xy=tuple(target["xy"]),
++        yaw_degrees=float(target["yaw_degrees"]), route="direct",
++        supply_arm=target_arm, destination_arm=target_arm,
++        orientation_degrees=float(target["yaw_degrees"]),
++        source_region=f"{target_arm}_source")
++    distractor_entry = ObjectSpec(
++        name=distractor["name"], color=distractor["color"], xy=tuple(distractor["xy"]),
++        yaw_degrees=float(distractor["yaw_degrees"]), route="direct",
++        supply_arm=other, destination_arm=other,
++        orientation_degrees=float(distractor["yaw_degrees"]),
++        source_region=f"{other}_source")
++    condition_payload = {
++        "physical_sha256": layout["physical_sha256"],
++        "layout_sha256": layout["layout_sha256"],
++        "target_color": target_color,
++        "target_name": target["name"],
++        "distractor_name": distractor["name"],
++        "active_arm": target_arm,
++        "other_arm": other,
++        "slot": slot,
++        "instruction": instruction,
++    }
++    extra = {
++        "task_type": "dual_block_select_place",
++        "arrangement": layout["arrangement"],
++        "layout_seed": layout["seed"],
++        "physical_sha256": layout["physical_sha256"],
++        "layout_sha256": layout["layout_sha256"],
++        "condition_sha256": common.sha256_json(condition_payload),
++        "trays": layout["trays"],
++        "blocks": layout["blocks"],
++        "target_name": target["name"],
++        "target_color": target_color,
++        "distractor_name": distractor["name"],
++        "distractor_color": distractor["color"],
++        "active_arm": target_arm,
++        "other_arm": other,
++        "instruction": instruction,
++        "slot_name": slot["name"],
++        "slot_xy": list(slot["xy"]),
++        "support_z": float(slot["support_z"]),
++        "checks": layout["checks"],
++        "condition_checks": layout["checks"]["conditions"][target_color],
++        "layout_spec": layout,
++    }
++    scene = SceneSpec(
++        schema_version=1, profile="dual_block_select_place", seed=int(layout["seed"]),
++        objects=[target_entry, distractor_entry], shared_xy=(0.0, 0.0),
++        shared_orientation_degrees=0.0, expected_transfers=[], summary=instruction,
++        extra=extra)
++    scene.sha256 = layout["layout_sha256"]
++    return scene
++
++
++# ---------------------------------------------------------------------------
++# task
++# ---------------------------------------------------------------------------
++class DualBlockSelectPlaceTask:
++    """Target success and distractor integrity are judged from physics only."""
++
++    def __init__(self, config: dict):
++        self.config = config
++        self.scene = None
++        self.start_time = 0.0
++        self.stable_since = None
++        self.instruction = config["sorting"]["instruction"]
++        self.names = ["cube_0", "cube_1"]
++        self.target_name = None
++        self.target_color = None
++        self.distractor_name = None
++        self.distractor_color = None
++        self.active_arm = None
++        self.target_initial = None
++        self.distractor_initial = None
++        self.initial_fingerprint = None
++        self.initial_metrics = None
++
++    def reset(self, model, data, rng, scene=None):
++        if scene is None or scene.extra.get("task_type") != "dual_block_select_place":
++            raise ValueError("DualBlockSelectPlaceTask requires a dual_block_select_place SceneSpec")
++        self.scene = scene
++        self.names = [entry.name for entry in scene.objects]
++        self.target_name = scene.extra["target_name"]
++        self.target_color = scene.extra["target_color"]
++        self.distractor_name = scene.extra["distractor_name"]
++        self.distractor_color = scene.extra["distractor_color"]
++        self.active_arm = scene.extra["active_arm"]
++        self.instruction = scene.extra["instruction"]
++        self.config["sorting"]["instruction"] = self.instruction
++        self.stable_since = None
++        self.target_initial = None
++        self.distractor_initial = None
++        self.initial_fingerprint = None
++        self.initial_metrics = None
++        table_z = float(self.config["scene"]["table"]["surface_z"])
++        for color in ("red", "blue"):
++            x, y = scene.extra["trays"][color]
++            body_id = model.body(f"{color}_tray").id
++            model.body_pos[body_id] = np.array([float(x), float(y), table_z], dtype=float)
++        for entry in scene.objects:
++            address = model.jnt_qposadr[model.joint(f"{entry.name}_free").id]
++            yaw = math.radians(float(entry.yaw_degrees)) / 2.0
++            data.qpos[address:address + 3] = [
++                float(entry.xy[0]), float(entry.xy[1]),
++                table_z + _b("regions").cube_half(self.config) + 0.001]
++            data.qpos[address + 3:address + 7] = [math.cos(yaw), 0.0, 0.0, math.sin(yaw)]
++            data.qvel[address:address + 6] = 0.0
++            model.geom_rgba[model.geom(f"{entry.name}_geom").id] = _color_rgba(entry.color)
++
++    def set_initial_measured(self, model, data):
++        contacts = _b("contacts")
++        if self.scene is None:
++            raise RuntimeError("task has no scene")
++        for name in (self.target_name, self.distractor_name):
++            position, rotation = contacts.object_pose(model, data, name)
++            value = {"position": position.copy(), "rotation": rotation.copy()}
++            if name == self.target_name:
++                self.target_initial = value
++            else:
++                self.distractor_initial = value
++        self.initial_metrics = measure_initial(
++            _BOUND["env_proxy"], self.config, self.scene.extra["blocks"]) if "env_proxy" in _BOUND else None
++
++    def _tray(self, color: str) -> np.ndarray:
++        return np.asarray(self.scene.extra["trays"][color], dtype=float)
++
++    def _status(self, model, data, name: str) -> dict:
++        contacts = _b("contacts")
++        regions = _b("regions")
++        entry = next(item for item in self.scene.objects if item.name == name)
++        color = entry.color
++        position, rotation = contacts.object_pose(model, data, name)
++        half = np.full(3, regions.cube_half(self.config))
++        extents = np.abs(rotation) @ half
++        center = self._tray(color)
++        inner = regions.tray_inner_half(self.config)
++        contained = bool(np.all(np.abs(position[:2] - center) + extents[:2] <= inner)
++                         and self.config["scene"]["table"]["surface_z"] < position[2]
++                         < self.config["scene"]["table"]["surface_z"] + 0.06)
++        support_geoms = {f"{color}_tray_0"}
++        supported, supports = contacts.object_support(model, data, name, support_geoms)
++        table_supported, table_supports = contacts.object_support(model, data, name, {"table"})
++        touching = contacts.robot_contacts_with(model, data, name)
++        linear, angular, _, _ = contacts.object_speed(model, data, name)
++        limits = float(self.config["sorting"].get("linear_speed_m_s", 0.02))
++        angular_limit = float(self.config["sorting"].get("angular_speed_rad_s", 0.2))
++        stable_in_tray = bool(contained and supported and not touching
++                              and linear <= limits and angular <= angular_limit)
++        stable_on_table = bool(table_supported and not touching
++                               and linear <= limits and angular <= angular_limit)
++        table = self.config["scene"]["table"]
++        out_of_bounds = bool(position[2] < table["surface_z"] - 0.10
++                             or np.any(np.abs(position[:2] - np.asarray(table["center_xy"]))
++                                       > np.asarray(table["half_size_xy"]) + 0.1))
++        grasped = any(contacts.bilateral_grasp(model, data, name, arm)[0]
++                      for arm in ("left", "right"))
++        displacement = None
++        if name == self.target_name and self.target_initial is not None:
++            displacement = float(np.linalg.norm(position - self.target_initial["position"]))
++        if name == self.distractor_name and self.distractor_initial is not None:
++            displacement = float(np.linalg.norm(position - self.distractor_initial["position"]))
++        return {"color": color, "position_xy": [float(position[0]), float(position[1])],
++                "position": position.tolist(), "contained": contained,
++                "supported_geoms": supports, "supported": bool(supported),
++                "table_supported": bool(table_supported),
++                "table_support_geoms": table_supports,
++                "robot_contacts": touching, "grasped": bool(grasped),
++                "linear_speed_m_s": linear, "angular_speed_rad_s": angular,
++                "stable_in_tray": stable_in_tray, "stable_on_table": stable_on_table,
++                "displacement_from_initial_m": displacement,
++                "out_of_bounds": out_of_bounds}
++
++    def object_statuses(self, model, data) -> dict:
++        return {name: self._status(model, data, name) for name in self.names}
++
++    def arm_clearance(self, model, data) -> dict:
++        contacts = _b("contacts")
++        tolerance_deg = float(self.config["sorting"].get("arm_park_joint_tolerance_deg", 2.0))
++        tolerance_grip = float(self.config["sorting"].get("arm_park_gripper_tolerance_percent", 5.0))
++        home_deg = np.asarray(self.config["robot"]["home_degrees"], dtype=float)
++        home_grip = float(self.config["robot"]["home_gripper_percent"])
++        parked = {}
++        for arm in ("left", "right"):
++            state = _arm_public(model, data, arm, self.config)
++            joint_error = float(np.max(np.abs(state[:5] - home_deg)))
++            grip_error = float(abs(state[5] - home_grip))
++            parked[arm] = {"joint_error_deg": joint_error, "gripper_error_percent": grip_error,
++                           "parked": bool(joint_error <= tolerance_deg and grip_error <= tolerance_grip)}
++        margin = float(self.config["sorting"].get("arm_clearance_m", 0.01))
++        position = contacts.object_pose(model, data, self.target_name)[0]
++        outer = _b("regions").tray_inner_half(self.config) + 0.006
++        tray_contacts = _tray_contact_count(model, data)
++        clearances = {}
++        for arm in ("left", "right"):
++            tcp = data.site_xpos[model.site(f"{arm}_tcp").id]
++            block_distance = float(np.linalg.norm(tcp - position))
++            tray_distance = float("inf")
++            for color in ("red", "blue"):
++                center = self._tray(color)
++                dx = max(0.0, abs(float(tcp[0]) - center[0]) - outer[0])
++                dy = max(0.0, abs(float(tcp[1]) - center[1]) - outer[1])
++                tray_distance = min(tray_distance, math.hypot(dx, dy))
++            clearances[arm] = {"block_m": block_distance, "tray_m": tray_distance,
++                               "clear": bool(block_distance >= margin and tray_distance >= margin)}
++        return {"parked": parked, "clearances": clearances, "tray_contacts": tray_contacts,
++                "clear": bool(all(item["parked"] for item in parked.values())
++                              and all(item["clear"] for item in clearances.values())
++                              and not tray_contacts)}
++
++    def evaluate(self, model, data):
++        statuses = self.object_statuses(model, data)
++        clearance = self.arm_clearance(model, data)
++        target = statuses[self.target_name]
++        distractor = statuses[self.distractor_name]
++        threshold = self.config["sorting"].get("distractor_max_displacement_m")
++        displacement_ok = bool(threshold is not None
++                               and distractor["displacement_from_initial_m"] is not None
++                               and distractor["displacement_from_initial_m"] <= float(threshold))
++        distractor_ok = bool(distractor["stable_on_table"] and not distractor["robot_contacts"]
++                             and not distractor["grasped"] and not distractor["out_of_bounds"]
++                             and displacement_ok)
++        target_ok = bool(target["stable_in_tray"] and clearance["clear"])
++        stable_now = bool(target_ok and distractor_ok)
++        if stable_now:
++            if self.stable_since is None:
++                self.stable_since = float(data.time)
++        else:
++            self.stable_since = None
++        stable_seconds = float(self.config["sorting"]["stable_success_s"])
++        stable = bool(self.stable_since is not None
++                      and data.time - self.stable_since >= stable_seconds)
++        timeout = bool(data.time - self.start_time >= float(self.config["sorting"]["timeout_s"]))
++        success = bool(stable)
++        reason = None
++        if target["out_of_bounds"] or distractor["out_of_bounds"]:
++            reason = "object_out_of_bounds"
++        elif not target["contained"]:
++            reason = "wrong_tray"
++        elif not target["supported"]:
++            reason = "not_supported"
++        elif target["robot_contacts"]:
++            reason = "robot_contact"
++        elif (target["linear_speed_m_s"] > float(self.config["sorting"].get("linear_speed_m_s", 0.02))
++              or target["angular_speed_rad_s"] > float(self.config["sorting"].get("angular_speed_rad_s", 0.2))):
++            reason = "not_stable"
++        elif not clearance["clear"]:
++            reason = "arm_not_clear"
++        elif distractor["grasped"]:
++            reason = "distractor_grasped"
++        elif distractor["robot_contacts"]:
++            reason = "distractor_contact"
++        elif not displacement_ok:
++            reason = "distractor_displaced"
++        elif not distractor["stable_on_table"]:
++            reason = "distractor_unstable"
++        elif target["stable_in_tray"] and not success:
++            reason = "not_stable"
++        if timeout and not success:
++            reason = reason or "timeout"
++        info = {"success": success, "sorted_count": int(target["stable_in_tray"]),
++                "objects": statuses, "arm_clearance": clearance,
++                "distractor": {**distractor, "max_displacement_m": threshold,
++                               "displacement_ok": displacement_ok},
++                "stable_seconds": (None if self.stable_since is None
++                                   else round(float(data.time - self.stable_since), 6)),
++                "failure_reason": reason, "timeout": timeout,
++                "success_mode": "dual_block_physical_v1"}
++        return float(target["stable_in_tray"]), success, bool(timeout and not success), info
++
++
++# ---------------------------------------------------------------------------
++# expert and runner wiring
++# ---------------------------------------------------------------------------
++def dual_block_expert_class():
++    """Subclass the external expert so the sampled slot is authoritative."""
++    base = _b("SingleBlockExpert")
++    regions = _b("regions")
++
++    class DualBlockExpert(base):
++        def _slot(self, name):
++            return regions.TraySlot(name, self.scene.extra["target_color"],
++                                    tuple(self.scene.extra["slot_xy"]),
++                                    float(self.scene.extra["support_z"]))
++
++        def direct_episode(self, env, assignment):
++            from bimanual.control.motion import (MotionPlan, object_follow_stage,
++                                                 park_stages, pick_stages, place_stages)
++
++            entry = self._object(assignment.object_id)
++            slot = self._slot(assignment.slot_name)
++            profile = self.config["grasp"]
++            approach = profile.get("place_hover_height_m", profile["hover_height_m"])
++            release_z = (slot.support_z + self.config["sorting"]["cube_size_m"] / 2
++                         + profile["release_clearance_m"])
++            carry_target = [slot.xy[0], slot.xy[1], release_z + approach]
++            stages = pick_stages(env, assignment.supply_arm, entry.name,
++                                 entry.orientation_degrees)
++            for stage in stages:
++                if stage.name == "pick_descend":
++                    # The descend ends at the target grasp pose.  Admit the
++                    # target's own CAD-band contact there; every other contact
++                    # stays hard.
++                    stage.metadata["allowed_object"] = entry.name
++                    arm = stage.arm
++                    target = entry.name
++                    stage.screen = (
++                        lambda live, actions, _arm=arm, _target=target:
++                        _b("payload_path").screen_joint_path(
++                            live, _arm, actions, allowed_object=_target))
++            yield MotionPlan(arm=assignment.supply_arm, object_id=entry.name,
++                             stages=stages, label=f"direct_pick_{entry.name}")
++            yield MotionPlan(arm=assignment.supply_arm, object_id=entry.name,
++                             stages=object_follow_stage(
++                                 env, assignment.supply_arm, entry.name, carry_target,
++                                 label=f"direct_carry_{entry.name}"),
++                             label=f"direct_carry_{entry.name}")
++            yield MotionPlan(arm=assignment.destination_arm, object_id=entry.name,
++                             stages=place_stages(
++                                 env, assignment.destination_arm, entry.name,
++                                 slot.xy, slot.support_z,
++                                 support_geoms={f"{slot.color}_tray_0", "table"}),
++                             label=f"direct_place_{entry.name}")
++            yield MotionPlan(arm=assignment.destination_arm, object_id=entry.name,
++                             stages=park_stages(env, assignment.destination_arm),
++                             label=f"direct_park_{entry.name}")
++
++    return DualBlockExpert
++
++
++def install_runtime(config: dict, env) -> dict:
++    """Install the dual task, reset hook and expert class for this process."""
++    task = DualBlockSelectPlaceTask(config)
++    env.task = task
++    _BOUND["env_proxy"] = env
++    original_reset = env.reset
++
++    def reset_and_fingerprint(seed=0, scene=None):
++        observation = original_reset(seed=seed, scene=scene)
++        task.set_initial_measured(env.model, env.data)
++        if scene is not None:
++            task.initial_fingerprint = initial_fingerprint(env, scene)
++        return observation
++
++    env.reset = reset_and_fingerprint
++    expert = dual_block_expert_class()
++    _b("episode_module").SingleBlockExpert = expert
++    runner_config = copy.deepcopy(config)
++    runner_config["task"]["type"] = "single_block_place"
++    return {"task": task, "runner_config": runner_config, "expert_class": expert}
+diff --git a/scripts/so101/scene2_certify.py b/scripts/so101/scene2_certify.py
+new file mode 100644
+index 0000000..893b871
+--- /dev/null
++++ b/scripts/so101/scene2_certify.py
+@@ -0,0 +1,229 @@
++#!/usr/bin/env python3
++"""Build the scene2 geometric certificate on the independent source snapshot.
++
++The certificate certifies the pick envelope for both arms and the nominal place
++slots for both tray arrangements.  It is an envelope, not a per-scene place
++guarantee: the sampler re-screens every accepted layout at its own yaw and tray
++pose.  The shared handoff area is not used by this task and is recorded empty.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from datetime import datetime, timedelta, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
++
++
++def _certify_place_slot_yaws(env, color, slot, yaws, domain_yaws) -> dict:
++    """Nominal place reference at an explicit yaw list.
++
++    The external helper only tests 0 and 90 degrees.  With the registered 70 %
++    opening the withdrawn fingers can touch a tray wall at those yaws, so the
++    reference is evaluated over the actual candidate domain and the excluded
++    yaws are kept in the record instead of being dropped.
++    """
++    certification = s2._b("certification")
++    regions = s2._b("regions")
++    PoseIK = s2._b("PoseIK")
++    profile = env.config["grasp"]
++    arm = regions.destination_arm(env.config, color)
++    ik = PoseIK(env)
++    support_z = float(slot.support_z)
++    release_z = support_z + regions.cube_half(env.config) + profile["release_clearance_m"]
++    hover_height = profile.get("place_hover_height_m", profile["hover_height_m"])
++    duration = profile["stage_durations_s"]
++    results = {}
++    for degrees in yaws:
++        rotation = certification._rotation(degrees)
++        release = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z], rotation,
++                           tolerance=0.0002, rotation_tolerance=0.01)
++        if not release.converged:
++            results[str(int(degrees))] = {"certified": False, "reason": "release_ik"}
++            continue
++        hover = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z + hover_height], rotation,
++                         seed_rad=release.joints_rad, tolerance=0.0002,
++                         rotation_tolerance=0.01)
++        if not hover.converged:
++            results[str(int(degrees))] = {"certified": False, "reason": "place_hover_ik"}
++            continue
++        base = env.robot.home()
++        low = certification._arm_target(base, arm, joints=release.joints_rad,
++                                        gripper=profile["closed_percent"])
++        high = certification._arm_target(base, arm, joints=hover.joints_rad,
++                                         gripper=profile["closed_percent"])
++        descent, _ = certification._interpolate(env, high, low, duration["lower"])
++        descent_screen = certification._screen(env, arm, descent, 0.0005)
++        if not descent_screen["passed"]:
++            results[str(int(degrees))] = {"certified": False, "reason": "descent_path",
++                                          "contacts": descent_screen.get("contacts", [])[:3]}
++            continue
++        withdraw = None
++        for sign in (-1.0, 1.0):
++            sideways_xy = np.asarray(slot.xy, dtype=float) + rotation[:, 0][:2] * \
++                profile["retreat_clearance_x_m"] * sign
++            sideways = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z], rotation,
++                                seed_rad=release.joints_rad, tolerance=0.0005,
++                                rotation_tolerance=0.02)
++            if not sideways.converged:
++                continue
++            lifted = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z + hover_height],
++                              rotation, seed_rad=sideways.joints_rad, tolerance=0.0008,
++                              rotation_tolerance=0.03)
++            if not lifted.converged:
++                continue
++            out = certification._arm_target(base, arm, joints=sideways.joints_rad,
++                                            gripper=profile["open_percent"])
++            up = certification._arm_target(base, arm, joints=lifted.joints_rad,
++                                           gripper=profile["open_percent"])
++            release_path, _ = certification._interpolate(env, low, out, duration["release"] / 2)
++            retreat_path, _ = certification._interpolate(env, out, up, duration["retreat"] / 2)
++            release_screen = certification._screen(env, arm, release_path, 0.0005)
++            retreat_screen = certification._screen(env, arm, retreat_path, 0.0005)
++            if release_screen["passed"] and retreat_screen["passed"]:
++                withdraw = {"sign": sign, "release": True, "retreat": True}
++                break
++        if withdraw is None:
++            results[str(int(degrees))] = {"certified": False, "reason": "withdraw_path"}
++        else:
++            results[str(int(degrees))] = {"certified": True, "release_z_m": release_z,
++                                          "hover_z_m": release_z + hover_height,
++                                          "withdraw_sign": withdraw["sign"]}
++    domain = {str(int(value)) for value in domain_yaws}
++    return {"name": slot.name, "color": color, "arm": arm, "support_z": support_z,
++            "yaws": results,
++            "certified": any(value["certified"] for value in results.values()),
++            "certified_in_domain": any(results.get(key, {}).get("certified", False)
++                                       for key in domain),
++            "domain_yaws": sorted(int(value) for value in domain_yaws)}
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--grid", type=float, default=0.01)
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to overwrite existing certificate: {output}")
++    config = s2.load_config(root, protocol, certificate=output)
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    regions = s2._b("regions")
++    mujoco = s2._b("mujoco")
++
++    output.parent.mkdir(parents=True, exist_ok=True)
++    started = datetime.now(timezone.utc)
++    with BimanualEnv(config, images=False) as env:
++        env.data.qpos[env.robot.qpos_ids] = env.robot.to_radians(env.robot.home())
++        mujoco.mj_forward(env.model, env.data)
++        profile = config["grasp"]
++        certificate = {
++            "schema_version": regions.SCHEMA_VERSION,
++            "created": _now(),
++            "grid_m": args.grid,
++            "hover_height_m": profile["hover_height_m"],
++            "release_clearance_m": profile["release_clearance_m"],
++            "retreat_clearance_m": profile["retreat_clearance_x_m"],
++            "robot_penetration_tolerance_m": profile["robot_penetration_tolerance_m"],
++            "open_percent": profile["open_percent"],
++            "orientation_candidates_degrees": [0.0, 90.0],
++            "model_sha256": regions.model_fingerprint(env),
++            "scene_sha256": regions.config_fingerprint(config),
++            "config_sha256": regions.config_fingerprint(config, names=("runtime", "camera")),
++            "grasp_sha256": regions.config_fingerprint(config, names=("grasp",)),
++            "pick_region": {arm: regions.pick_region(config, arm).as_dict()
++                            for arm in ("left", "right")},
++            "pick_points": {},
++            "pick_rejected": {},
++            "place_slots": {},
++            "shared": {"region": regions.shared_region(config).as_dict(),
++                       "grid_m": None, "certified_points": [],
++                       "note": "not used by the dual-block select-place task"},
++            "park": {},
++            "task": "dual_block_select_place",
++            "tray_sampling": {
++                "positive_y": config["sorting"]["tray_sampling_positive"],
++                "negative_y": config["sorting"]["tray_sampling_negative"],
++            },
++            "arrangements": ["red_positive_y", "red_negative_y"],
++        }
++        for arm in ("left", "right"):
++            entry = certification.certify_pick_grid(
++                env, arm, args.grid, (0.0, 90.0), profile["hover_height_m"],
++                profile["robot_penetration_tolerance_m"])
++            certificate["pick_points"][arm] = entry["points"]
++            certificate["pick_rejected"][arm] = entry["rejected"]
++            print(json.dumps({"arm": arm, "points": len(entry["points"]),
++                              "rejected": len(entry["rejected"])}), flush=True)
++
++        base_trays = {color: list(config["scene"]["trays"][color]) for color in ("red", "blue")}
++        base_destination = config["sorting"].get("destination_arm")
++        yaws = [0.0, 15.0, 30.0, 45.0, 60.0, 75.0, 90.0]
++        domain_yaws = list(range(int(config["sorting"]["yaw_domain_degrees"][0]),
++                                 int(config["sorting"]["yaw_domain_degrees"][1]) + 1, 15))
++        for color in ("red", "blue"):
++            for slot in regions.tray_slots(config, color):
++                certificate["place_slots"][slot.name] = _certify_place_slot_yaws(
++                    env, color, slot, yaws, domain_yaws)
++        print(json.dumps({"place_slots": len(certificate["place_slots"])}), flush=True)
++
++        swapped = {"red": [0.24, -0.26], "blue": [0.24, 0.26]}
++        with s2.trays_at(env, swapped):
++            config["scene"]["trays"]["red"] = list(swapped["red"])
++            config["scene"]["trays"]["blue"] = list(swapped["blue"])
++            config["sorting"]["destination_arm"] = {"red": "right", "blue": "left"}
++            for color in ("red", "blue"):
++                for slot in regions.tray_slots(config, color):
++                    certificate["place_slots"][f"swapped_{slot.name}"] = \
++                        _certify_place_slot_yaws(env, color, slot, yaws, domain_yaws)
++        config["scene"]["trays"]["red"] = base_trays["red"]
++        config["scene"]["trays"]["blue"] = base_trays["blue"]
++        if base_destination is None:
++            config["sorting"].pop("destination_arm", None)
++        else:
++            config["sorting"]["destination_arm"] = base_destination
++        print(json.dumps({"place_slots_all": len(certificate["place_slots"])}), flush=True)
++
++        certificate["park"] = certification.certify_park(env)
++        certificate["summary"] = {
++            "pick_points": {arm: len(points) for arm, points in certificate["pick_points"].items()},
++            "place_slots": {name: bool(value["certified"])
++                            for name, value in certificate["place_slots"].items()},
++            "place_slots_in_yaw_domain": {name: bool(value["certified_in_domain"])
++                                          for name, value in certificate["place_slots"].items()},
++            "shared_points": 0,
++            "park": {arm: bool(value.get("certified"))
++                     for arm, value in certificate["park"].items()},
++            "open_percent": profile["open_percent"],
++            "note": "pick envelope + nominal place references for both arrangements; "
++                    "per-scene place screening is mandatory",
++        }
++        stale = certification.check_certificate_current(regions.Certificate(certificate), env)
++        if stale:
++            raise SystemExit("freshly built certificate is stale: " + "; ".join(stale))
++    regions.save_certificate(certificate, output)
++    print(json.dumps({"output": str(output), **certificate["summary"],
++                      "wall_time_s": (datetime.now(timezone.utc) - started).total_seconds()},
++                     indent=2))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_layout_pilot.py b/scripts/so101/scene2_layout_pilot.py
+new file mode 100644
+index 0000000..fb81f8b
+--- /dev/null
++++ b/scripts/so101/scene2_layout_pilot.py
+@@ -0,0 +1,208 @@
++#!/usr/bin/env python3
++"""Layout/IK/collision pilot for dual-block counterfactual scenes.
++
++For every seed the sampler draws two tray poses, two block poses and two
++continuous yaws, then screens both target instructions (target pick, target
++place, initial settling).  No expert episode is executed and no dataset is
++written.  The report keeps the draw distribution separate from the accepted
++distribution so rejection bias is visible.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from collections import Counter, defaultdict
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++def _band(value: float, width: float = 5.0) -> str:
++    lower = int(float(value) // width) * width
++    return f"{lower:02.0f}-{lower + width:02.0f}"
++
++
++def _spread(values: list[float]) -> dict:
++    if not values:
++        return {"count": 0, "min": None, "max": None, "mean": None, "std": None}
++    array = np.asarray(values, dtype=float)
++    return {"count": int(array.size), "min": round(float(array.min()), 6),
++            "max": round(float(array.max()), 6),
++            "mean": round(float(array.mean()), 6), "std": round(float(array.std()), 6)}
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--seeds", type=int, default=None)
++    parser.add_argument("--seed-start", type=int, default=None)
++    parser.add_argument("--max-attempts-per-layout", type=int, default=None)
++    parser.add_argument("--wall-clock-limit", type=float, default=None)
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    certificate_path = (root / protocol["source_binding"]["certificate"]).resolve()
++    config = s2.load_config(root, protocol, certificate=certificate_path)
++    certificate, certificate_path = s2.load_certificate(config)
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to reuse existing pilot directory: {output}")
++    output.mkdir(parents=True)
++
++    settings = protocol["collection"]["layout_pilot"]
++    seeds = int(args.seeds or settings["seeds"])
++    seed_start = int(args.seed_start if args.seed_start is not None else settings["seed_start"])
++    max_attempts = int(args.max_attempts_per_layout or settings["maximum_attempts_per_layout"])
++    wall_limit = float(args.wall_clock_limit or settings["wall_clock_limit_s"])
++    gate = float(settings.get("acceptance_gate_value", 0.5))
++    provenance = s2.provenance(root, args.protocol, config, certificate_path)
++
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    started = time.time()
++    records, failures = [], []
++    with BimanualEnv(config, images=False) as env:
++        stale = certification.check_certificate_current(certificate, env)
++        if stale:
++            raise SystemExit("certificate stale: " + "; ".join(stale))
++        s2.install_runtime(config, env)
++        for offset in range(seeds):
++            if time.time() - started > wall_limit:
++                failures.append({"seed": seed_start + offset, "reason": "wall_clock_limit",
++                                 "message": f"stopped after {time.time() - started:.1f} s"})
++                break
++            seed = seed_start + offset
++            arrangement = "red_positive_y" if offset % 2 == 0 else "red_negative_y"
++            trace = []
++            seed_started = time.time()
++            try:
++                layout = s2.generate_layout(
++                    config, certificate, seed, arrangement, env=env,
++                    provenance_hashes=provenance, max_attempts=max_attempts, trace=trace)
++            except s2._b("SceneGenerationError") as error:
++                failures.append({
++                    "seed": seed, "arrangement": arrangement, "reason": "scene_generation_failed",
++                    "message": getattr(error, "message", str(error))[:500],
++                    "attempts": len(trace), "wall_time_s": time.time() - seed_started,
++                    "trace": trace,
++                })
++                continue
++            layout["wall_time_s"] = time.time() - seed_started
++            layout["trace"] = trace
++            records.append(layout)
++
++    accepted = len(records)
++    attempted = accepted + len(failures)
++    rate = round(accepted / attempted, 4) if attempted else 0.0
++    by_arrangement = {}
++    for arrangement in ("red_positive_y", "red_negative_y"):
++        rows = [row for row in records if row["arrangement"] == arrangement]
++        attempts = sum(1 for offset in range(seeds)
++                       if (offset % 2 == 0) == (arrangement == "red_positive_y"))
++        by_arrangement[arrangement] = {
++            "attempted": attempts, "accepted": len(rows),
++            "rate": round(len(rows) / attempts, 4) if attempts else None}
++    accepted_yaws = {"cube_0": [], "cube_1": []}
++    draw_yaws = {"cube_0": [], "cube_1": []}
++    for row in records:
++        for block in row["blocks"]:
++            accepted_yaws[block["name"]].append(float(block["yaw_degrees"]))
++    attempt_reasons = Counter()
++    for row in records + failures:
++        for entry in row.get("trace", []):
++            attempt_reasons[str(entry.get("result"))] += 1
++            for block in entry.get("blocks", []):
++                draw_yaws[block["name"]].append(float(block["yaw_degrees"]))
++    accepted_yaw_all = [value for values in accepted_yaws.values() for value in values]
++    draw_yaw_all = [value for values in draw_yaws.values() for value in values]
++    accepted_bands = Counter(_band(value) for value in accepted_yaw_all)
++    draw_bands = Counter(_band(value) for value in draw_yaw_all)
++    tray_x = [row["trays"][color][0] for row in records for color in ("red", "blue")]
++    tray_y = [row["trays"][color][1] for row in records for color in ("red", "blue")]
++    block_x = [block["xy"][0] for row in records for block in row["blocks"]]
++    block_y = [block["xy"][1] for row in records for block in row["blocks"]]
++    rejection_reasons = Counter()
++    for row in failures:
++        rejection_reasons[row["reason"]] += 1
++    by_color_arm = {}
++    for color in ("red", "blue"):
++        rows = [row for row in records if any(block["color"] == color for block in row["blocks"])]
++        arms = Counter(next(block["arm"] for block in row["blocks"] if block["color"] == color)
++                       for row in rows)
++        by_color_arm[color] = {"accepted_layouts": len(rows), "by_arm": dict(arms),
++                               "yaw": _spread([float(next(block["yaw_degrees"] for block in row["blocks"]
++                                                         if block["color"] == color))
++                                               for row in rows])}
++    payload = {
++        "schema_version": 1,
++        "created": _now(),
++        "phase": "layout_ik_collision_pilot",
++        "protocol_id": protocol["protocol_id"],
++        "protocol_sha256": s2.common.sha256_file(args.protocol),
++        "profile_sha256": provenance["profile_sha256"],
++        "adapter_sha256": provenance["adapter_sha256"],
++        "certificate_sha256": provenance["certificate_sha256"],
++        "source_fingerprint": {key: provenance[key] for key in
++                               ("source_sha256", "source_files", "expert_sha256",
++                                "model_sha256", "config_sha256", "packages")},
++        "seed_grid": [seed_start, seed_start + max(0, seeds - 1)],
++        "attempted": attempted, "accepted": accepted, "rejected": len(failures),
++        "acceptance_rate": rate, "acceptance_gate": gate,
++        "passed": bool(rate >= gate and accepted > 0),
++        "by_arrangement": by_arrangement,
++        "by_color_arm": by_color_arm,
++        "yaw": {
++            "draw": {"values": _spread(draw_yaw_all), "bands_5deg": dict(sorted(draw_bands.items()))},
++            "accepted": {"values": _spread(accepted_yaw_all),
++                         "bands_5deg": dict(sorted(accepted_bands.items()))},
++            "by_object": {name: {"draw": _spread(values),
++                                 "accepted": _spread(accepted_yaws[name])}
++                          for name, values in draw_yaws.items()},
++            "note": "draw and accepted distributions are reported separately; the accepted set is rejection-biased and is never described as uniform",
++        },
++        "tray": {"x_m": _spread(tray_x), "y_m": _spread(tray_y)},
++        "block": {"x_m": _spread(block_x), "y_m": _spread(block_y)},
++        "sampler_attempts": {
++            "max": max((row["checks"]["sampler_attempts"] for row in records), default=None),
++            "mean": round(float(np.mean([row["checks"]["sampler_attempts"] for row in records])), 4)
++            if records else None,
++        },
++        "rejection_reasons": dict(sorted(rejection_reasons.items())),
++        "attempt_reasons": dict(sorted(attempt_reasons.items())),
++        "unique_physical_hashes": len({row["physical_sha256"] for row in records}),
++        "all_accepted_have_both_conditions": all(
++            set(row["checks"]["conditions"]) == {"red", "blue"} for row in records),
++        "all_accepted_initial_checks_passed": all(
++            row["checks"]["initial"]["passed"] for row in records),
++        "episodes_saved": 0,
++        "expert_executions": 0,
++        "wall_time_s": time.time() - started,
++        "note": "layout/IK/collision pilot only; no expert execution and no dataset",
++        "records": records,
++        "failures": failures,
++    }
++    s2.common.write_json(output / "layout_pilot.json", payload)
++    summary = {key: value for key, value in payload.items()
++               if key not in ("records", "failures")}
++    s2.common.write_json(output / "layout_pilot_summary.json", summary)
++    print(json.dumps(summary, indent=2))
++    return 0 if payload["passed"] else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_settle_baseline.py b/scripts/so101/scene2_settle_baseline.py
+new file mode 100644
+index 0000000..e84676b
+--- /dev/null
++++ b/scripts/so101/scene2_settle_baseline.py
+@@ -0,0 +1,158 @@
++#!/usr/bin/env python3
++"""Measure the natural distractor drift with both arms parked.
++
++The baseline is drawn from the same tray/block distributions as the pilot but
++uses independent seeds.  It does not execute the expert.  The registered
++threshold is the measured maximum post-settle displacement plus 1 mm, floored at
++2 mm; the value is written to the protocol/profile before any pilot episode is
++inspected.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--scenes", type=int, default=12)
++    parser.add_argument("--seed-start", type=int, default=20980)
++    parser.add_argument("--hold-s", type=float, default=2.0)
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    certificate_path = (root / protocol["source_binding"]["certificate"]).resolve()
++    config = s2.load_config(root, protocol, certificate=certificate_path)
++    certificate, certificate_path = s2.load_certificate(config)
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to reuse existing baseline directory: {output}")
++    output.mkdir(parents=True)
++    provenance = s2.provenance(root, args.protocol, config, certificate_path)
++
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    contacts = s2._b("contacts")
++    mujoco = s2._b("mujoco")
++    started = time.time()
++    records, rejected = [], []
++    with BimanualEnv(config, images=False) as env:
++        stale = certification.check_certificate_current(certificate, env)
++        if stale:
++            raise SystemExit("certificate stale: " + "; ".join(stale))
++        s2.install_runtime(config, env)
++        seed = args.seed_start
++        while len(records) < args.scenes:
++            if seed >= args.seed_start + 200:
++                break
++            arrangement = "red_positive_y" if (seed - args.seed_start) % 2 == 0 else "red_negative_y"
++            rng = np.random.default_rng(np.random.SeedSequence([seed, 0xBA5E]))
++            try:
++                candidate = s2.sample_candidate(config, certificate, rng, arrangement)
++            except s2._b("SceneGenerationError") as error:
++                rejected.append({"seed": seed, "arrangement": arrangement,
++                                 "reason": getattr(error, "message", str(error))[:300]})
++                seed += 1
++                continue
++            trays, blocks = candidate["trays"], candidate["blocks"]
++            s2.set_scene_state(env, config, trays, blocks,
++                               settle_s=float(config["runtime"]["settle_s"]))
++            initial = s2.measure_initial(env, config, blocks)
++            if not initial["passed"]:
++                rejected.append({"seed": seed, "arrangement": arrangement,
++                                 "reason": "initial_" + ",".join(
++                                     name for name, ok in initial["checks"].items() if not ok)})
++                seed += 1
++                continue
++            baseline = {}
++            for name in ("cube_0", "cube_1"):
++                baseline[name] = contacts.object_pose(env.model, env.data, name)[0].copy()
++            max_displacement = {name: 0.0 for name in baseline}
++            max_speed = {name: 0.0 for name in baseline}
++            robot_contacts = []
++            false_grasp = []
++            steps = round(float(args.hold_s) * float(config["runtime"]["physics_hz"]))
++            for _ in range(steps):
++                mujoco.mj_step(env.model, env.data)
++                for name in baseline:
++                    position = contacts.object_pose(env.model, env.data, name)[0]
++                    max_displacement[name] = max(
++                        max_displacement[name],
++                        float(np.linalg.norm(position - baseline[name])))
++                    linear, angular, _, _ = contacts.object_speed(env.model, env.data, name)
++                    max_speed[name] = max(max_speed[name], max(linear, angular))
++                for name in baseline:
++                    touching = contacts.robot_contacts_with(env.model, env.data, name)
++                    if touching:
++                        robot_contacts.append({"object": name, "contacts": touching[:2]})
++                    if any(contacts.bilateral_grasp(env.model, env.data, name, arm)[0]
++                           for arm in ("left", "right")):
++                        false_grasp.append({"object": name})
++            mujoco.mj_forward(env.model, env.data)
++            records.append({
++                "seed": seed,
++                "arrangement": arrangement,
++                "trays": trays,
++                "blocks": blocks,
++                "initial_checks": initial["checks"],
++                "hold_s": float(args.hold_s),
++                "max_displacement_m": {name: round(value, 9)
++                                       for name, value in max_displacement.items()},
++                "max_speed": {name: round(value, 9) for name, value in max_speed.items()},
++                "robot_contact_samples": len(robot_contacts),
++                "robot_contacts": robot_contacts[:8],
++                "false_grasp_samples": len(false_grasp),
++            })
++            seed += 1
++    flat = [value for row in records for value in row["max_displacement_m"].values()]
++    maximum = max(flat) if flat else None
++    threshold = None if maximum is None else round(max(0.002, maximum + 0.001), 6)
++    payload = {
++        "schema_version": 1,
++        "created": _now(),
++        "phase": "distractor_settle_baseline",
++        "protocol_id": protocol["protocol_id"],
++        "protocol_sha256": s2.common.sha256_file(args.protocol),
++        "certificate_sha256": provenance["certificate_sha256"],
++        "adapter_sha256": provenance["adapter_sha256"],
++        "source_sha256": provenance["source_sha256"],
++        "seed_range": [args.seed_start, args.seed_start + len(records) + len(rejected) - 1],
++        "scenes_requested": args.scenes,
++        "scenes_measured": len(records),
++        "rejected": rejected,
++        "hold_s": float(args.hold_s),
++        "max_hold_displacement_m": maximum,
++        "threshold_rule": "max(0.002, measured_max + 0.001)",
++        "threshold_m": threshold,
++        "any_robot_contact": any(row["robot_contact_samples"] for row in records),
++        "any_false_grasp": any(row["false_grasp_samples"] for row in records),
++        "records": records,
++        "note": "arms parked at home; no expert execution; post-settle drift only",
++    }
++    s2.common.write_json(output / "baseline.json", payload)
++    print(json.dumps({key: value for key, value in payload.items()
++                      if key not in ("records", "rejected")}, indent=2))
++    return 0 if records and not payload["any_robot_contact"] and not payload["any_false_grasp"] else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_pregenerate.py b/scripts/so101/scene2_pregenerate.py
+new file mode 100644
+index 0000000..f344479
+--- /dev/null
++++ b/scripts/so101/scene2_pregenerate.py
+@@ -0,0 +1,130 @@
++#!/usr/bin/env python3
++"""Freeze the four pilot layouts and their eight counterfactual conditions.
++
++Nothing is executed here.  The output file is written once and then becomes the
++immutable scene registry used by the physical pilot.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    certificate_path = (root / protocol["source_binding"]["certificate"]).resolve()
++    config = s2.load_config(root, protocol, certificate=certificate_path)
++    certificate, certificate_path = s2.load_certificate(config)
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to overwrite frozen pilot scenes: {output}")
++    output.parent.mkdir(parents=True, exist_ok=True)
++    provenance = s2.provenance(root, args.protocol, config, certificate_path)
++
++    settings = protocol["collection"]["physical_pilot"]
++    seed_start, _ = protocol["collection"]["seed_registry"]["physical_pilot_layouts"]
++    layouts_needed = int(settings["layouts"])
++    candidates_max = int(settings["max_layout_candidates"])
++    max_attempts = int(protocol["collection"]["layout_pilot"]["maximum_attempts_per_layout"])
++
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    started = time.time()
++    attempts, layouts = [], []
++    with BimanualEnv(config, images=False) as env:
++        stale = certification.check_certificate_current(certificate, env)
++        if stale:
++            raise SystemExit("certificate stale: " + "; ".join(stale))
++        s2.install_runtime(config, env)
++        wanted = {"red_positive_y": layouts_needed // 2,
++                  "red_negative_y": layouts_needed - layouts_needed // 2}
++        got = {"red_positive_y": 0, "red_negative_y": 0}
++        for offset in range(candidates_max):
++            if all(got[key] >= wanted[key] for key in wanted):
++                break
++            seed = int(seed_start) + offset
++            arrangement = "red_positive_y" if offset % 2 == 0 else "red_negative_y"
++            if got[arrangement] >= wanted[arrangement]:
++                attempts.append({"seed": seed, "arrangement": arrangement,
++                                 "status": "skipped_quota_full"})
++                continue
++            trace = []
++            started_seed = time.time()
++            try:
++                layout = s2.generate_layout(
++                    config, certificate, seed, arrangement, env=env,
++                    provenance_hashes=provenance, max_attempts=max_attempts, trace=trace)
++            except s2._b("SceneGenerationError") as error:
++                attempts.append({
++                    "seed": seed, "arrangement": arrangement, "status": "rejected",
++                    "reason": getattr(error, "message", str(error))[:400],
++                    "attempts": len(trace), "wall_time_s": time.time() - started_seed})
++                continue
++            got[arrangement] += 1
++            layouts.append(layout)
++            attempts.append({
++                "seed": seed, "arrangement": arrangement, "status": "accepted",
++                "physical_sha256": layout["physical_sha256"],
++                "layout_sha256": layout["layout_sha256"],
++                "sampler_attempts": layout["checks"]["sampler_attempts"],
++                "wall_time_s": time.time() - started_seed})
++    scenes = {}
++    for layout in layouts:
++        scenes[layout["physical_sha256"]] = {}
++        for color in ("red", "blue"):
++            scene = s2.build_scene(config, layout, color)
++            scenes[layout["physical_sha256"]][color] = scene.as_dict()
++    payload = {
++        "schema_version": 1,
++        "created": _now(),
++        "phase": "pilot_scene_freeze",
++        "protocol_id": protocol["protocol_id"],
++        "protocol_sha256": s2.common.sha256_file(args.protocol),
++        "profile_sha256": provenance["profile_sha256"],
++        "adapter_sha256": provenance["adapter_sha256"],
++        "certificate_sha256": provenance["certificate_sha256"],
++        "source_fingerprint": {key: provenance[key] for key in
++                               ("source_sha256", "source_files", "expert_sha256",
++                                "model_sha256", "config_sha256", "packages")},
++        "seed_registry": protocol["collection"]["seed_registry"],
++        "layouts_needed": layouts_needed,
++        "layouts_accepted": len(layouts),
++        "arrangement_balance": got,
++        "complete": len(layouts) == layouts_needed,
++        "layouts": layouts,
++        "scenes": scenes,
++        "attempts": attempts,
++        "wall_time_s": time.time() - started,
++        "note": "four layouts x two instructions = eight condition episodes; not eight independent scenes",
++    }
++    if not payload["complete"]:
++        output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++        raise SystemExit(f"only {len(layouts)}/{layouts_needed} layouts were accepted; registry written for audit")
++    output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    print(json.dumps({key: value for key, value in payload.items()
++                      if key not in ("layouts", "scenes", "attempts")}, indent=2))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_collect.py b/scripts/so101/scene2_collect.py
+new file mode 100644
+index 0000000..594c71f
+--- /dev/null
++++ b/scripts/so101/scene2_collect.py
+@@ -0,0 +1,421 @@
++#!/usr/bin/env python3
++"""Physical pilot: four frozen layouts x (red target, blue target) = 8 episodes.
++
++Each episode is reset from its SceneSpec, the post-settle initial fingerprint is
++recorded, and the episode is judged by the registered physical predicate.  The
++three cameras are written as H.264 streams; the trace, events and applied action
++per control frame are kept beside them.  No LeRobot dataset and no training are
++started here.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import shutil
++import subprocess
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++class CameraSink:
++    """Write one pre-action frame per control tick for each recorded camera."""
++
++    def __init__(self, output: Path, env, camera_keys: list[str], fps: int):
++        self.output = Path(output)
++        self.output.mkdir(parents=True, exist_ok=True)
++        self.env = env
++        self.camera_keys = list(camera_keys)
++        self.fps = int(fps)
++        self.index = 0
++        self.errors = []
++        self.fallback_stride = 5
++        self.ffmpeg = shutil.which("ffmpeg")
++        self.processes = {}
++        self.frames = (self.output / "frames.jsonl").open("w", encoding="utf-8")
++        if self.ffmpeg:
++            for key in self.camera_keys:
++                name = key.removeprefix("observation.images.")
++                profile = env.config["camera"][name]
++                width = int(profile.get("width", env.config["camera"]["central"]["width"]))
++                height = int(profile.get("height", env.config["camera"]["central"]["height"]))
++                path = self.output / f"{name}.mp4"
++                command = [
++                    self.ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
++                    "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
++                    "-r", str(self.fps), "-i", "-", "-an", "-c:v", "libx264",
++                    "-preset", "ultrafast", "-crf", "20", "-pix_fmt", "yuv420p",
++                    "-threads", "1", str(path),
++                ]
++                try:
++                    process = subprocess.Popen(command, stdin=subprocess.PIPE,
++                                               stderr=subprocess.PIPE)
++                    self.processes[key] = {"process": process, "path": path,
++                                           "name": name, "width": width, "height": height}
++                except OSError as error:
++                    self.errors.append({"camera": name, "error": f"{type(error).__name__}: {error}"})
++        else:
++            for key in self.camera_keys:
++                name = key.removeprefix("observation.images.")
++                (self.output / f"{name}_jpeg").mkdir(parents=True, exist_ok=True)
++
++    def frame(self, observation, applied_action):
++        row = {"index": self.index, "sim_time": float(self.env.data.time),
++               "wall_time": time.time(),
++               "applied_action": [float(value) for value in applied_action]}
++        self.frames.write(json.dumps(row) + "\n")
++        for key in self.camera_keys:
++            image = np.asarray(observation[key], dtype=np.uint8)
++            if self.ffmpeg:
++                entry = self.processes.get(key)
++                if entry is None:
++                    continue
++                height, width = entry["height"], entry["width"]
++                if image.shape != (height, width, 3):
++                    self.errors.append({"camera": entry["name"], "frame": self.index,
++                                        "error": f"shape {image.shape} != {(height, width, 3)}"})
++                    continue
++                try:
++                    entry["process"].stdin.write(image.tobytes())
++                except (BrokenPipeError, OSError) as error:
++                    self.errors.append({"camera": entry["name"], "frame": self.index,
++                                        "error": f"{type(error).__name__}: {error}"})
++            elif self.index % self.fallback_stride == 0:
++                from PIL import Image
++
++                name = key.removeprefix("observation.images.")
++                Image.fromarray(image).save(
++                    self.output / f"{name}_jpeg" / f"frame_{self.index:06d}.jpg", quality=92)
++        self.index += 1
++
++    def close(self) -> dict:
++        videos = {}
++        if self.ffmpeg:
++            for key, entry in self.processes.items():
++                process = entry["process"]
++                try:
++                    process.stdin.close()
++                except OSError:
++                    pass
++                try:
++                    returncode = process.wait(timeout=120)
++                except subprocess.TimeoutExpired:
++                    process.kill()
++                    returncode = -1
++                stderr = process.stderr.read().decode(errors="replace")[-800:]
++                videos[entry["name"]] = {
++                    "path": entry["path"].name, "returncode": returncode,
++                    "bytes": entry["path"].stat().st_size if entry["path"].is_file() else None,
++                    "stderr_tail": stderr if returncode else "",
++                }
++                if returncode != 0:
++                    self.errors.append({"camera": entry["name"], "returncode": returncode,
++                                        "error": stderr})
++        self.frames.close()
++        summary = {
++            "frames": self.index, "fps": self.fps, "camera_keys": self.camera_keys,
++            "backend": "ffmpeg" if self.ffmpeg else "jpeg",
++            "fallback_stride": None if self.ffmpeg else self.fallback_stride,
++            "videos": videos, "errors": self.errors,
++        }
++        (self.output / "sink.json").write_text(
++            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++        return summary
++
++
++def _load_scenes(path: Path) -> dict:
++    return json.loads(path.read_text(encoding="utf-8"))
++
++
++def _action_divergence(first_dir: Path, second_dir: Path) -> dict:
++    def rows(directory):
++        path = directory / "cameras" / "frames.jsonl"
++        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
++                if line.strip()]
++
++    first, second = rows(first_dir), rows(second_dir)
++    count = min(len(first), len(second))
++    if count == 0:
++        return {"common_frames": 0, "first_divergence_index": None,
++                "max_abs_diff_degrees": None, "frames_over_1deg": None,
++                "per_arm_max_abs_diff_degrees": None}
++    left = np.asarray([row["applied_action"][:6] for row in first[:count]], dtype=float)
++    right = np.asarray([row["applied_action"][:6] for row in second[:count]], dtype=float)
++    left_other = np.asarray([row["applied_action"][6:] for row in first[:count]], dtype=float)
++    right_other = np.asarray([row["applied_action"][6:] for row in second[:count]], dtype=float)
++    left_diff = np.abs(left - right)
++    right_diff = np.abs(left_other - right_other)
++    combined = np.maximum(left_diff.max(axis=1), right_diff.max(axis=1))
++    over = np.where(combined > 1.0)[0]
++    return {
++        "common_frames": int(count),
++        "first_divergence_index": int(over[0]) if over.size else None,
++        "max_abs_diff_degrees": float(combined.max()),
++        "frames_over_1deg": int(over.size),
++        "per_arm_max_abs_diff_degrees": {
++            "left": float(left_diff.max()), "right": float(right_diff.max())},
++    }
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--scenes", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    parser.add_argument("--wall-clock-limit", type=float, default=None)
++    parser.add_argument("--limit", type=int, default=None,
++                        help="engineering smoke only: stop after this many episodes")
++    args = parser.parse_args()
++
++    root = s2.configure(args.root)
++    protocol = s2.load_protocol(args.protocol)
++    s2.set_protocol_id(protocol["protocol_id"])
++    certificate_path = (root / protocol["source_binding"]["certificate"]).resolve()
++    config = s2.load_config(root, protocol, certificate=certificate_path)
++    certificate, certificate_path = s2.load_certificate(config)
++    output = args.output.expanduser().resolve()
++    if output.exists():
++        raise SystemExit(f"refusing to reuse existing run directory: {output}")
++    output.mkdir(parents=True)
++    provenance = s2.provenance(root, args.protocol, config, certificate_path)
++    scenes_path = args.scenes.expanduser().resolve()
++    frozen = _load_scenes(scenes_path)
++    checks = {
++        "protocol_id": frozen.get("protocol_id") == protocol["protocol_id"],
++        "protocol_sha256": frozen.get("protocol_sha256") == s2.common.sha256_file(args.protocol),
++        "adapter_sha256": frozen.get("adapter_sha256") == provenance["adapter_sha256"],
++        "certificate_sha256": frozen.get("certificate_sha256") == provenance["certificate_sha256"],
++        "source_sha256": (frozen.get("source_fingerprint") or {}).get("source_sha256")
++        == provenance["source_sha256"],
++        "complete": bool(frozen.get("complete")),
++    }
++    if not all(checks.values()):
++        raise SystemExit("frozen scene registry does not match the current code/assets: "
++                         + json.dumps(checks, sort_keys=True))
++    layouts = frozen["layouts"]
++    scenes = frozen["scenes"]
++    settings = protocol["collection"]["physical_pilot"]
++    wall_limit = float(args.wall_clock_limit or settings["episode_wall_clock_limit_s"])
++    protocol_cap = int(settings["episode_attempt_cap"])
++    episode_cap = int(args.limit) if args.limit is not None else protocol_cap
++
++    BimanualEnv = s2._b("BimanualEnv")
++    certification = s2._b("certification")
++    EpisodeRunner = s2._b("EpisodeRunner")
++    SceneSpec = s2._b("SceneSpec")
++    camera_keys = list(config["recording"]["camera_keys"])
++    if camera_keys != list(protocol["observation"]["cameras"]):
++        raise SystemExit("camera order differs from the protocol")
++    attempts_path = output / "attempts.jsonl"
++    rows, pairs = [], []
++    started = time.time()
++    episode_index = 0
++    stop = False
++    with BimanualEnv(config, images=True) as env:
++        stale = certification.check_certificate_current(certificate, env)
++        if stale:
++            raise SystemExit("certificate stale: " + "; ".join(stale))
++        runtime = s2.install_runtime(config, env)
++        runner = EpisodeRunner(env, runtime["runner_config"], certificate)
++        for layout_index, layout in enumerate(layouts):
++            if stop:
++                break
++            physical = layout["physical_sha256"]
++            condition_rows = {}
++            for color in ("red", "blue"):
++                if episode_index >= episode_cap:
++                    stop = True
++                    break
++                if time.time() - started > wall_limit:
++                    rows.append({"attempt": episode_index + 1, "phase": "physical_pilot",
++                                 "layout_index": layout_index,
++                                 "physical_sha256": physical,
++                                 "target_color": color,
++                                 "success": False,
++                                 "failure_reason": "wall_clock_exceeded",
++                                 "failure_stage": None, "frames": 0,
++                                 "wall_time_s": time.time() - started})
++                    episode_index += 1
++                    stop = True
++                    break
++                scene = SceneSpec.from_dict(scenes[physical][color])
++                scene_dir = output / f"layout_{layout_index:02d}_{layout['arrangement']}" / color
++                scene_dir.mkdir(parents=True, exist_ok=True)
++                sink = CameraSink(scene_dir / "cameras", env, camera_keys,
++                                  int(config["recording"]["fps"]))
++                episode_started = time.time()
++                result = None
++                failure = None
++                try:
++                    result = runner.run_episode(scene, output=scene_dir, record=True, sink=sink)
++                except Exception as error:  # keep the pilot ledger even on an adapter failure
++                    failure = f"{type(error).__name__}: {error}"
++                finally:
++                    try:
++                        sink_summary = sink.close()
++                    except Exception as error:
++                        sink_summary = {"frames": sink.index, "errors": [
++                            {"error": f"{type(error).__name__}: {error}"}]}
++                if result is None:
++                    row = {
++                        "attempt": episode_index + 1, "phase": "physical_pilot",
++                        "layout_index": layout_index, "layout_seed": layout["seed"],
++                        "arrangement": layout["arrangement"], "target_color": color,
++                        "target_name": scene.extra["target_name"],
++                        "distractor_name": scene.extra["distractor_name"],
++                        "active_arm": scene.extra["active_arm"],
++                        "physical_sha256": physical,
++                        "layout_sha256": layout["layout_sha256"],
++                        "condition_sha256": scene.extra["condition_sha256"],
++                        "scene_sha256": scene.sha256, "success": False,
++                        "raw_success": False, "failure_reason": "adapter_exception",
++                        "failure_stage": None, "failure_message": failure,
++                        "frames": sink_summary.get("frames", 0),
++                        "sim_time_s": 0.0, "wall_time_s": time.time() - episode_started,
++                        "initial_fingerprint": None, "initial_metrics_passed": None,
++                        "initial_metrics": None, "target_status": None,
++                        "distractor_status": None, "distractor_check": None,
++                        "arm_clearance": None, "cameras": sink_summary,
++                        "diagnostics": str(scene_dir.relative_to(output)),
++                        "scene": scene.as_dict(),
++                    }
++                    rows.append(row)
++                    condition_rows[color] = row
++                    with attempts_path.open("a", encoding="utf-8") as stream:
++                        stream.write(json.dumps(row, default=str) + "\n")
++                    print(json.dumps({"attempt": row["attempt"], "layout": layout_index,
++                                      "color": color, "success": False,
++                                      "reason": "adapter_exception", "message": failure}),
++                          flush=True)
++                    episode_index += 1
++                    continue
++                status = result.detail.get("status") or {}
++                fingerprint = env.task.initial_fingerprint
++                initial_metrics = env.task.initial_metrics
++                row = {
++                    "attempt": episode_index + 1,
++                    "phase": "physical_pilot",
++                    "layout_index": layout_index,
++                    "layout_seed": layout["seed"],
++                    "arrangement": layout["arrangement"],
++                    "target_color": color,
++                    "target_name": scene.extra["target_name"],
++                    "distractor_name": scene.extra["distractor_name"],
++                    "active_arm": scene.extra["active_arm"],
++                    "physical_sha256": physical,
++                    "layout_sha256": layout["layout_sha256"],
++                    "condition_sha256": scene.extra["condition_sha256"],
++                    "scene_sha256": scene.sha256,
++                    "success": bool(result.success),
++                    "raw_success": bool(status.get("success")),
++                    "failure_reason": result.failure_reason or status.get("failure_reason"),
++                    "failure_stage": result.detail.get("failure_stage"),
++                    "failure_message": result.detail.get("failure_message"),
++                    "frames": int(result.frames),
++                    "sim_time_s": float(result.sim_time_s),
++                    "wall_time_s": float(result.wall_time_s),
++                    "initial_fingerprint": fingerprint["fingerprint_sha256"] if fingerprint else None,
++                    "initial_metrics_passed": (initial_metrics or {}).get("passed"),
++                    "initial_metrics": initial_metrics,
++                    "target_status": (status.get("objects") or {}).get(scene.extra["target_name"]),
++                    "distractor_status": (status.get("objects") or {}).get(scene.extra["distractor_name"]),
++                    "distractor_check": status.get("distractor"),
++                    "arm_clearance": status.get("arm_clearance"),
++                    "cameras": sink_summary,
++                    "diagnostics": str(scene_dir.relative_to(output)),
++                    "scene": scene.as_dict(),
++                }
++                rows.append(row)
++                condition_rows[color] = row
++                with attempts_path.open("a", encoding="utf-8") as stream:
++                    stream.write(json.dumps(row, default=str) + "\n")
++                print(json.dumps({"attempt": row["attempt"], "layout": layout_index,
++                                  "color": color, "arm": row["active_arm"],
++                                  "success": row["success"],
++                                  "reason": row["failure_reason"],
++                                  "frames": row["frames"],
++                                  "wall_s": round(row["wall_time_s"], 2)}), flush=True)
++                episode_index += 1
++            if len(condition_rows) == 2:
++                first, second = condition_rows["red"], condition_rows["blue"]
++                same = bool(first["initial_fingerprint"] and second["initial_fingerprint"]
++                            and first["initial_fingerprint"] == second["initial_fingerprint"])
++                first_dir = output / first["diagnostics"]
++                second_dir = output / second["diagnostics"]
++                divergence = _action_divergence(first_dir, second_dir)
++                pairs.append({
++                    "layout_index": layout_index,
++                    "physical_sha256": physical,
++                    "arrangement": layout["arrangement"],
++                    "initial_fingerprints": {"red": first["initial_fingerprint"],
++                                             "blue": second["initial_fingerprint"]},
++                    "initial_fingerprint_match": same,
++                    "action_divergence": divergence,
++                    "red_success": first["success"], "blue_success": second["success"],
++                })
++    layouts_success = sum(1 for pair in pairs
++                          if pair["red_success"] and pair["blue_success"])
++    manifest = {
++        "schema_version": 1,
++        "created": _now(),
++        "phase": "physical_pilot",
++        "protocol_id": protocol["protocol_id"],
++        "protocol_sha256": s2.common.sha256_file(args.protocol),
++        "scenes_file": scenes_path.name,
++        "scenes_sha256": s2.common.sha256_file(scenes_path),
++        "profile_sha256": provenance["profile_sha256"],
++        "adapter_sha256": provenance["adapter_sha256"],
++        "certificate_sha256": provenance["certificate_sha256"],
++        "source_fingerprint": {key: provenance[key] for key in
++                               ("source_sha256", "source_files", "expert_sha256",
++                                "model_sha256", "config_sha256", "packages")},
++        "layouts": len(layouts),
++        "episodes_executed": len(rows),
++        "successes": sum(1 for row in rows if row["success"]),
++        "failures": sum(1 for row in rows if not row["success"]),
++        "layout_successes_both_conditions": layouts_success,
++        "conditions": {color: sum(1 for row in rows if row["target_color"] == color)
++                       for color in ("red", "blue")},
++        "arm_balance": {
++            color: {arm: sum(1 for row in rows if row["target_color"] == color
++                             and row["active_arm"] == arm)
++                    for arm in ("left", "right")}
++            for color in ("red", "blue")},
++        "arrangement_balance": {value: sum(1 for row in rows if row["arrangement"] == value)
++                                for value in ("red_positive_y", "red_negative_y")},
++        "distinct_initial_states": len({row["initial_fingerprint"] for row in rows
++                                        if row["initial_fingerprint"]}),
++        "pair_checks": pairs,
++        "pair_initial_fingerprint_matches": sum(1 for pair in pairs
++                                                if pair["initial_fingerprint_match"]),
++        "episode_cap": episode_cap,
++        "protocol_episode_cap": protocol_cap,
++        "engineering_smoke_limit": args.limit,
++        "wall_clock_limit_s": wall_limit,
++        "wall_time_s": time.time() - started,
++        "pilot_is_not_validation": True,
++        "claim": ("4 layouts x 2 instructions = 8 condition episodes; "
++                  "not 8 independent scenes; pilot data are excluded from training "
++                  "and from the formal validation split"),
++        "attempts_file": attempts_path.name,
++    }
++    (output / "pilot_manifest.json").write_text(
++        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    print(json.dumps(manifest, indent=2))
++    return 0 if len(rows) == protocol_cap else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/so101/scene2_audit.py b/scripts/so101/scene2_audit.py
+new file mode 100644
+index 0000000..928f78a
+--- /dev/null
++++ b/scripts/so101/scene2_audit.py
+@@ -0,0 +1,455 @@
++#!/usr/bin/env python3
++"""Audit the pilot traces and produce red/blue visual evidence.
++
++The audit is read-only with respect to the run directory.  It checks control
++ticks, state/action alignment, the applied target, all three camera streams,
++object trajectories and the recorded physical predicate, then writes
++``frame_audit.json`` and one contact sheet per layout pair.
++"""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import subprocess
++import sys
++from collections import Counter
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import scene2_common as s2  # noqa: E402
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
++
++
++def _hash_array(array) -> str:
++    return hashlib.sha256(np.asarray(array, dtype=np.float64).tobytes()).hexdigest()
++
++
++def _ffprobe(path: Path) -> dict:
++    command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_frames",
++               "-show_entries", "stream=width,height,r_frame_rate,nb_read_frames,duration",
++               "-of", "json", str(path)]
++    try:
++        result = subprocess.run(command, capture_output=True, text=True, timeout=120)
++    except (OSError, subprocess.SubprocessError) as error:
++        return {"error": f"{type(error).__name__}: {error}"}
++    if result.returncode != 0:
++        return {"error": result.stderr[-500:]}
++    return json.loads(result.stdout).get("streams", [{}])[0]
++
++
++def _frame_hashes(path: Path) -> list[str]:
++    command = ["ffmpeg", "-v", "error", "-i", str(path), "-f", "framemd5", "-"]
++    try:
++        result = subprocess.run(command, capture_output=True, text=True, timeout=600)
++    except (OSError, subprocess.SubprocessError):
++        return []
++    hashes = []
++    for line in result.stdout.splitlines():
++        line = line.strip()
++        if not line or line.startswith("#"):
++            continue
++        fields = [field.strip() for field in line.split(",")]
++        if len(fields) >= 6 and fields[0].isdigit():
++            hashes.append(fields[-1])
++    return hashes
++
++
++def _duplicate_runs(hashes: list[str]) -> list[dict]:
++    runs = []
++    if not hashes:
++        return runs
++    start, previous = 0, hashes[0]
++    for index in range(1, len(hashes) + 1):
++        current = hashes[index] if index < len(hashes) else None
++        if current != previous:
++            length = index - start
++            if length > 1:
++                runs.append({"start": start, "length": length, "end": index - 1})
++            start, previous = index, current
++    return runs
++
++
++def _stage_at(stages, index: int) -> str:
++    if index < 0 or index >= len(stages):
++        return ""
++    return str(stages[index])
++
++
++def _episode_audit(row: dict, run: Path, protocol: dict) -> dict:
++    directory = run / row["diagnostics"]
++    trace = np.load(directory / "trace.npz", allow_pickle=False)
++    summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
++    scene = json.loads((directory / "scene.json").read_text(encoding="utf-8"))
++    sink = json.loads((directory / "cameras" / "sink.json").read_text(encoding="utf-8"))
++    sink_rows = [json.loads(line) for line in
++                 (directory / "cameras" / "frames.jsonl").read_text(encoding="utf-8").splitlines()
++                 if line.strip()]
++    times = np.asarray(trace["time"], dtype=np.float64)
++    stages = [str(value) for value in trace["stage"]]
++    state = np.asarray(trace["state"], dtype=np.float64)
++    action = np.asarray(trace["action"], dtype=np.float64)
++    objects = np.asarray(trace["objects_pos"], dtype=np.float64)
++    substeps = np.asarray(trace["substeps"], dtype=np.int64)
++    expected_dt = 1.0 / float(protocol["control"]["control_hz"])
++    deltas = np.diff(times) if times.size > 1 else np.asarray([])
++    applied = np.asarray([entry["applied_action"] for entry in sink_rows], dtype=np.float64) \
++        if sink_rows else np.zeros((0, 12))
++    sink_times = np.asarray([entry["sim_time"] for entry in sink_rows], dtype=np.float64) \
++        if sink_rows else np.zeros(0)
++    wall_times = np.asarray([entry["wall_time"] for entry in sink_rows], dtype=np.float64) \
++        if sink_rows else np.zeros(0)
++    common = min(len(action), len(applied))
++    applied_error = (np.abs(action[:common] - applied[:common])
++                     if common else np.zeros((0, 12)))
++    joint_dims = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
++    gripper_dims = [5, 11]
++    action_diff = np.abs(np.diff(action, axis=0)) if len(action) > 1 else np.zeros((0, 12))
++    jumps = {
++        "joint_max_deg": float(action_diff[:, joint_dims].max()) if len(action_diff) else 0.0,
++        "gripper_max_percent": float(action_diff[:, gripper_dims].max()) if len(action_diff) else 0.0,
++        "frames_joint_over_15deg": int(np.sum(action_diff[:, joint_dims].max(axis=1) > 15.0))
++        if len(action_diff) else 0,
++        "frames_gripper_over_30percent": int(np.sum(action_diff[:, gripper_dims].max(axis=1) > 30.0))
++        if len(action_diff) else 0,
++        "first_joint_jump_index": (int(np.argmax(action_diff[:, joint_dims].max(axis=1) > 15.0))
++                                   if len(action_diff) and
++                                   np.any(action_diff[:, joint_dims].max(axis=1) > 15.0) else None),
++        "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
++    }
++    tolerance = 1e-6
++    expected_substeps = int(round(
++        float(protocol["control"]["physics_hz"]) / float(protocol["control"]["control_hz"])))
++    incomplete = np.asarray(trace["incomplete"], dtype=bool)
++    short = np.where(deltas < expected_dt - tolerance)[0] if deltas.size else []
++    long = np.where(deltas > expected_dt + tolerance)[0] if deltas.size else []
++    partial_frames = []
++    for index in short:
++        if substeps[index] < expected_substeps or incomplete[index]:
++            partial_frames.append({"index": int(index), "dt_s": float(deltas[index]),
++                                   "substeps": int(substeps[index]),
++                                   "incomplete": bool(incomplete[index])})
++    explained_short = len(partial_frames)
++    unexplained_short = int(len(short) - explained_short)
++    time_audit = {
++        "frames": int(times.size),
++        "expected_dt_s": expected_dt,
++        "expected_substeps": expected_substeps,
++        "dt_min_s": float(deltas.min()) if deltas.size else None,
++        "dt_max_s": float(deltas.max()) if deltas.size else None,
++        "dt_mean_s": float(deltas.mean()) if deltas.size else None,
++        "dt_missing": int(len(long)),
++        "dt_duplicate": int(len(short)),
++        "dt_short": int(len(short)),
++        "dt_long": int(len(long)),
++        "dt_nonmonotonic": int(np.sum(deltas <= 0.0)) if deltas.size else 0,
++        "partial_frames": partial_frames,
++        "explained_short": explained_short,
++        "unexplained_short": unexplained_short,
++        "substeps": dict(Counter(int(value) for value in substeps.tolist())),
++        "incomplete_frames": int(np.sum(incomplete)),
++    }
++    physics_dt = 1.0 / float(protocol["control"]["physics_hz"])
++    if substeps.size and (substeps[-1] < expected_substeps or incomplete[-1]):
++        expected_terminal = float(times[-1] + int(substeps[-1]) * physics_dt)
++        summary_time = summary.get("sim_time_s")
++        time_audit["terminal_partial_frame"] = {
++            "index": int(times.size - 1),
++            "substeps": int(substeps[-1]),
++            "incomplete": bool(incomplete[-1]),
++            "trace_time_s": float(times[-1]),
++            "expected_terminal_time_s": expected_terminal,
++            "summary_sim_time_s": float(summary_time) if summary_time is not None else None,
++            "gap_s": (float(summary_time) - expected_terminal) if summary_time is not None else None,
++        }
++    else:
++        time_audit["terminal_partial_frame"] = None
++    camera_audit = {}
++    for key in sink.get("camera_keys", []):
++        name = key.removeprefix("observation.images.")
++        path = directory / "cameras" / f"{name}.mp4"
++        probe = _ffprobe(path)
++        hashes = _frame_hashes(path)
++        runs = _duplicate_runs(hashes)
++        longest = max(runs, key=lambda item: item["length"]) if runs else None
++        camera_audit[name] = {
++            "path": path.name, "probe": probe, "decoded_frames": len(hashes),
++            "duplicate_runs": len(runs), "longest_duplicate_run": longest,
++            "longest_run_stage": _stage_at(stages, longest["start"]) if longest else None,
++            "longest_run_time_s": (float(times[min(longest["start"], times.size - 1)])
++                                   if longest and times.size else None),
++            "frame_count_matches_trace": len(hashes) == int(times.size),
++        }
++    object_audit = {}
++    roles = {scene["target_name"]: "target",
++             scene["distractor_name"]: "distractor"}
++    for index, entry in enumerate(scene.get("objects", [])):
++        name = entry["name"]
++        positions = objects[:, index, :]
++        path_length = float(np.sum(np.linalg.norm(np.diff(positions, axis=0), axis=1))) \
++            if len(positions) > 1 else 0.0
++        object_audit[name] = {
++            "role": roles.get(name),
++            "color": entry.get("color"),
++            "path_length_m": path_length,
++            "net_displacement_m": float(np.linalg.norm(positions[-1] - positions[0]))
++            if len(positions) else None,
++            "initial_xy": positions[0, :2].tolist() if len(positions) else None,
++            "final_xy": positions[-1, :2].tolist() if len(positions) else None,
++            "moved_over_5mm": bool(len(positions)
++                                   and np.linalg.norm(positions[-1] - positions[0]) > 0.005),
++        }
++    initial_state = np.load(directory / "initial_state.npz", allow_pickle=False)["state"]
++    status = summary.get("status") or {}
++    target_status = (status.get("objects") or {}).get(scene["target_name"]) or {}
++    distractor_status = (status.get("objects") or {}).get(scene["distractor_name"]) or {}
++    predicate = {
++        "summary_success": bool(summary.get("success")),
++        "status_success": bool(status.get("success")),
++        "failure_reason": summary.get("failure_reason"),
++        "failure_stage": summary.get("failure_stage"),
++        "sorted_count": status.get("sorted_count"),
++        "target_contained": target_status.get("contained"),
++        "target_supported": target_status.get("supported"),
++        "target_robot_contacts": target_status.get("robot_contacts"),
++        "target_stable_in_tray": target_status.get("stable_in_tray"),
++        "distractor_stable_on_table": distractor_status.get("stable_on_table"),
++        "distractor_robot_contacts": distractor_status.get("robot_contacts"),
++        "distractor_grasped": distractor_status.get("grasped"),
++        "distractor_displacement_m": distractor_status.get("displacement_from_initial_m"),
++        "distractor_displacement_ok": (status.get("distractor") or {}).get("displacement_ok"),
++        "contact_monitor_error_count": summary.get("contact_monitor_error_count"),
++        "soft_contact_count": summary.get("soft_contact_count"),
++    }
++    consistency = {
++        "success_matches_status": predicate["summary_success"] == predicate["status_success"],
++        "success_sorted_one": (predicate["sorted_count"] == 1) if predicate["summary_success"] else True,
++        "success_target_contained": (predicate["target_contained"] is True)
++        if predicate["summary_success"] else True,
++        "success_target_supported": (predicate["target_supported"] is True)
++        if predicate["summary_success"] else True,
++        "success_no_target_robot_contact": (not predicate["target_robot_contacts"])
++        if predicate["summary_success"] else True,
++        "success_no_distractor_contact": (not predicate["distractor_robot_contacts"])
++        if predicate["summary_success"] else True,
++        "success_no_distractor_grasp": (not predicate["distractor_grasped"])
++        if predicate["summary_success"] else True,
++        "success_distractor_displacement_ok": (predicate["distractor_displacement_ok"] is True)
++        if predicate["summary_success"] else True,
++    }
++    return {
++        "attempt": row["attempt"], "layout_index": row["layout_index"],
++        "arrangement": row["arrangement"], "target_color": row["target_color"],
++        "active_arm": row["active_arm"],
++        "physical_sha256": row["physical_sha256"], "condition_sha256": row["condition_sha256"],
++        "success": row["success"], "failure_reason": row["failure_reason"],
++        "initial_fingerprint": row["initial_fingerprint"],
++        "initial_state_sha256": _hash_array(initial_state),
++        "time": time_audit,
++        "state_action": {
++            "state_shape": list(state.shape), "action_shape": list(action.shape),
++            "state_finite": bool(np.isfinite(state).all()),
++            "action_finite": bool(np.isfinite(action).all()),
++            "action_jumps": jumps,
++            "applied_vs_commanded": {
++                "compared_frames": int(common),
++                "max_abs_diff": float(applied_error.max()) if applied_error.size else None,
++                "frames_over_1e_5": int(np.sum(applied_error.max(axis=1) > 1e-5))
++                if applied_error.size else 0,
++                "note": "applied is the clamped canonical target; commanded is the plan target",
++            },
++        },
++        "sink": {
++            "frames": len(sink_rows), "sink_reported_frames": sink.get("frames"),
++            "backend": sink.get("backend"), "errors": sink.get("errors", []),
++            "sim_time_max_abs_diff_s": float(np.max(np.abs(sink_times - times[:len(sink_times)])))
++            if sink_rows and times.size else None,
++            "wall_dt_min_s": float(np.diff(wall_times).min()) if len(wall_times) > 1 else None,
++            "wall_dt_max_s": float(np.diff(wall_times).max()) if len(wall_times) > 1 else None,
++            "wall_rate_hz": (float(len(wall_times) / (wall_times[-1] - wall_times[0]))
++                             if len(wall_times) > 1 and wall_times[-1] > wall_times[0] else None),
++        },
++        "cameras": camera_audit,
++        "objects": object_audit,
++        "predicate": predicate,
++        "consistency": consistency,
++        "consistency_passed": all(consistency.values()),
++    }
++
++
++def _contact_sheet(first: Path, second: Path, output: Path, label: str) -> dict:
++    from PIL import Image, ImageDraw
++
++    frames = {}
++    for role, path in (("red", first), ("blue", second)):
++        for position, extra in (("initial", ["-ss", "0"]),
++                                ("final", ["-sseof", "-0.05"])):
++            target = output.parent / f".{label}_{role}_{position}.png"
++            command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
++                       *extra, "-i", str(path), "-frames:v", "1", str(target)]
++            subprocess.run(command, check=False, capture_output=True, timeout=120)
++            if target.is_file():
++                with Image.open(target) as image:
++                    frames[(role, position)] = image.convert("RGB").copy()
++    if len(frames) < 4:
++        return {"created": False, "reason": "could not extract four frames"}
++    width = max(image.width for image in frames.values())
++    height = max(image.height for image in frames.values())
++    sheet = Image.new("RGB", (width * 2, height * 2 + 40), (20, 20, 20))
++    draw = ImageDraw.Draw(sheet)
++    draw.text((8, 8), label, fill=(240, 240, 240))
++    positions = {("red", "initial"): (0, 40), ("red", "final"): (width, 40),
++                 ("blue", "initial"): (0, height + 40), ("blue", "final"): (width, height + 40)}
++    for key, image in frames.items():
++        x, y = positions[key]
++        sheet.paste(image, (x, y))
++        draw.text((x + 6, y + 6), f"{key[0]} {key[1]}", fill=(255, 230, 80))
++    sheet.save(output)
++    for key in frames:
++        (output.parent / f".{label}_{key[0]}_{key[1]}.png").unlink(missing_ok=True)
++    return {"created": True, "path": str(output), "size": list(sheet.size)}
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--run", type=Path, required=True)
++    parser.add_argument("--protocol", type=Path,
++                        default=s2.REPO_ROOT / "configs/so101/scene2_dual_random_protocol.json")
++    parser.add_argument("--assets", type=Path,
++                        default=s2.REPO_ROOT / "reports/assets/so101-scene2-dual-random")
++    parser.add_argument("--output", type=Path, default=None)
++    args = parser.parse_args()
++
++    run = args.run.expanduser().resolve()
++    protocol = s2.load_protocol(args.protocol)
++    manifest = json.loads((run / "pilot_manifest.json").read_text(encoding="utf-8"))
++    rows = [json.loads(line) for line in
++            (run / "attempts.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
++    rows = [row for row in rows if row.get("diagnostics")]
++    assets = args.assets.expanduser().resolve()
++    assets.mkdir(parents=True, exist_ok=True)
++    audits, sheets = [], []
++    for row in rows:
++        try:
++            audits.append(_episode_audit(row, run, protocol))
++        except Exception as error:
++            audits.append({"attempt": row.get("attempt"), "layout_index": row.get("layout_index"),
++                           "target_color": row.get("target_color"),
++                           "error": f"{type(error).__name__}: {error}"})
++    by_layout = {}
++    for row in rows:
++        by_layout.setdefault(row["layout_index"], {})[row["target_color"]] = row
++    for layout_index, conditions in sorted(by_layout.items()):
++        if set(conditions) == {"red", "blue"}:
++            red = run / conditions["red"]["diagnostics"] / "cameras" / "central.mp4"
++            blue = run / conditions["blue"]["diagnostics"] / "cameras" / "central.mp4"
++            if red.is_file() and blue.is_file():
++                output = assets / f"layout_{layout_index:02d}_red_vs_blue.png"
++                sheets.append({"layout_index": layout_index,
++                               **_contact_sheet(red, blue, output,
++                                                f"layout {layout_index} {conditions['red']['arrangement']}")})
++    initial_pairs = {}
++    for layout_index, conditions in by_layout.items():
++        if set(conditions) == {"red", "blue"}:
++            red_state = next((audit["initial_state_sha256"] for audit in audits
++                              if audit.get("layout_index") == layout_index
++                              and audit.get("target_color") == "red"), None)
++            blue_state = next((audit["initial_state_sha256"] for audit in audits
++                               if audit.get("layout_index") == layout_index
++                               and audit.get("target_color") == "blue"), None)
++            initial_pairs[layout_index] = {
++                "red": red_state, "blue": blue_state,
++                "match": bool(red_state and blue_state and red_state == blue_state),
++            }
++    summary = {
++        "schema_version": 1,
++        "created": _now(),
++        "phase": "pilot_frame_audit",
++        "protocol_id": protocol["protocol_id"],
++        "run": run.name,
++        "pilot_manifest": manifest,
++        "episodes": len(audits),
++        "episodes_with_errors": sum(1 for audit in audits if "error" in audit),
++        "all_time_checks": all(audit.get("time", {}).get("unexplained_short") == 0
++                               and audit.get("time", {}).get("dt_long") == 0
++                               and audit.get("time", {}).get("dt_nonmonotonic") == 0
++                               for audit in audits if "error" not in audit),
++        "all_state_action_finite": all(audit.get("state_action", {}).get("state_finite")
++                                       and audit.get("state_action", {}).get("action_finite")
++                                       for audit in audits if "error" not in audit),
++        "all_consistency": all(audit.get("consistency_passed") for audit in audits
++                               if "error" not in audit),
++        "all_video_frame_counts_match": all(
++            all(camera.get("frame_count_matches_trace")
++                for camera in audit.get("cameras", {}).values())
++            for audit in audits if "error" not in audit),
++        "camera_order": rows[0].get("cameras", {}).get("camera_keys") if rows else None,
++        "initial_pair_states": initial_pairs,
++        "initial_pair_matches": sum(1 for value in initial_pairs.values() if value["match"]),
++        "manifest_pair_initial_fingerprint_matches": manifest.get("pair_initial_fingerprint_matches"),
++        "initial_pair_checks_agree": (sum(1 for value in initial_pairs.values() if value["match"])
++                                      == manifest.get("pair_initial_fingerprint_matches")),
++        "terminal_partial_frames": [
++            {"attempt": audit.get("attempt"), "layout_index": audit.get("layout_index"),
++             "target_color": audit.get("target_color"),
++             **audit["time"]["terminal_partial_frame"]}
++            for audit in audits if "error" not in audit
++            and audit.get("time", {}).get("terminal_partial_frame")],
++        "dt_failures": [{"attempt": audit.get("attempt"),
++                         "layout_index": audit.get("layout_index"),
++                         "target_color": audit.get("target_color"),
++                         **audit.get("time", {})}
++                        for audit in audits if "error" not in audit
++                        and (audit["time"]["unexplained_short"] or audit["time"]["dt_long"]
++                             or audit["time"]["dt_nonmonotonic"])],
++        "action_jump_failures": [{"attempt": audit.get("attempt"),
++                                  "layout_index": audit.get("layout_index"),
++                                  "target_color": audit.get("target_color"),
++                                  **audit["state_action"]["action_jumps"]}
++                                 for audit in audits if "error" not in audit
++                                 and (audit["state_action"]["action_jumps"]["frames_joint_over_15deg"]
++                                      or audit["state_action"]["action_jumps"]["frames_gripper_over_30percent"])],
++        "video_duplicate_runs": [{"attempt": audit.get("attempt"),
++                                  "camera": name,
++                                  **camera}
++                                 for audit in audits if "error" not in audit
++                                 for name, camera in audit.get("cameras", {}).items()
++                                 if camera.get("longest_duplicate_run")],
++        "contact_sheets": sheets,
++        "episodes_detail": audits,
++        "passed": bool(
++            audits and all("error" not in audit for audit in audits)
++            and all(audit.get("time", {}).get("unexplained_short") == 0
++                    and audit.get("time", {}).get("dt_long") == 0
++                    and audit.get("time", {}).get("dt_nonmonotonic") == 0
++                    for audit in audits)
++            and all(audit.get("state_action", {}).get("state_finite")
++                    and audit.get("state_action", {}).get("action_finite")
++                    for audit in audits)
++            and all(audit.get("consistency_passed") for audit in audits)
++            and all(all(camera.get("frame_count_matches_trace")
++                        for camera in audit.get("cameras", {}).values())
++                    for audit in audits)
++            and (sum(1 for value in initial_pairs.values() if value["match"])
++                 == manifest.get("pair_initial_fingerprint_matches"))),
++    }
++    output = args.output or (run / "frame_audit.json")
++    output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    public = {key: value for key, value in summary.items() if key != "episodes_detail"}
++    public["episodes_detail"] = [{key: value for key, value in audit.items()
++                                  if key not in ("cameras",)} for audit in audits]
++    (run / "frame_audit_summary.json").write_text(
++        json.dumps(public, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    print(json.dumps({key: value for key, value in summary.items()
++                      if key not in ("episodes_detail", "pilot_manifest")}, indent=2))
++    return 0 if summary["passed"] else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/tests/test_scene2_contracts.py b/tests/test_scene2_contracts.py
+new file mode 100644
+index 0000000..799543a
+--- /dev/null
++++ b/tests/test_scene2_contracts.py
+@@ -0,0 +1,282 @@
++"""Static contracts for workstream C scene2 (no external simulator needed)."""
++from __future__ import annotations
++
++import ast
++import json
++import re
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++PROTOCOL = ROOT / "configs/so101/scene2_dual_random_protocol.json"
++PROFILE = ROOT / "configs/so101/scene2_dual_random_profile.yaml"
++ADAPTER = ROOT / "scripts/so101/scene2_common.py"
++COLLECTOR = ROOT / "scripts/so101/scene2_collect.py"
++AUDIT = ROOT / "scripts/so101/scene2_audit.py"
++BASELINE = ROOT / "scripts/so101/scene2_settle_baseline.py"
++CERTIFY = ROOT / "scripts/so101/scene2_certify.py"
++
++
++def _module(path: Path) -> ast.Module:
++    return ast.parse(path.read_text(encoding="utf-8"))
++
++
++def _class(path: Path, name: str) -> ast.ClassDef:
++    return next(node for node in _module(path).body
++                if isinstance(node, ast.ClassDef) and node.name == name)
++
++
++def _text(path: Path) -> str:
++    return path.read_text(encoding="utf-8")
++
++
++class Scene2ProtocolContractTest(unittest.TestCase):
++    def setUp(self):
++        self.protocol = json.loads(PROTOCOL.read_text(encoding="utf-8"))
++
++    def test_task_and_instructions(self):
++        task = self.protocol["task"]
++        self.assertEqual(task["name"], "dual_block_select_place")
++        self.assertEqual(task["objects_per_episode"], 2)
++        self.assertEqual(task["instruction_template"], "Put the {color} block into the {color} tray.")
++        self.assertEqual(task["instruction_values"]["red"], "Put the red block into the red tray.")
++        self.assertEqual(task["instruction_values"]["blue"], "Put the blue block into the blue tray.")
++        self.assertFalse(task["transfer_protocol"])
++        self.assertFalse(task["handover_between_arms"])
++
++    def test_colour_is_not_bound_to_arm_or_side(self):
++        layout = self.protocol["scene_layout"]
++        self.assertEqual(set(layout["arrangements"]["values"]),
++                         {"red_positive_y", "red_negative_y"})
++        decoupling = layout["colour_decoupling"]
++        self.assertIn("sampled independently", decoupling["rule"])
++        self.assertIn("both arms", decoupling["consequence"])
++        self.assertEqual(layout["active_arm_rule"]["selection"],
++                         "left if the target tray centre has y > 0, right if y < 0")
++        self.assertIn("home park", layout["active_arm_rule"]["other_arm"])
++
++    def test_sampling_domains_and_bounds_are_frozen(self):
++        layout = self.protocol["scene_layout"]
++        self.assertEqual(layout["blocks"]["yaw"]["domain_degrees"], [30.0, 75.0])
++        self.assertEqual(layout["blocks"]["yaw"]["domain_status"], "frozen_after_layout_pilot")
++        self.assertEqual(layout["trays"]["candidate_region_status"], "frozen_after_layout_pilot")
++        self.assertEqual(layout["blocks"]["minimum_pairwise_distance_m"], 0.06)
++        self.assertEqual(layout["trays"]["frozen_sampling"]["positive_y"]["x_m"], [0.21, 0.27])
++        completed = self.protocol["collection"]["layout_pilot"]["completed"]
++        self.assertEqual(completed["accepted"], 240)
++        self.assertEqual(completed["attempted"], 240)
++        self.assertEqual(completed["by_arrangement"], {"red_positive_y": 120, "red_negative_y": 120})
++        self.assertEqual(completed["by_color_arm"]["red"], {"left": 120, "right": 120})
++        self.assertEqual(completed["by_color_arm"]["blue"], {"left": 120, "right": 120})
++        self.assertTrue(completed["all_accepted_have_both_conditions"])
++        self.assertTrue(completed["all_accepted_initial_checks_passed"])
++        self.assertIn("rejection-biased", completed["yaw_bias_note"])
++
++    def test_success_predicate_checks_target_and_distractor(self):
++        predicate = self.protocol["success_predicate"]
++        target = " ".join(predicate["requires_all_target"])
++        distractor = " ".join(predicate["requires_all_distractor"])
++        for phrase in ("same-colour tray", "supported", "released", "0.02 m/s",
++                       "home park", "0.01 m", "0.5 s"):
++            self.assertIn(phrase, target)
++        for phrase in ("no contact", "bilateral gripper grasp", "displacement",
++                       "out of bounds", "0.5 s"):
++            self.assertIn(phrase, distractor)
++        baseline = predicate["distractor_baseline"]
++        self.assertEqual(baseline["status"], "frozen_before_physical_pilot")
++        self.assertEqual(baseline["threshold_m"], 0.002)
++        self.assertFalse(baseline["measured_any_robot_contact"])
++        self.assertFalse(baseline["measured_any_false_grasp"])
++        self.assertIn("expert return code", predicate["not_sufficient"])
++
++    def test_family_rule_and_pilot_caps(self):
++        self.assertIn("never cross train/validation", self.protocol["scene_family"]["rule"])
++        self.assertIn("counterfactual", self.protocol["scene_family"]["rule"])
++        pilot = self.protocol["collection"]["physical_pilot"]
++        self.assertEqual(pilot["layouts"], 4)
++        self.assertEqual(pilot["episodes"], 8)
++        self.assertEqual(pilot["episode_attempt_cap"], 8)
++        self.assertIn("each layout is executed once", pilot["rule"])
++        self.assertTrue(pilot["pilot_is_not_formal_validation"])
++        report = ROOT / "reports/so101-scene2-dual-random-scene.md"
++        if report.is_file():
++            text = report.read_text(encoding="utf-8").lower()
++            self.assertIn("not eight independent scenes", text)
++
++    def test_no_clean60_norm_or_checkpoint(self):
++        forbidden = self.protocol["collection"]["formal"]["forbidden"]
++        self.assertIn("clean60 norm", forbidden)
++        self.assertIn("clean60 checkpoint", forbidden)
++        self.assertIn("clean100 norm", forbidden)
++        self.assertIn("clean100 checkpoint", forbidden)
++        self.assertIn("not computed in this phase", self.protocol["collection"]["formal"]["normalisation"])
++
++    def test_chunk_length_is_not_frozen_by_this_branch(self):
++        interface = self.protocol["data_interface"]
++        self.assertIn("model line decides", interface["chunk_length"])
++        self.assertEqual(len(self.protocol["observation"]["state"]["shape"]), 1)
++        self.assertEqual(self.protocol["observation"]["state"]["shape"][0], 12)
++        self.assertEqual(self.protocol["action"]["shape"], [12])
++        self.assertEqual(len(self.protocol["observation"]["cameras"]), 3)
++
++    def test_record_conflict_is_explicit(self):
++        conflict = self.protocol["record_conflicts"][0]
++        self.assertIn("Place the red block in the tray.", conflict["recorded_instructions"])
++        self.assertIn("Put the red block into the red tray.",
++                      json.dumps(self.protocol["task"]["instruction_values"]))
++        self.assertIn("governs scene2 data", conflict["resolution"])
++
++    def test_amendments_are_recorded(self):
++        ids = {entry["id"] for entry in self.protocol["pilot_amendments"]}
++        self.assertIn("baseline_seed_conflict", ids)
++        self.assertIn("pre_pilot_open_yaw_scan", ids)
++        self.assertEqual(self.protocol["collection"]["seed_registry"]["evaluation_reserved"],
++                         [21100, 21199])
++        self.assertEqual(self.protocol["collection"]["seed_registry"]["distractor_baseline"],
++                         [20800, 20899])
++
++
++class Scene2ProfileContractTest(unittest.TestCase):
++    def setUp(self):
++        import yaml
++
++        self.profile = yaml.safe_load(PROFILE.read_text(encoding="utf-8"))
++
++    def test_two_objects_and_no_randomisation(self):
++        sorting = self.profile["sorting"]
++        self.assertEqual(len(sorting["initial_positions_xy"]), 2)
++        self.assertEqual(set(sorting["objects"]), {"cube_0", "cube_1"})
++        self.assertEqual({entry["color"] for entry in sorting["objects"].values()},
++                         {"red", "blue"})
++        self.assertFalse(self.profile["domain_randomization"]["enabled"])
++        self.assertFalse(self.profile["scene"]["transfer"]["marker"])
++
++    def test_frozen_execution_parameters(self):
++        sorting = self.profile["sorting"]
++        self.assertEqual(sorting["yaw_domain_degrees"], [30.0, 75.0])
++        self.assertEqual(sorting["distractor_max_displacement_m"], 0.002)
++        self.assertEqual(sorting["block_block_min_distance_m"], 0.06)
++        self.assertEqual(self.profile["grasp"]["open_percent"], 70.0)
++        self.assertEqual(self.profile["grasp"]["closed_percent"], 0.0)
++
++
++class Scene2AdapterContractTest(unittest.TestCase):
++    def test_task_handles_both_blocks_not_only_cube_zero(self):
++        task = _class(ADAPTER, "DualBlockSelectPlaceTask")
++        source = ast.get_source_segment(_text(ADAPTER), task)
++        self.assertIn('self.names = ["cube_0", "cube_1"]', source)
++        self.assertIn("def object_statuses", source)
++        self.assertIn("def arm_clearance", source)
++        self.assertIn("distractor_max_displacement_m", source)
++        self.assertIn("bilateral_grasp", source)
++
++    def test_expert_uses_the_sampled_slot(self):
++        source = _text(ADAPTER)
++        self.assertIn('self.scene.extra["slot_xy"]', source)
++        self.assertIn('self.scene.extra["support_z"]', source)
++        self.assertIn("stage.name == \"pick_descend\"", source)
++        self.assertIn("allowed_object=_target", source)
++
++    def test_scene_hash_binds_layout_and_condition(self):
++        source = _text(ADAPTER)
++        self.assertIn('scene.sha256 = layout["layout_sha256"]', source)
++        self.assertIn('"condition_sha256": common.sha256_json(condition_payload)', source)
++        self.assertIn('"physical_sha256"', source)
++        self.assertIn('layout["physical_sha256"] = common.sha256_json(physical)', source)
++        self.assertNotIn("SingleBlockPlaceTask(", source)
++
++    def test_sampler_screens_both_targets(self):
++        source = _text(ADAPTER)
++        self.assertIn("for target in blocks:", source)
++        self.assertIn("pick_verdict(env, effective", source)
++        self.assertIn("place_verdict(env, effective", source)
++        self.assertIn("regions.tray_slots(effective", source)
++        self.assertIn("measure_initial(env, config, blocks)", source)
++        self.assertIn("SceneGenerationError", source)
++
++    def test_initial_state_is_hashed_after_reset(self):
++        source = _text(ADAPTER)
++        self.assertIn("task.initial_fingerprint = initial_fingerprint(env, scene)", source)
++        self.assertIn("snapshot_sha256", source)
++        self.assertIn("set_initial_measured", source)
++        self.assertIn("env.last_action = env.robot.apply_action(env.data, env.robot.home())", source)
++
++
++class Scene2CollectorAuditContractTest(unittest.TestCase):
++    def test_collector_writes_three_camera_frames_and_applied_action(self):
++        source = _text(COLLECTOR)
++        self.assertIn("class CameraSink", source)
++        self.assertIn('frames.jsonl', source)
++        self.assertIn('"applied_action"', source)
++        self.assertIn("observation.images", source)
++        self.assertIn("ffmpeg", source)
++        self.assertIn("initial_fingerprint", source)
++        self.assertIn("pair_initial_fingerprint_matches", source)
++        self.assertIn("pilot_is_not_validation", source)
++        self.assertIn('"layouts": len(layouts)', source)
++        self.assertIn('"episodes_executed": len(rows)', source)
++        self.assertIn("protocol_episode_cap", source)
++        self.assertIn("adapter_exception", source)
++
++    def test_audit_checks_ticks_videos_and_trajectories(self):
++        source = _text(AUDIT)
++        for token in ("dt_missing", "dt_duplicate", "dt_nonmonotonic", "substeps",
++                      "applied_vs_commanded", "frame_count_matches_trace",
++                      "longest_duplicate_run", "initial_state_sha256",
++                      "net_displacement_m", "contact_sheet", "consistency_passed"):
++            self.assertIn(token, source)
++
++    def test_baseline_freezes_a_floor_and_checks_contacts(self):
++        source = _text(BASELINE)
++        self.assertIn("max(0.002, maximum + 0.001)", source)
++        self.assertIn("any_robot_contact", source)
++        self.assertIn("any_false_grasp", source)
++        self.assertIn("post-settle", source)
++
++    def test_certificate_reports_domain_yaw_not_only_zero_ninety(self):
++        source = _text(CERTIFY)
++        self.assertIn("_certify_place_slot_yaws", source)
++        self.assertIn("certified_in_domain", source)
++        self.assertIn("domain_yaws", source)
++
++
++class Scene2ReportAndSafetyTest(unittest.TestCase):
++    def test_reports_are_short(self):
++        reports = sorted((ROOT / "reports").glob("so101-scene2-dual-random*.md"))
++        self.assertTrue(reports, "scene2 reports are missing")
++        for path in reports:
++            self.assertLess(len(path.read_text(encoding="utf-8")), 1000,
++                            f"{path.name} exceeds 1000 characters")
++
++    def test_new_files_do_not_contain_private_paths(self):
++        paths = [PROTOCOL, PROFILE, ADAPTER, COLLECTOR, AUDIT, BASELINE, CERTIFY,
++                 ROOT / "docs/so101-scene2-dual-random.md",
++                 ROOT / "docs/so101-scene2-dual-random-interface.md"]
++        paths += sorted((ROOT / "reports").glob("so101-scene2-dual-random*.md"))
++        paths += sorted((ROOT / "experiments/so101").glob("scene2-dual-random-*.json"))
++        forbidden = ["/" + "home" + "/", "Desk" + "top", "cache/so101", "runs/so101"]
++        for path in paths:
++            if not path.is_file():
++                continue
++            text = path.read_text(encoding="utf-8")
++            for token in forbidden:
++                self.assertNotIn(token, text, f"{path.name} contains a private path token")
++
++    def test_tracked_pilot_scene_summary_has_four_layouts(self):
++        path = ROOT / "experiments/so101/scene2-dual-random-pilot-scenes.json"
++        if not path.is_file():
++            self.skipTest("pilot scene summary has not been written yet")
++        data = json.loads(path.read_text(encoding="utf-8"))
++        self.assertEqual(data["layouts_accepted"], 4)
++        self.assertEqual(len(data["scenes"]), 4)
++        self.assertEqual(sum(len(value) for value in data["scenes"].values()), 8)
++        self.assertEqual(len({entry["physical_sha256"] for entry in data["layouts"]}), 4)
++        self.assertNotIn("external_root", json.dumps(data))
++
++    def test_no_synthetic_timestamp_claim(self):
++        text = json.dumps(json.loads(PROTOCOL.read_text(encoding="utf-8")))
++        self.assertIn("no synthetic index is treated as proof of no dropped frames", text)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/so101-scene2-dual-random.md b/docs/so101-scene2-dual-random.md
+new file mode 100644
+index 0000000..caa032f
+--- /dev/null
++++ b/docs/so101-scene2-dual-random.md
+@@ -0,0 +1,16 @@
++# SO101 scene2 dual-block reproduction
++
++External dual-SO101 source is not vendored; bind an independent snapshot.
++
++    R=$SO101_SOURCE_ROOT; P=$SO101_PYTHON; O=<run>
++    export SO101_EGL_DEVICE=0
++    $P scripts/so101/scene2_certify.py --root "$R" --output <cert>
++    $P scripts/so101/scene2_layout_pilot.py --root "$R" --output "$O/layout"
++    $P scripts/so101/scene2_settle_baseline.py --root "$R" --output "$O/baseline"
++    $P scripts/so101/scene2_pregenerate.py --root "$R" --output "$O/pilot_scenes.json"
++    $P scripts/so101/scene2_collect.py --root "$R" --scenes "$O/pilot_scenes.json" --output "$O/pilot"
++    $P scripts/so101/scene2_audit.py --run "$O/pilot"
++
++Hashes: source 908d940d, expert 113847db, model 6d18dad5, profile 260e65f6, certificate 11511f03, adapter e1f826b3, frozen protocol 5a1b72c4.
++
++R3 local; external snapshot not redistributed; reproduce-pending on a clean clone.
+diff --git a/docs/so101-scene2-dual-random-interface.md b/docs/so101-scene2-dual-random-interface.md
+new file mode 100644
+index 0000000..8dd50bd
+--- /dev/null
++++ b/docs/so101-scene2-dual-random-interface.md
+@@ -0,0 +1,12 @@
++# Scene2 data interface
++
++- 50 Hz control, 500 Hz physics, 10 substeps per tick; raw sim time and wall-clock start/end. A synthetic index never proves no frames were dropped.
++- state: 12 values, left six then right six; joints degrees, grippers percent; measured before the action.
++- action: 12 absolute joint targets actually applied after clamping; never the next measured state.
++- cameras: central, left_wrist, right_wrist; 640x480 RGB; before the action.
++- objects: both blocks, position/quaternion/velocity per tick; stage, contacts, events, initial/final state.
++- pilot: 4 layouts x 2 instructions = 8 condition episodes; pilot-only, never validation.
++- family: physical_sha256; a layout's red/blue pair never crosses a split.
++- chunk length: model line decides; raw trajectories are contiguous.
++- formal: counts/split/norm later; no clean60/clean100 norm or checkpoint.
++- raw evidence in the ignored run directory; tracked summaries in experiments/so101.
+diff --git a/reports/so101-scene2-dual-random-scene.md b/reports/so101-scene2-dual-random-scene.md
+new file mode 100644
+index 0000000..5684ffc
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-scene.md
+@@ -0,0 +1,11 @@
++# Scene2 dual-block pilot
++
++Claim: 4 layouts x 2 instructions = 8 condition episodes; not eight independent scenes. R3 local; reproduce-pending.
++
++Layout pre-screen: 240/240 seeds; 240 unique layouts; red/blue 120 left/120 right; yaw 30-75; not an expert success rate.
++
++Baseline: 12 scenes, 2 s hold, max drift 2e-9 m, threshold 2 mm.
++
++Physical pilot: 4/8; layout 3 passed both; 4/4 initial fingerprints match. Failures: pick_close tray contact 2 (0.61/0.74 mm), place_release 0.83 mm, place_withdraw no direction. Targets were placed and distractors moved <3e-9 m in the place failures. Arm split: red-left 0/2, red-right 2/2, blue-left 1/2, blue-right 1/2; small pilot, no language or arm claim. Formal collection not started; fix clearance first.
++
++[pilot](../experiments/so101/scene2-dual-random-pilot.json) · [audit](../experiments/so101/scene2-dual-random-audit.json) · [engineering](so101-scene2-dual-random-engineering.md) · [images](assets/so101-scene2-dual-random/layout_03_red_vs_blue.png).
+diff --git a/reports/so101-scene2-dual-random-data.md b/reports/so101-scene2-dual-random-data.md
+new file mode 100644
+index 0000000..e6ebe7a
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-data.md
+@@ -0,0 +1,5 @@
++# Scene2 pilot data quality
++
++8 episodes, 4503 control frames at 50 Hz; dt 0.020 s, no long/short/unexplained gaps. Three failure episodes end with terminal partial frames (7, 9 and 10 substeps); trace time plus partial substeps equals the summary sim time within 1e-14 s. applied == commanded exactly (max 0.0). State/action shapes (N,12), finite; joint jumps <=4.52 deg; gripper 70 percent at the open stage. Three cameras at 640x480, 50 fps; decoded frames equal trace frames; no central-camera duplicate run; wrist cameras show 2-3 frame repeats during slow carry/lower. Initial state hashes match 4/4. Target paths 0.15-0.218 m on successes; distractor net 0.0 m in all episodes. The recorded predicate and summary agree on all 8. Raw traces and videos stay in the ignored run directory; the tracked audit is [here](../experiments/so101/scene2-dual-random-audit.json).
++
++R3 local; reproduce-pending from a clean clone.
+diff --git a/reports/so101-scene2-dual-random-engineering.md b/reports/so101-scene2-dual-random-engineering.md
+new file mode 100644
+index 0000000..84729fd
+--- /dev/null
++++ b/reports/so101-scene2-dual-random-engineering.md
+@@ -0,0 +1,11 @@
++# Scene2 engineering notes
++
++- External `SingleBlockPlaceTask` hard-codes `cube_0`; scene2 uses its own dual-block task and an expert wrapper for the sampled slot. External source unchanged.
++- Pick descend grazes the target CAD band by 0.6-1.3 mm. Only the target's legal bands are admitted; distractor, trays, table and arm-arm keep the 0.5 mm guard.
++- Scan: open 70, yaw [30,75]; 0/15 and 90 hit the tray wall. Not pilot data.
++- Layout 240/240 is a pre-screen, not an expert success rate.
++- Smoke: layout 0 red placed the target, release hit the red tray wall by 0.83 mm; layout 0 blue placed it, withdraw had no collision-free direction. Distractor drift ~3e-9 m.
++- Discarded: one protocol-binding run with no completed episode; baseline seeds 21000-21004. See protocol amendments.
++- Full attempts: [pilot](../experiments/so101/scene2-dual-random-pilot.json). Raw traces and videos are ignored.
++
++R3 local; reproduce-pending from a clean clone.

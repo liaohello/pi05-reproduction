@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED",
+  "reason": "Same as per_dimension_loss.json: needs a GPU forward+backward on the step-2000 checkpoint. Not attempted, not approximated.",
+  "not_executed": true,
+  "must_not_be_read_as_a_result": true,
+  "required_command": "python scene1_libero_audit/tools/padding_grad.py --checkpoint <checkpoints> --step 2000 --train-view <data_view_v3> --batch 8 --seed 42 --groups action_expert,language_lora,projection,time_proj --out scene1_libero_audit/gradient_contribution.measured.json",
+  "planned_schema": {
+    "weighting": "grad_total = (12*grad_real + 20*grad_pad)/32 ; analysed at these true weights, not at 1/32 each",
+    "groups": {
+      "action_expert": {"regex": ".*llm.*_1.*", "grad_norm_real": "float", "grad_norm_pad": "float", "grad_norm_total": "float", "share_of_total_sq": "float"},
+      "language_lora": {"regex": ".*lora.*", "grad_norm_real": "float", "grad_norm_pad": "float", "grad_norm_total": "float", "share_of_total_sq": "float"},
+      "projection": {"regex": ".*(action_out_proj|action_in_proj).*", "grad_norm_real": "float", "grad_norm_pad": "float", "grad_norm_total": "float", "share_of_total_sq": "float"},
+      "time_proj": {"regex": ".*time_mlp.*", "grad_norm_real": "float", "grad_norm_pad": "float", "grad_norm_total": "float", "share_of_total_sq": "float"}
+    },
+    "cosine_real_vs_pad": {"action_expert": "float", "language_lora": "float", "projection": "float", "time_proj": "float"},
+    "clipping": {
+      "clip_norm_configured": 1.0,
+      "grad_norm_total_observed": "float",
+      "clip_triggered": "bool",
+      "grad_norm_real_only": "float",
+      "clip_triggered_without_pad": "bool",
+      "note": "this pair is the decisive test of the 'padding inflates the norm and forces clipping' hypothesis"
+    },
+    "adamw_update_comparison": {
+      "update_norm_32d_loss": "float",
+      "update_norm_12d_masked_loss": "float",
+      "cosine_between_updates": "float"
+    }
+  }
+}

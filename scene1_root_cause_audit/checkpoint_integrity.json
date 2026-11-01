@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "checkpoint": {
+    "run_root": "/work/runs/so101/scene1-pi05base-val50-20261029T184107Z-92c99192/formal",
+    "checkpoint_dir": "formal/checkpoints",
+    "verified_step": 2000,
+    "verified_from": "container so101-scene1-checkpoint-2000-state-read-20261030T000009Z, exit_code 0, image openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52"
+  },
+  "integrity": {
+    "orbax_step_directory": 2000,
+    "checkpoint_metadata_step": 2000,
+    "train_state_step": 2000,
+    "steps_agree": true,
+    "full_train_state": true,
+    "retain_all_saved_steps": true,
+    "parameters_sha256": "b307d931bc12fb4672a866ef91c2f986e7438162bee31fd5daeb6e7eff0b5ab5",
+    "ema_sha256": "76b5e54576195a2686a9af012687f53993b078687839712d3387374a51064f77",
+    "optimizer_state_sha256": "1ffb41ede2a2fe66d211858780838e150fbacf2fa8a02c370d5d86b9da4b96c4",
+    "optimizer_tensors": 60,
+    "config_sha256": "a6c57e02e298b28ad944e4cf07c5563c5456800419cf2cb3d6a5ba11d63d5a9a",
+    "run_config_sha256": "957e4bed6e1c03baf26f4b8657fee2e7182c73a10b5519a8766a8747848cc4e7",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "train_state_read_sha256": "72439c538b7d9463e859b8d7d227f5e92dd3964df4acd5c43b7d80d9e6506316",
+    "sources": [
+      "evaluation_2000/checkpoint_binding.json",
+      "evaluation_2000/state_read/train_state_read.json",
+      "formal/checkpoint_steps_2000.json"
+    ],
+    "label": "VERIFIED"
+  },
+  "retention": {
+    "retained_steps": [500, 1000, 1500, 2000],
+    "step_3000_present": false,
+    "finding": "No step-3000 artefact exists anywhere under the run root. The task's conditional clause ('if a step-3000 checkpoint exists, verify it independently before using it') does not apply: it was never written, because the run never reached step 3000 (last observed live step 2050).",
+    "label": "VERIFIED",
+    "consequence": "All EMA-vs-current comparisons must be made at step 2000. There is no way to measure whether the EMA gap closes with more training without producing new checkpoints, which this audit is not permitted to do."
+  },
+  "parameter_tree_structure": {
+    "both_trees_present": true,
+    "evidence": "checkpoint_binding.json carries independent parameters_sha256 and ema_sha256 for the same step",
+    "split_semantics": {
+      "source": "openpi/training/checkpoints.py:145-152 (_split_params), 155-159 (_merge_params)",
+      "behaviour": "when state.ema_params is not None, the 'params' item is written FROM ema_params and train_state is written with ema_params=None; otherwise 'params' is the live tree and train_state.params is emptied",
+      "implication_here": "because both trees exist at step 2000, the checkpoint's params/ directory contains the EMA weights and train_state/params contains the live weights",
+      "label": "VERIFIED"
+    },
+    "caveat": "The _split_params source quoted is the vendored copy at runs/so101/so101-scene2-dual-fast-flow-ki-prototype-v2-20261029T101027Z/openpi/training/checkpoints.py. The Scene1 runtime loads openpi from /opt/openpi (train_so101.py:31-42), which is not archived in this repository. The semantics are confirmed indirectly by the checkpoint layout (both trees saved) and by policy_config.py:57 loading params/ for inference, but the exact /opt/openpi revision was not hash-compared. Treat the code citation as LIKELY-equivalent, the artifact evidence as VERIFIED."
+  },
+  "not_verified": {
+    "leaf_level_equality_of_params_and_train_state_params": "BLOCKED (requires loading both trees and diffing)",
+    "l2_distance_between_live_and_ema": "BLOCKED",
+    "whether_ema_params_is_initialised_from_params_or_from_zeros": "BLOCKED — the initialisation lives in /opt/openpi/scripts/train.py, which is outside the repository. A zero-initialised EMA would make step 2000 catastrophically bad; a params-initialised EMA merely lags. These two hypotheses are not distinguishable from any file in this repo, and they have opposite implications."
+  }
+}

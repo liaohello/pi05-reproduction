@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>π0.5 训练监控 · 本地只读</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14161a;--muted:#5d6470;--line:#e3e6ec;--accent:#2f5bd7;
+--train:#2f5bd7;--validation:#d66b00;--full:#7b3fb5;
+--ok:#1a7f4b;--okbg:#e7f5ee;--bad:#b3261e;--badbg:#fdecea;--wait:#8a6d00;--waitbg:#fdf3d7;
+--band:rgba(47,91,215,.18)}
+@media (prefers-color-scheme:dark){:root{--bg:#12141a;--card:#1b1f27;--ink:#eef1f6;--muted:#9aa3b2;
+--line:#2b3140;--accent:#7aa2ff;--train:#7aa2ff;--validation:#ffab55;--full:#c49bff;
+--ok:#5fd39a;--okbg:#16311f;--bad:#ff8a80;--badbg:#3a1c1a;
+--wait:#e5c05a;--waitbg:#3a3116;--band:rgba(122,162,255,.22)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+header{padding:18px 26px 14px;border-bottom:1px solid var(--line);background:var(--card);
+display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center}
+h1{margin:0;font-size:17px;letter-spacing:.2px}
+h2{margin:26px 0 10px;font-size:14px;color:var(--muted);letter-spacing:.3px}
+main{padding:18px 26px 44px;max-width:1240px}
+.sub{color:var(--muted);font-size:12.5px}
+.pill{font-size:11.5px;padding:3px 10px;border-radius:99px;font-weight:600;white-space:nowrap}
+.pill.running,.pill.completed{color:var(--ok);background:var(--okbg)}
+.pill.waiting,.pill.stalled{color:var(--wait);background:var(--waitbg)}
+.pill.failed,.pill.disconnected{color:var(--bad);background:var(--badbg)}
+.pill.stopped{color:var(--muted);background:var(--bg)}
+.bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+.bar>i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin:16px 0 6px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.kpi b{display:block;font-size:19px;font-weight:650;letter-spacing:.2px}
+.kpi span{color:var(--muted);font-size:11.5px}
+.kpi .note{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+select,input[type=number]{background:var(--bg);color:var(--ink);border:1px solid var(--line);
+border-radius:8px;padding:6px 9px;font:inherit;max-width:340px}
+label{font-size:12.5px;color:var(--muted)}
+button{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+padding:6px 11px;font:inherit;cursor:pointer}
+button[aria-pressed=true]{color:var(--accent);border-color:var(--accent);font-weight:600}
+canvas{width:100%;height:330px;display:block;cursor:crosshair}
+.chart-wrap{position:relative;margin-top:10px}
+.tip{position:absolute;z-index:5;pointer-events:none;background:var(--card);border:1px solid var(--line);
+border-radius:9px;padding:7px 10px;font:12px/1.55 ui-monospace,Menlo,monospace;color:var(--ink);
+box-shadow:0 6px 18px rgba(0,0,0,.16);max-width:300px;white-space:nowrap}
+.tip b{color:var(--accent);font-weight:650}
+.tip .k{color:var(--muted)}
+.tip hr{border:0;border-top:1px dashed var(--line);margin:5px 0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend label{display:inline-flex;align-items:center;gap:4px;color:var(--muted);cursor:pointer}
+.legend i{display:inline-block;width:16px;height:3px;background:var(--accent);margin-right:5px;
+vertical-align:middle}
+.legend i.band{height:9px;width:14px;background:var(--band);border:1px solid var(--accent)}
+.legend i.smooth{background:var(--ok)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);
+border-radius:12px;overflow:hidden;font-size:12.5px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:11.5px}
+tr:last-child td{border-bottom:0}
+code{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--accent);word-break:break-all}
+.miss{color:var(--muted)}
+.flag{font-size:10.5px;padding:2px 7px;border-radius:99px;background:var(--waitbg);color:var(--wait);
+font-weight:600;margin-left:6px;white-space:nowrap}
+.flag.no{background:var(--bg);color:var(--muted);font-weight:400}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.empty{color:var(--muted);padding:16px 2px;font-size:13px}
+footer{color:var(--muted);font-size:11.5px;padding:6px 26px 30px}
+details{margin-top:8px}
+summary{cursor:pointer;color:var(--muted);font-size:12px}
+@media (max-width:640px){header,main,footer{padding-left:14px;padding-right:14px}canvas{height:250px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>π0.5 训练监控</h1>
+  <span class="pill waiting" id="status">连接中</span>
+  <span class="sub" id="status-reason"></span>
+  <span class="sub" style="margin-left:auto">本机只读页面 · 数据来自配置的运行目录</span>
+</header>
+<main>
+  <div class="card row">
+    <label for="run">运行目录</label>
+    <select id="run"><option value="">（无可选运行）</option></select>
+    <label for="poll">轮询间隔（秒）</label>
+    <input id="poll" type="number" min="1" max="600" step="1" value="5">
+    <button id="refresh" type="button">立即刷新</button>
+    <button id="pause" type="button" aria-pressed="false">暂停</button>
+    <span class="sub" id="updated"></span>
+  </div>
+
+  <div class="bar"><i id="progress-bar" style="width:0"></i></div>
+  <div class="sub" id="progress-text">进度：无数据</div>
+  <div class="kpis" id="kpis"></div>
+
+  <h2>训练 Loss 随 step</h2>
+  <div class="card">
+    <div class="row">
+      <button id="mode-raw" type="button" aria-pressed="true">原始记录</button>
+      <button id="mode-smooth" type="button" aria-pressed="false">平滑曲线</button>
+      <label for="span">训练平滑窗口</label>
+      <input id="span" type="number" min="2" max="500" step="1" value="30" style="max-width:90px">
+      <label for="val-span">验证平滑窗口</label>
+      <input id="val-span" type="number" min="2" max="500" step="1" value="3" style="max-width:90px">
+      <label for="full-span">完整验证平滑窗口</label>
+      <input id="full-span" type="number" min="2" max="500" step="1" value="3" style="max-width:90px">
+      <button id="mode-both" type="button" aria-pressed="false">原始＋平滑</button>
+      <label for="metric">绘制指标</label>
+      <select id="metric" style="max-width:170px">
+        <option value="loss">训练 loss</option>
+        <option value="grad_norm">梯度范数</option>
+        <option value="param_norm">参数范数</option>
+        <option value="lr">学习率（推导）</option>
+      </select>
+    </div>
+    <div class="chart-wrap"><canvas id="chart" width="1160" height="330"
+      aria-label="训练曲线，鼠标悬停可读出该点数值"></canvas><div class="tip" id="tip" hidden></div></div>
+    <div class="legend">
+      <label for="show-train"><input id="show-train" type="checkbox" checked>
+        <i style="background:var(--train)"></i>Training Loss（原始/桶均值）</label>
+      <label for="show-val"><input id="show-val" type="checkbox" checked>
+        <i style="background:var(--validation)"></i>Validation Probe（每50步）</label>
+      <label for="show-full"><input id="show-full" type="checkbox" checked>
+        <i style="background:var(--full);height:9px;width:9px;transform:rotate(45deg)"></i>Full Validation</label>
+      <span><i class="smooth"></i>两条曲线各自独立移动平均</span>
+      <span><i class="band"></i>训练桶内最小–最大（仅聚合时）</span>
+      <span id="hover-hint">鼠标移到曲线或橙色评估点即可读数</span>
+    </div>
+    <div class="sub" id="chart-note"></div>
+  </div>
+
+  <h2>其他指标（仅在有可靠记录时展示）</h2>
+  <div class="kpis" id="metrics"></div>
+
+  <h2>验证指标 · 按已完成 checkpoint 评估</h2>
+  <div class="card" id="validation"></div>
+
+  <h2>历史运行（实验台账）</h2>
+  <div class="card" id="history"></div>
+
+  <h2>读取状态</h2>
+  <div class="card" id="events"></div>
+</main>
+<footer>
+  缺失数据显示「未记录」且不补造数值；学习率为配置 schedule 的推导值，训练器本身不打印；
+  显存按秒采样、无时间戳，因此只给标量。Probe Loss 每 50 步实测一次；Full Loss 仅在指定 checkpoint
+  完整保存后实测。三类 loss 共用坐标轴，未完成评估不显示，不插值。
+  仅凭日志暂时不更新不会判定为失败，只会标为「记录中断」。
+</footer>
+<script>
+(() => {
+"use strict";
+const $ = (id) => document.getElementById(id);
+const el = {status:$("status"),reason:$("status-reason"),run:$("run"),poll:$("poll"),
+  updated:$("updated"),kpis:$("kpis"),bar:$("progress-bar"),ptext:$("progress-text"),
+  metrics:$("metrics"),validation:$("validation"),history:$("history"),events:$("events"),
+  chart:$("chart"),note:$("chart-note"),metric:$("metric"),span:$("span"),tip:$("tip"),
+  valSpan:$("val-span"),fullSpan:$("full-span"),showTrain:$("show-train"),
+  showVal:$("show-val"),showFull:$("show-full"),
+  hint:$("hover-hint")};
+const state = {runId:"", timer:null, paused:false, mode:"raw", view:null, runs:[], history:null,
+  pollMs:5000, pollSaved:false, hover:null, plot:null, lookup:null};
+const dpr = () => Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+const fmtInt = (v) => v == null ? "未记录" : Number(v).toLocaleString("zh-CN");
+function fmtNum(v, digits = 4) {
+  if (v == null || !Number.isFinite(v)) return "未记录";
+  const a = Math.abs(v);
+  return a !== 0 && a < 1e-3 ? v.toExponential(2) : v.toFixed(digits);
+}
+function fmtDur(s) {
+  if (s == null || !Number.isFinite(s)) return "未记录";
+  const v = Math.abs(s);
+  if (v < 60) return v.toFixed(1) + " 秒";
+  if (v < 3600) return (v / 60).toFixed(1) + " 分";
+  return (v / 3600).toFixed(2) + " 小时";
+}
+function fmtWhen(unix) {
+  if (unix == null) return "未记录";
+  const d = new Date(unix * 1000);
+  return Number.isNaN(d.getTime()) ? "未记录" : d.toLocaleString("zh-CN", {hour12: false});
+}
+const node = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+function kpi(label, value, note) {
+  const box = node("div", "kpi");
+  box.appendChild(node("b", null, value));
+  box.appendChild(node("span", null, label));
+  if (note) box.appendChild(node("span", "note", note));
+  return box;
+}
+
+// ---------------------------------------------------------------- polling
+async function getJSON(url) {
+  const res = await fetch(url, {cache: "no-store"});
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+async function loadRuns(keep) {
+  const data = await getJSON("/api/runs");
+  state.pollMs = data.polling_ms || state.pollMs;
+  state.history = data.history || null;
+  if (!keep && !state.pollSaved) el.poll.value = Math.round(state.pollMs / 1000);
+  el.run.innerHTML = "";
+  const runs = data.runs || [];
+  state.runs = runs;
+  if (!runs.length) {
+    el.run.appendChild(new Option("（运行目录下没有运行目录）", ""));
+    renderEmpty("配置的运行目录下还没有运行目录，等待训练写入。");
+    return;
+  }
+  for (const r of runs) {
+    const opt = new Option((r.current ? "▶ " : "") + r.name + (r.has_log ? "" : "（无日志）"), r.id);
+    el.run.appendChild(opt);
+  }
+  const current = runs.find((r) => r.current);
+  if (!keep || !runs.some((r) => r.id === state.runId)) {
+    state.runId = (current && current.id) || runs[0].id;
+    el.run.value = state.runId;
+  }
+  await loadState();
+}
+async function loadState() {
+  if (!state.runId) { await loadRuns(true); return; }
+  try {
+    const view = await getJSON("/api/state?run=" + encodeURIComponent(state.runId));
+    if (view && view.error) throw new Error(view.error);
+    state.view = view;
+    render(view);
+  } catch (err) {
+    disconnected(String(err.message || err));
+  }
+}
+function disconnected(reason) {
+  setStatus("disconnected", "监控连接中断");
+  el.reason.textContent = "页面无法读取监控后端（" + reason + "）；训练本身状态未知，请检查监控进程是否仍在运行。";
+  el.updated.textContent = "上次成功刷新：" + new Date().toLocaleTimeString("zh-CN", {hour12: false});
+}
+function setStatus(code, label) {
+  el.status.className = "pill " + code;
+  el.status.textContent = label;
+}
+function restart() {
+  if (state.timer) clearInterval(state.timer);
+  const seconds = Math.max(1, Math.min(600, Number(el.poll.value) || 5));
+  el.poll.value = String(seconds);
+  state.timer = setInterval(() => {
+    if (!state.paused) loadState();
+  }, seconds * 1000);
+}
+
+// ---------------------------------------------------------------- empty
+function renderEmpty(message) {
+  setStatus("waiting", "无运行");
+  el.reason.textContent = message;
+  el.kpis.innerHTML = ""; el.metrics.innerHTML = ""; el.events.innerHTML = "";
+  el.bar.style.width = "0"; el.ptext.textContent = "进度：无数据";
+  el.validation.innerHTML = ""; el.validation.appendChild(node("div", "empty", message));
+  renderHistory({history: state.history});
+  draw([], {available: false, reason: message});
+  el.note.textContent = message;
+}
+
+// ---------------------------------------------------------------- render
+function render(view) {
+  const st = view.status || {}, pg = view.progress || {}, cfg = view.config || {};
+  setStatus(st.code || "waiting", st.label || "未知");
+  el.reason.textContent = st.reason || "";
+  el.updated.textContent = "页面刷新 " + (view.generated_at || "") + " · 下次 " +
+    Math.round(Number(el.poll.value) || 5) + " 秒后";
+
+  el.ptext.textContent = !pg.updates
+    ? "进度：日志尚无 Step 记录（可能仍在加载权重或编译）"
+    : `进度：已记录 ${fmtInt(pg.updates)} / ${fmtInt(pg.target_steps)} 次更新`
+      + `（${fmtNum(pg.percent, 1)}%） · 最后一条日志 Step ${fmtInt(pg.step)}`;
+  el.bar.style.width = (pg.percent == null ? 0 : Math.max(0, Math.min(100, pg.percent))) + "%";
+
+  const speedBlock = pg.speed || {};
+  const missing = new Set(cfg.missing || []);
+  const checkpointSteps = Array.isArray(cfg.checkpoint_steps) ? cfg.checkpoint_steps : null;
+  el.kpis.innerHTML = "";
+  el.kpis.append(
+    kpi("更新次数 / 目标", pg.updates ? `${fmtInt(pg.updates)} / ${fmtInt(pg.target_steps)}` : "未记录",
+        `最后一条日志 Step ${fmtInt(pg.step)}`
+        + (pg.target_steps == null ? " · 配置快照没有目标步数" : "")),
+    kpi("batch", fmtInt(cfg.batch_size), missing.has("batch") ? "配置快照未记录" : null),
+    kpi("数据划分", cfg.split && (cfg.split.train != null || cfg.split.validation != null)
+        ? `${fmtInt(cfg.split.train)} 训练 / ${fmtInt(cfg.split.validation)} 验证` : "未记录",
+        cfg.split && cfg.split.declared ? "声明：" + cfg.split.declared : (missing.has("数据划分") ? "配置快照未记录" : null)),
+    kpi("已用时间", pg.wall_time_s != null ? fmtDur(pg.wall_time_s)
+        : speedBlock.elapsed_logged_s != null ? fmtDur(speedBlock.elapsed_logged_s) : "未记录",
+        pg.wall_time_s != null ? "启动器记录的墙钟"
+          : (speedBlock.elapsed_logged_s != null ? "按日志时间戳累计，不含启动开销" : "运行记录未写墙钟")),
+    kpi("训练速度", speedBlock.seconds_per_update != null
+        ? `${fmtNum(speedBlock.seconds_per_update, 3)} 秒/更新` : "未记录",
+        speedBlock.updates_per_second != null
+          ? `${fmtNum(speedBlock.updates_per_second, 3)} 更新/秒 · 来源 ${speedBlock.source}` : (speedBlock.note || null)),
+    kpi("预计剩余", speedBlock.estimated_remaining_s != null
+        ? fmtDur(speedBlock.estimated_remaining_s) : "未记录", "由当前速度推导的估计值"),
+    kpi("最后记录", pg.last_record_age_s != null ? fmtDur(pg.last_record_age_s) + "前" : "未记录",
+        pg.last_record_at ? fmtWhen(pg.last_record_at) : null),
+    kpi("Checkpoint", checkpointSteps && checkpointSteps.length
+        ? `${fmtInt(checkpointSteps.length)} 个指定节点`
+        : (cfg.save_interval != null ? `每 ${fmtInt(cfg.save_interval)} 更新` : "未记录"),
+        checkpointSteps && checkpointSteps.length
+          ? checkpointSteps.map(fmtInt).join(" · ")
+          : null),
+    kpi("运行参数", cfg.seed != null ? `seed ${fmtInt(cfg.seed)}` : "seed 未记录",
+        [cfg.dtype ? `dtype ${cfg.dtype}` : null,
+         cfg.data_loader_workers != null ? `workers ${fmtInt(cfg.data_loader_workers)}` : null]
+        .filter(Boolean).join(" · ")));
+  if (cfg.runtime) {
+    el.kpis.appendChild(kpi("设备与切分", cfg.runtime.device_count != null
+        ? `${fmtInt(cfg.runtime.device_count)} 卡` : "未记录",
+        [cfg.runtime.backend, cfg.runtime.fsdp_devices != null
+          ? `FSDP ${fmtInt(cfg.runtime.fsdp_devices)}` : null,
+         cfg.runtime.data_parallel_replicas != null
+           ? `数据并行 ${fmtInt(cfg.runtime.data_parallel_replicas)}` : null,
+         cfg.runtime.batch_per_data_shard != null
+           ? `每分片 batch ${fmtInt(cfg.runtime.batch_per_data_shard)}` : null]
+        .filter(Boolean).join(" · ") || null));
+  }
+
+  renderMetrics(view);
+  renderValidation(view);
+  renderEvents(view);
+  renderChart(view);
+  renderHistory(view);
+}
+
+function renderMetrics(view) {
+  const m = view.metrics || {}, mem = m.memory || {}, lr = m.lr || {};
+  const grad = m.grad_norm || {}, param = m.param_norm || {};
+  el.metrics.innerHTML = "";
+  el.metrics.append(
+    kpi("学习率", lr.available && lr.points && lr.points.length
+        ? fmtNum(lastValue(lr.points), 6) : "未记录",
+        lr.available ? (lr.source === "derived" ? "配置推导值" : "运行内 schedule trace") : (lr.reason || null)),
+    kpi("梯度范数", grad.available ? fmtNum(lastValue(grad.points)) : "未记录",
+        grad.available ? null : (grad.reason || "日志未记录")),
+    kpi("参数范数", param.available ? fmtNum(lastValue(param.points)) : "未记录",
+        param.available ? null : (param.reason || "日志未记录")),
+    kpi("显存", mem.available ? `${fmtInt(mem.latest_mib)} MiB` : "未记录",
+        mem.available ? `峰值 ${fmtInt(mem.peak_mib)} MiB · ${(mem.devices || []).length || 1} 个设备`
+          + ` · ${fmtInt(mem.samples)} 个采样` : (mem.reason || null)));
+  if (mem.available && (mem.devices || []).length > 1) {
+    el.metrics.appendChild(node("div", "sub",
+      mem.devices.map((d) => `设备${d.index} 峰值 ${fmtInt(d.peak_mib)} MiB`).join(" · ")
+      + "（取各设备最新值中的最大者）"));
+  }
+  if (mem.available) el.metrics.appendChild(node("div", "sub", mem.note || ""));
+  if (lr.available) el.metrics.appendChild(node("div", "sub", lr.source_note || ""));
+}
+function lastValue(points) {
+  for (let i = points.length - 1; i >= 0; i -= 1) {
+    const v = points[i] && points[i][1];
+    if (v != null && Number.isFinite(v)) return v;
+  }
+  return null;
+}
+
+function renderEvents(view) {
+  const e = view.events || {}, run = view.run || {};
+  el.events.innerHTML = "";
+  const items = [
+    `日志文件：${(run.log_files || []).join(", ") || "无"}`,
+    `重复 step：${fmtInt(e.duplicate_steps)}（同一步取最后写入）`,
+    `重启/回退：${fmtInt(e.restarts)}`,
+    `轮转或截断：${fmtInt(e.rotations)}`,
+    `半行等待：${fmtInt(e.half_lines)}`,
+    `无法解析取值：${fmtInt(e.malformed)}`,
+    e.pending_step != null
+      ? `step ${fmtInt(e.pending_step)} 的行尚未结束：只显示 step，不写入曲线（避免截断值）`
+      : "所有已解析记录都是完整行",
+    `记录中断阈值：${fmtNum(view.status && view.status.stale_limit_seconds, 0)} 秒`
+  ];
+  items.forEach((text) => el.events.appendChild(node("div", "sub", "· " + text)));
+}
+
+// ---------------------------------------------------------------- validation
+function renderValidation(view) {
+  const v = view.validation || {};
+  el.validation.innerHTML = "";
+  if (!v.available || !(v.points || []).length) {
+    el.validation.appendChild(node("div", "empty",
+      (v.reason || "尚无验证评估产物") + "（评估产物出现后立即展示，不会插值）"));
+    return;
+  }
+  el.validation.appendChild(node("div", "sub", v.cadence || ""));
+  if (v.gate) {
+    const g = node("div", "sub");
+    g.append(document.createTextNode(
+      `门禁：${v.gate.decision || "未记录"} · 最优 checkpoint ${fmtInt(v.gate.best_checkpoint)}` +
+      ` · 预设门禁 ${v.gate.pre_registered_before_training ? "是" : "未记录"} · 划分 ${v.gate.split || "未记录"}`));
+    el.validation.appendChild(g);
+  }
+  const table = node("table");
+  table.appendChild(node("thead")).innerHTML =
+    "<tr><th>step</th><th>划分</th><th>评估时间</th><th>闭环误差</th><th>闭环报告 loss</th><th>门禁</th><th>说明</th></tr>";
+  const body = node("tbody");
+  for (const row of v.points) {
+    const tr = node("tr");
+    const metrics = row.metrics || {};
+    const err = metrics.clean_active_joint_macro_mae_deg;
+    const loss = metrics.clean_active_true12_mse;
+    const gate = row.gate || {};
+    tr.append(
+      cell(fmtInt(row.step)),
+      cell(row.split || "未记录"),
+      cell(row.evaluated_at || "未记录"),
+      cell(err != null ? fmtNum(err) + "°" : "未记录", err == null ? "miss" : null),
+      cell(loss != null ? fmtNum(loss, 4) : "未记录", loss == null ? "miss" : null),
+      gateCell(gate),
+      cell([row.problem, row.success === false ? "评估未成功" : null,
+            row.source === "gate" ? "只有门禁汇总记录，无驱动清单条目" : null,
+            row.metric_source ? "指标来源 " + row.metric_source : null,
+            row.label ? "label " + row.label : null].filter(Boolean).join(" · ") || "—"));
+    body.appendChild(tr);
+  }
+  table.appendChild(body);
+  el.validation.appendChild(table);
+  const keys = (v.metric_keys || []).slice(0, 6);
+  if (keys.length) el.validation.appendChild(node("div", "sub", "指标键：" + keys.join("、")
+    + " · MAE 单位 " + (v.unit || "") + " · loss 单位 " + (v.loss_unit || "")));
+}
+function cell(text, cls) {
+  const td = node("td", cls);
+  td.textContent = text;
+  return td;
+}
+function gateCell(gate) {
+  const td = node("td");
+  if (gate.gate_passed === true) td.appendChild(node("span", "pill completed", "通过"));
+  else if (gate.gate_passed === false) td.appendChild(node("span", "pill failed", "未通过"));
+  else td.appendChild(node("span", "miss", "未评估"));
+  if ((gate.failed_checks || []).length) {
+    const d = node("details");
+    d.appendChild(node("summary", "sub", `${gate.failed_checks.length} 项未达标`));
+    d.appendChild(node("div", "sub", gate.failed_checks.join("、")));
+    td.appendChild(d);
+  }
+  return td;
+}
+
+function renderHistory(view) {
+  const h = view.history || {};
+  el.history.innerHTML = "";
+  if (!h.available || !(h.runs || []).length) {
+    el.history.appendChild(node("div", "empty", h.reason || "台账中没有训练记录"));
+    return;
+  }
+  el.history.appendChild(node("div", "sub", h.note || ""));
+  const table = node("table");
+  table.appendChild(node("thead")).innerHTML =
+    "<tr><th>时间</th><th>阶段</th><th>配置</th><th>更新次数</th><th>batch</th><th>墙钟</th><th>状态</th></tr>";
+  const body = node("tbody");
+  for (const r of h.runs) {
+    const tr = node("tr");
+    tr.append(cell(r.ts || "未记录"),
+      cell([r.scope, r.phase, r.substage].filter(Boolean).join(" ")),
+      cell(r.config || "未记录"), cell(fmtInt(r.updates)), cell(fmtInt(r.batch)),
+      cell(fmtDur(r.wall_s)),
+      cell(r.status || "未记录", r.status === "success" ? "ok" : (r.status ? "bad" : "miss")));
+    body.appendChild(tr);
+  }
+  table.appendChild(body);
+  el.history.appendChild(table);
+}
+
+// ---------------------------------------------------------------- chart
+function seriesFor(view) {
+  const key = el.metric.value;
+  if (key === "lr") {
+    const lr = (view.metrics || {}).lr || {};
+    return {points: (lr.points || []).map((p) => [p[0], p[1]]), available: !!lr.points,
+            thinned: false, raw_count: (lr.points || []).length,
+            reason: lr.reason || "学习率不可用", label: "学习率（配置推导值）", derived: lr.source === "derived"};
+  }
+  if (key === "grad_norm" || key === "param_norm") {
+    const block = (view.metrics || {})[key] || {};
+    return {points: toTriples(block.points), available: block.available,
+            thinned: !!block.thinned, raw_count: block.raw_count,
+            reason: block.reason || block.reason_missing, label: key === "grad_norm" ? "梯度范数" : "参数范数"};
+  }
+  const loss = view.loss || {};
+  return {points: toTriples(loss.points), available: loss.raw_count > 0,
+          thinned: !!loss.thinned, raw_count: loss.raw_count,
+          missing_records: loss.records_missing_value,
+          reason: loss.reason, label: "训练 loss"};
+}
+function toTriples(points) {
+  // 后端给 [step, 均值, 最小, 最大, 条数, 时间戳]；学习率只有 [step, 值]
+  return (points || []).map((p) => (p.length >= 5 ? p : [p[0], p[1], p[1], p[1], 1, null]));
+}
+function lookupMaps(view) {
+  const map = (rows) => { const m = new Map(); (rows || []).forEach((r) => m.set(r[0], r)); return m; };
+  const metrics = view.metrics || {};
+  return {loss: map((view.loss || {}).points), grad: map((metrics.grad_norm || {}).points),
+          param: map((metrics.param_norm || {}).points), lr: map((metrics.lr || {}).points),
+          memory: metrics.memory || {}, step: (view.progress || {}).step};
+}
+
+function validationLossSeries(view) {
+  const block = view.validation_loss || {};
+  if (el.metric.value !== "loss") {
+    const reason = "验证 loss 只在 Training/Validation Loss 共用视图中显示";
+    return {
+      probe:{available:false, points:[], reason},
+      full:{available:false, points:[], reason},
+    };
+  }
+  const series = (name) => {
+    const value = block[name] || {};
+    const points = (value.points || []).filter((row) =>
+      row && Number.isFinite(row.step) && Number.isFinite(row.loss));
+    return {available:points.length > 0, points,
+            reason:value.reason || `尚无 ${name} validation loss 记录`};
+  };
+  return {probe:series("probe"), full:series("full")};
+}
+
+function renderChart(view) {
+  const series = seriesFor(view);
+  const validation = validationLossSeries(view);
+  state.lookup = lookupMaps(view);
+  if (state.hover && state.plot) {
+    const trainHit = state.plot.trainPts.some((r) => r[0] === state.hover.step);
+    const probeHit = state.plot.probePts.some((r) => r.step === state.hover.step);
+    const fullHit = state.plot.fullPts.some((r) => r.step === state.hover.step);
+    const hit = state.hover.kind === "probe" ? probeHit
+      : state.hover.kind === "full" ? fullHit : trainHit;
+    if (!hit) dropHover();
+  }
+  draw(series, validation);
+  const bits = [];
+  if (series.thinned) bits.push(`原始 ${fmtInt(series.raw_count)} 条已按桶聚合，带显示桶内最小–最大`);
+  else if (series.raw_count != null) bits.push(`逐条绘制 ${fmtInt(series.raw_count)} 个原始记录`);
+  if (series.missing_records) bits.push(`${fmtInt(series.missing_records)} 条记录缺该指标值（跳过，不插值）`);
+  if (series.derived) bits.push("学习率为配置 schedule 推导值，训练器未打印");
+  if (state.mode !== "raw") {
+    if (el.showTrain.checked && series.points.length > 1) bits.push(`训练平滑窗口 ${smoothingSpan()} 点`);
+    if (el.showVal.checked && validation.probe.points.length > 1) bits.push(`Probe 平滑窗口 ${validationSmoothingSpan()} 点`);
+    if (el.showFull.checked && validation.full.points.length > 1) bits.push(`Full 平滑窗口 ${fullSmoothingSpan()} 点`);
+  }
+  if (!validation.probe.available) bits.push("Probe：" + validation.probe.reason);
+  else bits.push(`Probe 仅绘制 ${fmtInt(validation.probe.points.length)} 个实测点`);
+  if (!validation.full.available) bits.push("Full：" + validation.full.reason);
+  else bits.push(`Full 仅绘制 ${fmtInt(validation.full.points.length)} 个完整验证点`);
+  el.note.textContent = bits.join(" · ");
+}
+function smoothingSpan() {
+  return Math.max(2, Math.min(500, Number(el.span.value) || 30));
+}
+function validationSmoothingSpan() {
+  return Math.max(2, Math.min(500, Number(el.valSpan.value) || 3));
+}
+function fullSmoothingSpan() {
+  return Math.max(2, Math.min(500, Number(el.fullSpan.value) || 3));
+}
+
+function ema(points, window) {
+  const out = [];
+  let sum = 0, count = 0, queue = [];
+  for (const p of points) {
+    queue.push(p[1]); sum += p[1]; count += 1;
+    if (queue.length > window) sum -= queue.shift();
+    out.push([p[0], sum / queue.length]);
+  }
+  return out;
+}
+
+function strokeSeries(ctx, points, sx, sy) {
+  if (!points.length) return;
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    const x = sx(point[0]), y = sy(point[1]);
+    index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function draw(series, validation) {
+  const canvas = el.chart;
+  const rect = canvas.getBoundingClientRect();
+  const ratio = dpr();
+  const W = Math.max(320, Math.floor(rect.width * ratio));
+  const H = Math.max(160, Math.floor((rect.height || 330) * ratio));
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+  const ctx = canvas.getContext("2d");
+  const cs = getComputedStyle(document.documentElement);
+  const ink = cs.getPropertyValue("--ink").trim(), muted = cs.getPropertyValue("--muted").trim();
+  const line = cs.getPropertyValue("--line").trim(), train = cs.getPropertyValue("--train").trim();
+  const validationColor = cs.getPropertyValue("--validation").trim();
+  const fullColor = cs.getPropertyValue("--full").trim();
+  const ok = cs.getPropertyValue("--ok").trim(), band = cs.getPropertyValue("--band").trim();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = ink; ctx.font = `${Math.round(11 * ratio)}px ui-monospace, Menlo, monospace`;
+
+  const trainEnabled = !!series.available && el.showTrain.checked;
+  const probeEnabled = !!validation.probe.available && el.showVal.checked
+    && el.metric.value === "loss";
+  const fullEnabled = !!validation.full.available && el.showFull.checked
+    && el.metric.value === "loss";
+  const pts = trainEnabled ? (series.points || []).filter((p) => Number.isFinite(p[1])) : [];
+  const probePts = probeEnabled ? validation.probe.points : [];
+  const fullPts = fullEnabled ? validation.full.points : [];
+  if (!pts.length && !probePts.length && !fullPts.length) {
+    ctx.fillStyle = muted;
+    const reason = !el.showTrain.checked && !el.showVal.checked && !el.showFull.checked
+      ? "所有曲线均已在图例中隐藏"
+      : (series && series.reason) || (validation.probe && validation.probe.reason)
+        || "无数据：等待训练或验证记录";
+    ctx.fillText(reason, 14 * ratio, 24 * ratio);
+    state.plot = null;
+    dropHover();
+    return;
+  }
+  const pad = {l: 62 * ratio, r: 26 * ratio, t: 14 * ratio, b: 26 * ratio};
+  const metricValues = pts.flatMap((p) =>
+    series.thinned ? [p[2], p[3]] : [p[1]])
+    .concat(probePts.map((p) => p.loss))
+    .concat(fullPts.map((p) => p.loss));
+  let ymin = metricValues.length ? Math.min(...metricValues) : 0;
+  let ymax = metricValues.length ? Math.max(...metricValues) : 1;
+  if (ymin === ymax) { ymin -= 1; ymax += 1; }
+  const margin = (ymax - ymin) * 0.06;
+  ymin -= margin; ymax += margin;
+  const stepValues = pts.map((p) => p[0]);
+  probePts.forEach((p) => stepValues.push(p.step));
+  fullPts.forEach((p) => stepValues.push(p.step));
+  if (!stepValues.length) stepValues.push(0);
+  let xmin = Math.min(...stepValues), xmax = Math.max(...stepValues);
+  if (xmin === xmax) { xmin -= 1; xmax += 1; }
+  const sx = (v) => pad.l + (v - xmin) / Math.max(1e-9, xmax - xmin) * (W - pad.l - pad.r);
+  const sy = (v) => H - pad.b - (v - ymin) / (ymax - ymin) * (H - pad.t - pad.b);
+
+  ctx.strokeStyle = line; ctx.lineWidth = ratio;
+  for (let i = 0; i <= 4; i += 1) {
+    const y = pad.t + i * (H - pad.t - pad.b) / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    const tick = ymax - i * (ymax - ymin) / 4;
+    ctx.fillStyle = muted;
+    ctx.fillText(shortNum(tick), 6 * ratio, y + 4 * ratio);
+  }
+  ctx.textAlign = "center";
+  for (let i = 0; i <= 4; i += 1) {
+    const x = pad.l + i * (W - pad.l - pad.r) / 4;
+    ctx.fillStyle = muted;
+    ctx.fillText(fmtInt(Math.round(xmin + i * (xmax - xmin) / 4)), x, H - 8 * ratio);
+  }
+  ctx.textAlign = "left";
+
+  if (trainEnabled && series.thinned) {
+    ctx.fillStyle = band; ctx.beginPath();
+    pts.forEach((p, i) => { const x = sx(p[0]); i ? ctx.lineTo(x, sy(p[2])) : ctx.moveTo(x, sy(p[2])); });
+    for (let i = pts.length - 1; i >= 0; i -= 1) ctx.lineTo(sx(pts[i][0]), sy(pts[i][3]));
+    ctx.closePath(); ctx.fill();
+  }
+  const wantRaw = state.mode !== "smooth";
+  if (trainEnabled && wantRaw) {
+    ctx.strokeStyle = train; ctx.lineWidth = 1.4 * ratio;
+    strokeSeries(ctx, pts, sx, sy);
+  }
+  const trainSmooth = trainEnabled && state.mode !== "raw" && pts.length > 1
+    ? ema(pts, smoothingSpan()) : null;
+  if (trainSmooth) {
+    ctx.strokeStyle = ok; ctx.lineWidth = 2 * ratio; ctx.beginPath();
+    trainSmooth.forEach((p, i) => { const x = sx(p[0]), y = sy(p[1]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  const probePairs = probePts.map((p) => [p.step, p.loss]);
+  if (probeEnabled && wantRaw) {
+    ctx.strokeStyle = validationColor; ctx.lineWidth = 1.6 * ratio;
+    strokeSeries(ctx, probePairs, sx, sy);
+  }
+  const probeSmooth = probeEnabled && state.mode !== "raw" && probePairs.length > 1
+    ? ema(probePairs, validationSmoothingSpan()) : null;
+  if (probeSmooth) {
+    ctx.save();
+    ctx.strokeStyle = validationColor; ctx.lineWidth = 2 * ratio;
+    ctx.globalAlpha = 0.72; ctx.setLineDash([5 * ratio, 3 * ratio]);
+    strokeSeries(ctx, probeSmooth, sx, sy);
+    ctx.restore();
+  }
+  if (probeEnabled) {
+    ctx.fillStyle = validationColor;
+    for (const p of probePts) {
+      ctx.beginPath(); ctx.arc(sx(p.step), sy(p.loss), 4 * ratio, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  const fullPairs = fullPts.map((p) => [p.step, p.loss]);
+  if (fullEnabled && wantRaw) {
+    ctx.save();
+    ctx.strokeStyle = fullColor; ctx.lineWidth = 1.4 * ratio;
+    ctx.globalAlpha = 0.72;
+    strokeSeries(ctx, fullPairs, sx, sy);
+    ctx.restore();
+  }
+  const fullSmooth = fullEnabled && state.mode !== "raw" && fullPairs.length > 1
+    ? ema(fullPairs, fullSmoothingSpan()) : null;
+  if (fullSmooth) {
+    ctx.save();
+    ctx.strokeStyle = fullColor; ctx.lineWidth = 2 * ratio;
+    ctx.globalAlpha = 0.72; ctx.setLineDash([2 * ratio, 3 * ratio]);
+    strokeSeries(ctx, fullSmooth, sx, sy);
+    ctx.restore();
+  }
+  if (fullEnabled) {
+    ctx.fillStyle = fullColor;
+    for (const p of fullPts) {
+      const x = sx(p.step), y = sy(p.loss), size = 4.2 * ratio;
+      ctx.beginPath();
+      ctx.moveTo(x, y - size); ctx.lineTo(x + size, y);
+      ctx.lineTo(x, y + size); ctx.lineTo(x - size, y);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  const title = el.metric.value === "loss"
+    ? "Flow Matching Loss · Training蓝 / Probe橙 / Full紫 · 共用数值轴"
+    : (series.label || "loss");
+  ctx.fillStyle = ink;
+  ctx.fillText(title, pad.l, 12 * ratio);
+
+  state.plot = {
+    trainPts: pts, probePts, fullPts, trainSmooth, probeSmooth, fullSmooth,
+    sx, sy, pad, W, H, ratio,
+    thinned: !!series.thinned, label: series.label || "loss",
+    trainEnabled, probeEnabled, fullEnabled,
+    colors: {ink, muted, line, train, validation: validationColor, full: fullColor, ok, band},
+    probeByStep: new Map(probePts.map((row) => [row.step, row])),
+    fullByStep: new Map(fullPts.map((row) => [row.step, row])),
+    trainSmoothByStep: new Map((trainSmooth || []).map((row) => [row[0], row[1]])),
+    probeSmoothByStep: new Map((probeSmooth || []).map((row) => [row[0], row[1]])),
+    fullSmoothByStep: new Map((fullSmooth || []).map((row) => [row[0], row[1]])),
+  };
+  if (state.hover) paintHover(ctx);
+}
+
+// ---------------------------------------------------------------- hover readout
+function paintHover(ctx) {
+  const plot = state.plot;
+  if (!plot || !state.hover) return;
+  const probePoint = plot.probeByStep.get(state.hover.step);
+  const fullPoint = plot.fullByStep.get(state.hover.step);
+  const trainPoint = plot.trainPts.find((row) => row[0] === state.hover.step);
+  const point = state.hover.kind === "probe" ? probePoint
+    : state.hover.kind === "full" ? fullPoint : trainPoint;
+  if (!point) return;
+  const c = plot.colors;
+  const step = state.hover.step;
+  const value = state.hover.kind === "train" ? point[1] : point.loss;
+  const x = plot.sx(step);
+  const y = plot.sy(value);
+  const tint = state.hover.kind === "probe" ? c.validation
+    : state.hover.kind === "full" ? c.full : c.train;
+  ctx.save();
+  ctx.strokeStyle = c.muted; ctx.lineWidth = plot.ratio; ctx.setLineDash([3 * plot.ratio, 3 * plot.ratio]);
+  ctx.beginPath(); ctx.moveTo(x, plot.pad.t); ctx.lineTo(x, plot.H - plot.pad.b); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = c.ink;
+  ctx.textAlign = x > plot.W / 2 ? "right" : "left";
+  ctx.fillText(`step ${fmtInt(point[0])}`, x + (x > plot.W / 2 ? -6 : 6) * plot.ratio,
+               plot.H - plot.pad.b + 14 * plot.ratio);
+  ctx.textAlign = "left";
+  ctx.beginPath(); ctx.arc(x, y, 4.5 * plot.ratio, 0, Math.PI * 2);
+  ctx.strokeStyle = tint; ctx.lineWidth = 2.2 * plot.ratio; ctx.stroke();
+  ctx.restore();
+}
+
+function dropHover() {
+  state.hover = null;
+  el.tip.hidden = true;
+  el.tip.textContent = "";
+  if (el.hint) el.hint.hidden = false;
+}
+
+const esc = (value) => String(value).replace(/[&<>"]/g,
+    (ch) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch]));
+
+function tipRow(key, value) {
+  return `<div><span class="k">${esc(key)}</span> ${value}</div>`;
+}
+
+function tipHtml(hover) {
+  const plot = state.plot, look = state.lookup;
+  if (!plot || !look) return null;
+  const key = el.metric.value;
+  const shown = key === "lr" ? look.lr : key === "grad_norm" ? look.grad
+    : key === "param_norm" ? look.param : look.loss;
+  const hit = shown.get(hover.step);
+  const probe = plot.probeByStep.get(hover.step);
+  const full = plot.fullByStep.get(hover.step);
+  if (!hit && !probe && !full) return null;
+  const lines = [`<div><b>Global Step ${esc(fmtInt(hover.step))}</b></div>`];
+  const label = plot.label;
+  if (hit) lines.push(tipRow(label, `<b>${esc(fmtNum(hit[1]))}</b>`));
+  if (hit && plot.thinned && hit[4] > 1) {
+    lines.push(tipRow("桶内", `${esc(fmtNum(hit[2]))} – ${esc(fmtNum(hit[3]))}`
+      + ` <span class="k">（${esc(fmtInt(hit[4]))} 条聚合）</span>`));
+  }
+  const trainSmooth = plot.trainSmoothByStep.get(hover.step);
+  if (trainSmooth != null) lines.push(tipRow(`训练平滑(${smoothingSpan()}点)`, esc(fmtNum(trainSmooth))));
+  if (probe) {
+    lines.push(tipRow("Validation Loss Probe", `<b>${esc(fmtNum(probe.loss))}</b>`));
+    const smooth = plot.probeSmoothByStep.get(hover.step);
+    if (smooth != null) lines.push(tipRow(`Probe平滑(${validationSmoothingSpan()}点)`, esc(fmtNum(smooth))));
+    lines.push(
+      tipRow("Probe 样本", fmtInt(probe.samples_evaluated)),
+      probe.wall_time_s != null ? tipRow("Probe 耗时", fmtDur(probe.wall_time_s)) : "",
+      tipRow("probe checkpoint", probe.checkpoint_saved
+        ? '<span class="ok">保存完成</span>'
+        : '<span class="k">仅 Probe，不保存</span>'),
+      probe.completed_utc ? tipRow("Probe 时间", esc(probe.completed_utc)) : "",
+    );
+  }
+  if (full) {
+    lines.push(tipRow("Full Validation Loss", `<b>${esc(fmtNum(full.loss))}</b>`));
+    const smooth = plot.fullSmoothByStep.get(hover.step);
+    if (smooth != null) lines.push(tipRow(`Full平滑(${fullSmoothingSpan()}点)`, esc(fmtNum(smooth))));
+    lines.push(
+      tipRow("Full 样本", fmtInt(full.samples_evaluated)),
+      full.wall_time_s != null ? tipRow("Full 耗时", fmtDur(full.wall_time_s)) : "",
+      tipRow("full checkpoint", '<span class="ok">保存完成</span>'),
+      full.checkpoint_metadata_step != null
+        ? tipRow("checkpoint metadata step", fmtInt(full.checkpoint_metadata_step)) : "",
+      full.completed_utc ? tipRow("Full 时间", esc(full.completed_utc)) : "",
+    );
+  }
+  if (key !== "lr") {
+    const lr = look.lr.get(hover.step);
+    if (lr && lr[1] != null) lines.push(tipRow("学习率", `${esc(fmtNum(lr[1]))} <span class="k">推导</span>`));
+  }
+  if (key !== "grad_norm") {
+    const grad = look.grad.get(hover.step);
+    if (grad && grad[1] != null) lines.push(tipRow("梯度范数", esc(fmtNum(grad[1]))));
+  }
+  const lastPoint = plot.trainPts[plot.trainPts.length - 1];
+  const isLast = !!lastPoint && lastPoint[0] === hover.step;
+  if (hit && hit[5] != null) {
+    lines.push(`<hr>`, tipRow("日志时间", esc(fmtWhen(hit[5]))));
+    if (isLast && (state.view || {}).progress) {
+      lines.push(tipRow("距现在", esc(fmtDur(state.view.progress.last_record_age_s))
+        + " <span class='k'>按日志时间戳</span>"));
+    }
+  }
+  if (isLast) lines.push(tipRow("", "<span class='k'>最后一条记录</span>"));
+  return lines.join("");
+}
+
+function showTip(event, hover) {
+  const html = tipHtml(hover);
+  if (!html) { hideTip(); return; }
+  const box = el.chart.getBoundingClientRect();
+  el.tip.innerHTML = html;
+  el.tip.hidden = false;
+  if (el.hint) el.hint.hidden = true;
+  const left = Math.min(Math.max(4, event.clientX - box.left + 16),
+                        Math.max(4, box.width - el.tip.offsetWidth - 4));
+  const top = Math.min(Math.max(4, event.clientY - box.top + 14),
+                       Math.max(4, box.height - el.tip.offsetHeight - 4));
+  el.tip.style.left = `${left}px`;
+  el.tip.style.top = `${top}px`;
+}
+
+function hideTip() {
+  if (!state.hover) return;
+  dropHover();
+  if (state.view) renderChart(state.view);
+}
+
+function onPointerMove(event) {
+  const plot = state.plot;
+  if (!plot) return;
+  const box = el.chart.getBoundingClientRect();
+  const mx = (event.clientX - box.left) * plot.ratio;
+  const my = (event.clientY - box.top) * plot.ratio;
+  if (mx < plot.pad.l - 6 * plot.ratio || mx > plot.W - plot.pad.r + 6 * plot.ratio) { hideTip(); return; }
+  let best = null;
+  if (plot.probeEnabled) {
+    for (const row of plot.probePts) {
+      const dist = Math.hypot(plot.sx(row.step) - mx, plot.sy(row.loss) - my);
+      if (dist <= 11 * plot.ratio && (!best || dist < best.dist)) {
+        best = {kind: "probe", step: row.step, dist};
+      }
+    }
+  }
+  if (plot.fullEnabled) {
+    for (const row of plot.fullPts) {
+      const dist = Math.hypot(plot.sx(row.step) - mx, plot.sy(row.loss) - my);
+      if (dist <= 12 * plot.ratio && (!best || dist < best.dist)) {
+        best = {kind: "full", step: row.step, dist};
+      }
+    }
+  }
+  if (!best && plot.trainEnabled) {
+    let gap = Infinity, step = null;
+    for (const row of plot.trainPts) {
+      const g = Math.abs(plot.sx(row[0]) - mx);
+      if (g < gap) { gap = g; step = row[0]; }
+    }
+    if (step != null && gap <= 20 * plot.ratio) best = {kind: "train", step, dist: gap};
+  }
+  if (!best) { hideTip(); return; }
+  if (state.hover && state.hover.kind === best.kind && state.hover.step === best.step) {
+    showTip(event, best);
+    return;
+  }
+  state.hover = best;
+  renderChart(state.view);
+  showTip(event, best);
+}
+
+el.chart.addEventListener("pointermove", onPointerMove);
+el.chart.addEventListener("pointerdown", onPointerMove);
+el.chart.addEventListener("pointerleave", hideTip);
+function shortNum(v) {
+  const a = Math.abs(v);
+  if (a !== 0 && a < 1e-3) return v.toExponential(1);
+  if (a >= 1000) return v.toFixed(0);
+  return v.toFixed(a >= 10 ? 2 : 3);
+}
+// ---------------------------------------------------------------- wiring
+function setMode(mode) {
+  state.mode = mode;
+  for (const [id, value] of [["mode-raw", "raw"], ["mode-smooth", "smooth"], ["mode-both", "both"]]) {
+    $(id).setAttribute("aria-pressed", String(mode === value));
+  }
+  if (state.view) renderChart(state.view);
+}
+$("mode-raw").addEventListener("click", () => setMode("raw"));
+$("mode-smooth").addEventListener("click", () => setMode("smooth"));
+$("mode-both").addEventListener("click", () => setMode("both"));
+el.metric.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.span.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.valSpan.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.fullSpan.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.showTrain.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.showVal.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.showFull.addEventListener("change", () => { dropHover(); if (state.view) renderChart(state.view); });
+el.run.addEventListener("change", () => {
+  state.runId = el.run.value;
+  state.view = null;
+  if (state.runId) loadState(); else renderEmpty("未选择运行目录。");
+});
+el.poll.addEventListener("change", restart);
+$("refresh").addEventListener("click", loadState);
+$("pause").addEventListener("click", () => {
+  state.paused = !state.paused;
+  $("pause").setAttribute("aria-pressed", String(state.paused));
+  $("pause").textContent = state.paused ? "继续" : "暂停";
+  if (!state.paused) loadState();
+});
+window.addEventListener("resize", () => {
+  if (!state.view) return;
+  renderChart(state.view);
+});
+el.poll.value = String(Math.round((state.pollMs || 5000) / 1000));
+try {
+  const saved = localStorage.getItem("pi05.watch.poll");
+  if (saved) { el.poll.value = saved; state.pollSaved = true; }
+} catch (err) { /* 存储不可用时用默认值 */ }
+el.poll.addEventListener("change", () => {
+  try { localStorage.setItem("pi05.watch.poll", el.poll.value); } catch (err) { /* 忽略 */ }
+});
+loadRuns(false).catch((err) => disconnected(String(err.message || err)));
+restart();
+})();
+</script>
+</body>
+</html>

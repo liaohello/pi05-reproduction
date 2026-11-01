@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "phase": "E3.1",
+  "substage": "G1-oracle-replay-and-E3-contact-attribution",
+  "claim": "The fixed successful training demonstration replays through the same PolicyRunner and guard without initial-state, action or timing mismatch; this is an environment/expert compatibility check, not a policy result.",
+  "fixed_demo": {
+    "episode_index": 0,
+    "seed": 8100,
+    "split": "train",
+    "frames": 2717,
+    "duration_s": 54.34,
+    "control_hz": 50,
+    "physics_hz": 500
+  },
+  "inputs": {
+    "source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+    "expert_sha256": "200dcd12513a31af15a1dc915526fd79b319924c2cb3ead2ae85f4e0e6e7421e",
+    "protocol_sha256": "ddf9879fb556e16c243d6fb08eaef604a461dca5198ff43d3e43d32b7203d3ae",
+    "train_view_sha256": "fbb8b6edda727a3a5b341865b4e856cd8b5eaced2e0e032b4e1d9b37f26b7dee",
+    "norm_stats_canonical_sha256": "5fd6e6d804b1299f8115846aff543589bff869c8c8a04c2868b625df70cdbae5"
+  },
+  "initial_state": {
+    "file_matches_trace": true,
+    "restored_vs_recorded_max_abs": 0.0,
+    "frame0_state_error": 0.0,
+    "expert_frame0_time_s": 0.4000000000000003,
+    "runner_frame0_time_s": 0.4200000000000003,
+    "runner_time0_minus_period_s": 0.4000000000000003,
+    "time_alignment_error_s": 0.0,
+    "time_semantics": "expert trace stores pre-action time; PolicyRecorder stores post-step time; compare with one control-period offset"
+  },
+  "actions": {
+    "compared_frames": 2616,
+    "expert_frames": 2717,
+    "runner_frames": 2616,
+    "max_abs_error": 0.0,
+    "extra_clipping": 0,
+    "unconsumed_expert_frames": 101,
+    "runner_terminated_by_success": true
+  },
+  "control": {
+    "physics_substeps_per_full_frame": 10,
+    "expert_substeps_unique": [10],
+    "runner_substeps_unique": [10]
+  },
+  "time": {
+    "control_period_s": 0.02,
+    "expert_first_last_s": [0.4000000000000003, 54.72000000002091],
+    "runner_first_last_s": [0.4200000000000003, 52.720000000018466]
+  },
+  "result": {
+    "success": true,
+    "sorted_count": 4,
+    "frames": 2616,
+    "sim_time_s": 52.32000000001847,
+    "wall_time_s": 129.79915738105774,
+    "clipped_values": 0,
+    "safety_stops": 0,
+    "stop_reason": null,
+    "stop_frame": null,
+    "stop_substeps": null
+  },
+  "e3_contact_baseline": {
+    "manifest_sha256": "b7d7daaa95532b1691141238bf270b0df6f859010c753e48ea5b3b97f1a20e38",
+    "episodes": 20,
+    "seeds": [9100, 9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118, 9119],
+    "sorted_count_distribution": {"0": 20},
+    "failure_reason": "unexpected_contact",
+    "contact_kind": "robot_environment_contact",
+    "object_contacts": 0,
+    "contact_groups_by_episode": {"red_tray": 11, "table": 3, "blue_tray": 6},
+    "side_by_episode": {"left": 14, "right": 6},
+    "penetration_mm_min_max": [0.5147032798261675, 1.6597130088464171],
+    "stop_frame_min_median_max": [253, 860.5, 4089],
+    "stop_sim_time_s_min_median_max": [5.06599999999962, 17.214000000001118, 81.79799999998983],
+    "stop_substeps_min_median_max": [1, 4, 9],
+    "all_contact_stops_partial_frame": true,
+    "clipped_values_total": 7,
+    "episodes_with_clipping": 4,
+    "total_sim_time_s": 462.5359999999998,
+    "total_wall_time_s": 1150.454000711441
+  },
+  "attribution": "The exact initial state, recorded applied-action prefix and ten-substep physics all reproduce and reach 4/4 sorted objects with no guard stop. Replay mismatch, wrong initial state and an environment that rejects the expert path are therefore excluded for this scene. Every original E3 stop is a gripper/jaw collision band against a red/blue tray or the table, with no object contact; the measured penetrations exceed the 0.5 mm stop budget. The E3 checkpoint is separately proven state-blind in e31-state.json. That establishes a real input gap, but the paired training and rollout evidence is still required before attributing task failure to it alone.",
+  "claim_boundary": [
+    "one fixed demonstration and one scene only",
+    "not a policy success rate or a generalisation result",
+    "does not relax any contact, penetration or success threshold",
+    "does not change the original E3 0/20 record"
+  ]
+}

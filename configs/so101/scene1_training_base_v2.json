@@ -1,0 +1,182 @@
+{
+  "schema_version": 2,
+  "branch": "so101",
+  "phase": "scene1",
+  "status": "proposed_preflight_required",
+  "supersedes": "configs/so101/scene1_training.json",
+  "claim": "Recommended pi05_base hyperparameters for the 64-episode single-block dataset; training has not started.",
+  "runtime_binding": {
+    "image": "openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "base_checkpoint": "pi05_base",
+    "base_checkpoint_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd",
+    "sentencepiece_asset_sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6",
+    "resume_previous_so101_checkpoint": false
+  },
+  "data_binding": {
+    "collection_run": "20261029T102500Z-scene1-single-random-v3",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "norm_stats_sha256": "c44567cdecf7aae63f644d2d64535672adae70ec954742259a7dfb24dd49d63f",
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "episodes": 64,
+    "train_episodes": 52,
+    "validation_episodes": 12,
+    "train_red": 26,
+    "train_blue": 26,
+    "validation_red": 6,
+    "validation_blue": 6,
+    "train_frames": 36623,
+    "frames_total": 45031,
+    "control_hz": 50,
+    "normalisation": "train split only; quantile min/max from the final training config",
+    "sampling": {
+      "mode": "balanced_categories",
+      "group_weights": {
+        "clean": 1.0
+      },
+      "episode_equal_within_group": true,
+      "validation_used_for_training": false
+    }
+  },
+  "interface_contract": {
+    "state_dim": 12,
+    "state_order": [
+      "left_arm_5_joints_deg",
+      "left_gripper_percent",
+      "right_arm_5_joints_deg",
+      "right_gripper_percent"
+    ],
+    "action_dim": 12,
+    "internal_action_dim": 32,
+    "action_semantics": "absolute joint-position target applied at the current control frame",
+    "action_horizon": 10,
+    "replan_steps": 10,
+    "state_mode": "on",
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "image_resize": [
+      224,
+      224
+    ],
+    "image_masks": {
+      "base_0_rgb": true,
+      "left_wrist_0_rgb": true,
+      "right_wrist_0_rgb": true
+    }
+  },
+  "model_scope": {
+    "pi05": true,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m",
+    "language_backbone": "frozen",
+    "language_lora": {
+      "attention": true,
+      "mlp": true,
+      "rank": 16,
+      "alpha": 16.0
+    },
+    "action_expert": "full",
+    "vision_encoder": "frozen",
+    "projection_groups": {
+      "action_in_proj": "full kernel and bias",
+      "action_out_proj": "full kernel and bias",
+      "time_mlp_in": "full kernel and bias",
+      "time_mlp_out": "full kernel and bias"
+    },
+    "standalone_state_projection": "absent in the measured pi05 parameter tree; keep only if the final runtime parameter audit finds one",
+    "expected_trainable_parameters_before_reaudit": 457967648,
+    "expected_trainable_tensors_before_reaudit": 29,
+    "total_parameters_before_reaudit": 3381303056
+  },
+  "optimisation": {
+    "seed": 42,
+    "optimizer": "AdamW",
+    "adamw_beta1": 0.9,
+    "adamw_beta2": 0.95,
+    "adamw_epsilon": 1e-8,
+    "weight_decay": 1e-10,
+    "gradient_clip_norm": 1.0,
+    "global_batch_size": 8,
+    "updates": 25000,
+    "approx_epochs_at_36155_eligible_windows": 5.53,
+    "warmup_updates": 1000,
+    "peak_lr": 5e-5,
+    "cosine_decay_updates": 25000,
+    "final_lr": 5e-6,
+    "lr_schedule_restart_on_resume": false,
+    "ema_decay": 0.999,
+    "dtype": "bfloat16",
+    "expected_storage_dtypes": {
+      "frozen_parameters": "bfloat16",
+      "trainable_parameters": "float32",
+      "adamw_mu_nu": "float32"
+    },
+    "data_loader_workers": 8,
+    "allow_batch_fallback": false,
+    "allow_update_override": false
+  },
+  "devices": {
+    "single_process": true,
+    "gpu_count": 4,
+    "fsdp_devices": 4,
+    "data_parallel_replicas": 1,
+    "batch_per_device": 2,
+    "global_batch_interpretation": "8 unique samples total",
+    "minimum_memory_margin_mib": 10,
+    "utilisation_is_not_an_admission_gate": true
+  },
+  "checkpointing": {
+    "save_every_updates": 3000,
+    "checkpoint_steps": [
+      3000,
+      6000,
+      9000,
+      12000,
+      15000,
+      18000,
+      21000,
+      24000,
+      25000
+    ],
+    "full_train_state": true,
+    "include_params": true,
+    "include_optimizer": true,
+    "include_ema": true,
+    "step_source": "TrainState.step",
+    "orbax_directory_name_is_not_the_update_count": true,
+    "resume_probe_before_formal": true
+  },
+  "wall_clock": {
+    "limit_s": 108000,
+    "throughput_measurement_required": true
+  },
+  "preflight_required_before_launch": [
+    "Strictly load pi05_base into the actual TrainState and verify every non-LoRA tensor.",
+    "Re-measure the frozen-vision parameter tree and optimizer/EMA dtypes.",
+    "Bind the final config hash into the norm and loader audits.",
+    "Run a two-update FSDP4/global-batch-8 probe with real gradients and EMA.",
+    "Measure whole-process per-card peaks and retain at least 10 MiB free.",
+    "Save a complete TrainState, restore params, optimizer, EMA and actual step, then continue one update.",
+    "Measure steady-state update time and verify the 108000-second wall-clock budget."
+  ],
+  "evaluation_plan": {
+    "validation_episodes": 12,
+    "report_red_and_blue_separately": true,
+    "report_blue_yaw_bands": [
+      "0-30",
+      "30-60",
+      "60-61.2"
+    ],
+    "report_block_position_and_tray_offset": true,
+    "absolute_offline_thresholds": "pre-register before the first training update",
+    "closed_loop": "reserved seeds 16000-16099; not started"
+  },
+  "known_limitations": [
+    "All 14 collection failures were blue-arm failures, so blue successful yaw is truncated at 61.2 degrees.",
+    "With one block and a fixed red-left/blue-right arm mapping, colour-conditioned selection is confounded with active-arm identity.",
+    "The 12-step state/action interface is not a dual-arm handover policy."
+  ],
+  "executed": false
+}

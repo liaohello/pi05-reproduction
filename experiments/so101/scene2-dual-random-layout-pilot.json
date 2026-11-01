@@ -1,0 +1,226 @@
+{
+  "acceptance_gate": 0.5,
+  "acceptance_rate": 1.0,
+  "accepted": 240,
+  "adapter_sha256": "e1f826b355f0abc945d1cf54698376455f776908bdea8afd35b124620eec6c0c",
+  "all_accepted_have_both_conditions": true,
+  "all_accepted_initial_checks_passed": true,
+  "attempt_reasons": {
+    "accepted": 480,
+    "cube_0_pick_region": 166,
+    "cube_0_tray_keepout": 756,
+    "cube_1_pick_region": 104,
+    "cube_1_tray_keepout": 432,
+    "pick_blue_hover_ik": 6,
+    "pick_blue_pick_path": 6,
+    "pick_red_hover_ik": 10,
+    "pick_red_pick_path": 10,
+    "place_blue_checks": 68,
+    "place_red_checks": 62
+  },
+  "attempted": 240,
+  "block": {
+    "x_m": {
+      "count": 480,
+      "max": 0.283309,
+      "mean": 0.218705,
+      "min": 0.16026,
+      "std": 0.034707
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.209848,
+      "mean": 0.001277,
+      "min": -0.218705,
+      "std": 0.113778
+    }
+  },
+  "by_arrangement": {
+    "red_negative_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    },
+    "red_positive_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    }
+  },
+  "by_color_arm": {
+    "blue": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 74.833404,
+        "mean": 52.398414,
+        "min": 30.082882,
+        "std": 13.525545
+      }
+    },
+    "red": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 74.546809,
+        "mean": 53.113331,
+        "min": 30.311095,
+        "std": 12.080006
+      }
+    }
+  },
+  "certificate_sha256": "11511f03839c4ef34568efa9c54644a8a767a4e6cbdc1e218f5d53efa51a39e8",
+  "claim": "layout/IK/collision pre-screen only; 240/240 seeds accepted after rejection sampling; not a physical expert success rate",
+  "episodes_saved": 0,
+  "expert_executions": 0,
+  "note": "draw and accepted yaw distributions are separate; the accepted set is rejection-biased and is never described as uniform",
+  "passed": true,
+  "phase": "layout_ik_collision_pilot",
+  "profile_sha256": "260e65f6ebc1f3338890e66497a96e1f5335f58ee50e68b92e92689b35008374",
+  "protocol_id": "scene2_dual_random_v1",
+  "protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+  "rejected": 0,
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "reproduction": {
+    "intersection": 240,
+    "note": "the two 240-seed runs produced identical physical layout sets; only protocol bookkeeping hashes and wall time differ",
+    "physical_layout_sets_equal": true
+  },
+  "runs": [
+    {
+      "id": "layout_pilot_run_1",
+      "protocol_sha256": "046d2ddf6ed8eb6b4b597377f1f63ae351c924bfee4c684729947aedf236684c",
+      "wall_time_s": 40.44841146469116
+    },
+    {
+      "id": "layout_pilot_run_2",
+      "protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+      "wall_time_s": 56.78658080101013
+    }
+  ],
+  "sampler_attempts": {
+    "max": 30,
+    "mean": 4.375
+  },
+  "schema_version": 1,
+  "seed_grid": [
+    20000,
+    20239
+  ],
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "packages": {
+      "Pillow": "12.3.0",
+      "PyYAML": "6.0.3",
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6"
+    },
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tray": {
+    "x_m": {
+      "count": 480,
+      "max": 0.269875,
+      "mean": 0.237731,
+      "min": 0.210118,
+      "std": 0.016842
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.279914,
+      "mean": 0.000406,
+      "min": -0.27931,
+      "std": 0.251964
+    }
+  },
+  "unique_physical_hashes": 240,
+  "wall_time_s": 56.78658080101013,
+  "yaw": {
+    "accepted": {
+      "bands_5deg": {
+        "30-35": 53,
+        "35-40": 53,
+        "40-45": 43,
+        "45-50": 57,
+        "50-55": 53,
+        "55-60": 66,
+        "60-65": 49,
+        "65-70": 53,
+        "70-75": 53
+      },
+      "values": {
+        "count": 480,
+        "max": 74.833404,
+        "mean": 52.755872,
+        "min": 30.082882,
+        "std": 12.828142
+      }
+    },
+    "by_object": {
+      "cube_0": {
+        "accepted": {
+          "count": 240,
+          "max": 74.546809,
+          "mean": 53.113331,
+          "min": 30.311095,
+          "std": 12.080006
+        },
+        "draw": {
+          "count": 2100,
+          "max": 74.96951,
+          "mean": 53.329802,
+          "min": 30.01887,
+          "std": 12.636751
+        }
+      },
+      "cube_1": {
+        "accepted": {
+          "count": 240,
+          "max": 74.833404,
+          "mean": 52.398414,
+          "min": 30.082882,
+          "std": 13.525545
+        },
+        "draw": {
+          "count": 2100,
+          "max": 74.939745,
+          "mean": 52.657588,
+          "min": 30.019204,
+          "std": 13.032
+        }
+      }
+    },
+    "draw": {
+      "bands_5deg": {
+        "30-35": 428,
+        "35-40": 456,
+        "40-45": 396,
+        "45-50": 542,
+        "50-55": 446,
+        "55-60": 506,
+        "60-65": 460,
+        "65-70": 488,
+        "70-75": 478
+      },
+      "values": {
+        "count": 4200,
+        "max": 74.96951,
+        "mean": 52.993695,
+        "min": 30.01887,
+        "std": 12.840296
+      }
+    },
+    "note": "draw and accepted distributions are reported separately; the accepted set is rejection-biased and is never described as uniform"
+  }
+}

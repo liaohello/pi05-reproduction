@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "run_id": "scene1-pi05base-val50-20261029T184107Z-92c99192",
+  "status": "PARTIAL",
+  "status_note": "Per-dim statistics are copied verbatim from the run's own norm audit (train-only recomputation). The *distributional* fields the task requested (histograms, |norm|>1/2/5/10 rates, per-colour and per-arm groups) could NOT be computed: they need the 45,031-sample dataset and a Python process. They are present as null, never as 0.",
+  "source": {
+    "file": "runs/so101/scene1-pi05base-val50-20261029T184107Z-92c99192/norm_audit_v4/action_norm_audit.json",
+    "train_only_block": "statistics.recomputed_train_only  (lines 580-752)",
+    "cross_checks": {
+      "recomputed_from_train_only_matches_view": true,
+      "recorded_train_only_equals_recomputed": true,
+      "normalisation_uses_quantiles": true,
+      "near_constant_dims_std_lt_1e-6": {"actions": [], "state": []},
+      "all_values_finite": true
+    },
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "norm_stats_canonical_sha256": "ff6d6db5bf68679c784b9dd7bff593bb0eada38e44ead74d83b639d537c55797",
+    "base_checkpoint_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd",
+    "units": ["degree","degree","degree","degree","degree","percent",
+              "degree","degree","degree","degree","degree","percent"],
+    "dim_semantics": {"0-4": "left arm joints", "5": "left gripper",
+                      "6-10": "right arm joints", "11": "right gripper"}
+  },
+
+  "actions": {
+    "n_frames_train": 36623,
+    "min":  [-24.343374252319336, -25.0, -44.310367584228516, -15.0, -19.18337059020996, 0.0,
+             -38.45732498168945, -27.225521087646484, -45.91849899291992, -15.0, -21.645748138427734, 0.0],
+    "q01":  [-22.094884872436523, -25.0, -32.640438079833984, -15.0, -10.129274749755858, 0.0,
+             -35.43520736694336, -25.0, -35.96959510803222, -15.0, -18.246588745117187, 0.0],
+    "q99":  [38.678236694335936, 40.90619293212889, 40.567596435546875, 86.69685363769531, 103.3965235900879, 40.0,
+             28.585337677001952, 42.51783752441406, 49.5412712097168, 89.09162139892578, 75.12748886108399, 40.0],
+    "max":  [39.06321334838867, 48.83460235595703, 40.63314437866211, 92.5091552734375, 104.18852233886719, 40.0,
+             32.504486083984375, 49.533931732177734, 57.89765167236328, 94.99411010742188, 83.06266784667969, 40.0],
+    "mean": [3.5454872632022094, -7.6133705059660235, 24.224421088136395, 19.972108519552506, 17.91855516798151, 29.30395466616728,
+             -0.5922972901899524, -9.465539324685436, 26.330298884173995, 20.011523451129527, 9.307157123785121, 29.1685233894625],
+    "std":  [13.278910619071494, 21.740844589133197, 20.81481685378561, 41.5237265123046, 28.93662339372733, 16.65801859775422,
+             12.955679750319531, 21.512627549365973, 22.330724745046375, 41.511499880669206, 19.939003167258026, 16.73294429319344],
+    "derived_q99_minus_q01": [60.773, 65.906, 73.208, 101.697, 113.526, 40.0, 64.020, 67.518, 85.511, 104.092, 93.374, 40.0],
+    "derived_normalised_extreme": {
+      "note": "arithmetic from min/q01/q99/max, quantile rule (x-q01)/(q99-q01)*2-1; NOT a histogram",
+      "min_side": [-1.074, -1.000, -1.319, -1.000, -1.160, -1.000, -1.094, -1.066, -1.233, -1.000, -1.073, -1.000],
+      "max_side": [1.013, 1.241, 1.002, 1.114, 1.014, 1.000, 1.122, 1.208, 1.196, 1.113, 1.170, 1.000]
+    },
+    "rates": {
+      "frac_abs_norm_gt_1": null,
+      "frac_abs_norm_gt_2": null,
+      "frac_abs_norm_gt_5": null,
+      "frac_abs_norm_gt_10": null,
+      "note": "null = BLOCKED. Bounds: no training value can exceed |2| because the declared min/max map to at most |1.32|."
+    }
+  },
+
+  "state": {
+    "min":  [-24.289745330810547, -24.527048110961914, -43.44538879394531, -14.877960205078125, -19.134395599365234, 0.6973018050193787,
+             -38.43153381347656, -26.740570068359375, -45.01523208618164, -14.877960205078125, -21.632116317749023, 0.6325114965438843],
+    "q01":  [-22.03919075012207, -24.52273178100586, -32.0910604095459, -14.870000839233398, -10.094404830932616, 1.1890423464775086,
+             -35.408550033569334, -24.52450942993164, -35.425363311767576, -14.870000839233398, -18.229682083129884, 0.8797726845741273],
+    "q99":  [38.63009872436523, 41.412995910644526, 41.21068572998047, 86.68156005859373, 103.39321319580078, 39.997554779052734,
+             28.590223541259764, 43.004966735839844, 49.898198928833, 89.0855728149414, 75.13172012329102, 39.997554779052734],
+    "max":  [39.13420104980469, 49.4560546875, 41.21721267700195, 92.31556701660156, 104.19354248046875, 39.99824142456055,
+             32.455291748046875, 50.2136116027832, 58.0555534362793, 94.7949447631836, 83.01127624511719, 39.99824142456055],
+    "mean": [3.535371086080736, -7.024191497532921, 24.777591410395374, 20.075126146540686, 17.921451369650832, 29.67501033772621,
+             -0.5919755119425704, -8.892653325869626, 26.887401795246877, 20.109338710793242, 9.30283465738134, 29.527729943993997],
+    "std":  [13.26335190960037, 21.833526077771264, 20.897891276255518, 41.444161153119076, 28.935530020578767, 15.940424682904327,
+             12.945746675944102, 21.62280212551997, 22.39215837442804, 41.4271879871559, 19.924178969429875, 16.041222551626053],
+    "derived_normalised_extreme": {
+      "min_side": [-1.072, -1.000, -1.309, -1.001, -1.158, -1.013, -1.082, -1.062, -1.213, -1.001, -1.077, -1.006],
+      "max_side": [1.018, 1.221, 1.000, 1.108, 1.014, 1.000, 1.113, 1.196, 1.224, 1.107, 1.166, 1.000]
+    }
+  },
+
+  "asymmetry_left_vs_right": {
+    "span_ratio_per_joint": [0.949, 0.977, 0.856, 0.977, 1.216, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    "finding": "joint index 4 (left) has a 22 % wider q01-q99 span than the mirrored joint 10 (right): 113.5 deg vs 93.4 deg. All other pairs agree within 5 %.",
+    "label": "VERIFIED (arithmetic on declared stats)"
+  },
+
+  "gripper_consistency": {
+    "action_range": {"left": [0.0, 40.0], "right": [0.0, 40.0]},
+    "state_range": {"left": [1.189, 39.998], "right": [0.880, 39.998]},
+    "expert_command_convention": {"open_percent": 35.0, "closed_percent": 0.0},
+    "finding": "State and action use different spans for the same physical gripper: action 0->-1.0, state 0->-1.013 (left) / -1.006 (right). The offset is 1.2 % of span, so the same physical opening is encoded ~0.02 apart between state tokens and action targets. Not a bug, but it means state and action are not on a common scale.",
+    "label": "VERIFIED",
+    "impact": "LIKELY negligible (<0.02 normalised units)"
+  },
+
+  "leakage": {
+    "validation_in_norm_stats": false,
+    "evidence": [
+      "recomputed_from_train_only_matches_view = true",
+      "recorded_train_only == recomputed_train_only for mean/q01/q99/std on both state and actions",
+      "statistics.validation_inclusion_max_abs_by_split_and_field records what WOULD change if validation were included: actions mean 1.284 / q01 3.185 / q99 4.840 / std 1.851 (deg). The applied stats do not contain that shift."
+    ],
+    "label": "VERIFIED"
+  },
+
+  "unavailable": {
+    "per_dim_histograms": "BLOCKED",
+    "per_colour_and_per_arm_groups": "BLOCKED (the audit file stores no colour/arm partition)",
+    "train_vs_validation_distribution_test": "BLOCKED",
+    "closed_loop_state_distribution": "BLOCKED"
+  }
+}

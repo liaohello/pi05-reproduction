@@ -1,128 +1,32 @@
-# pi05-reproduction
+# π0.5 Reproduction
 
-**π0.5 Reproduction & Bimanual VLA Research** — reproducing and benchmarking π0.5, SmolVLA and X-VLA across LIBERO, RoboTwin, a MuJoCo dual-SO101 setup and real robots, covering expert data generation, LeRobot fine-tuning, RTC inference, evaluation and sim-to-real transfer.
+π0.5 推理复现与双 SO101 微调研究。仓库保存适配代码、协议和脱敏证据；上游源码、权重、数据集与原始录像在仓库外，但**获取路径与校验和入库**。
 
-This is a research repository, not a fork of the upstream projects. It keeps the third-party
-simulators and model code out of Git, pins them by content hash and image digest, and adds only
-the adapters, protocols, evaluation harness and experiment records needed to compare models
-under one protocol.
+## 当前状态
 
-> Status: **early Phase 1**. One inference pipeline is verified end to end; nothing here is a
-> published benchmark number yet.
+- LIBERO：P1.0 推理冒烟完成；完整评估与训练复现未完成，M0 仍为 in progress。
+- `4/4 smoke-test episodes succeeded; not a benchmark success-rate estimate.`
+- SO101：训练、数据和评估代码已入库；E4-T 开环门未通过。一次获准绕过门禁的单场景诊断不代表 E4-R 验收。
+- Scene1：单块抓取测试通过（单场景闭环，非成功率估计）；KI 联合训练（PI-FAST + Flow Matching + Knowledge Insulation，语言侧与动作专家均为 LoRA）仅有冻结草案与梯度矩阵诊断，端到端训练与评估未验证。
+- RoboTwin、RTC、真机仍按独立阶段推进。
 
-## Scope and honesty of claims
+## 复现
 
-The project separates three layers of claims, and the README never mixes them:
-
-| Layer | Claim | Current state |
-| --- | --- | --- |
-| **Baseline Reproduction** | Re-run public checkpoints and evaluate them under a fixed protocol | Inference path verified; full evaluation not run |
-| **Method Experiments** | Compare action chunking, RTC, expert-data scale and generalisation | Not started |
-| **Robot Adaptation** | MuJoCo dual SO101 and real-robot validation | Not started |
-
-## Phases
-
-| Phase | Content | Status |
-| --- | --- | --- |
-| **Phase 1 — LIBERO Benchmark** | π0.5 official baseline, fine-tuning, checkpoints, simulation evaluation | **P1.0 inference smoke test done**; P1.1 full evaluation and P1.2 training reproduction pending |
-| **Phase 2 — RoboTwin Benchmark** | Bimanual expert data, π0.5 / SmolVLA / X-VLA comparison, generalisation | Roadmap only |
-| **Phase 3 — MuJoCo Dual-SO101** | Automatic expert trajectories, LeRobot conversion, bimanual fine-tuning, RTC execution | Roadmap only |
-| **Phase 4 — Real-World Sim-to-Real** | SO101 data collection, real-scene fine-tuning, deployment, sim-vs-real gap analysis | Roadmap only |
-
-Milestones and gates are defined in [`docs/roadmap.md`](docs/roadmap.md).
-
-### What P1.0 actually is
-
-Four LIBERO suites were run once each (task 0, one rollout per suite) against the public
-`pi05_libero` checkpoint, in a closed loop: instruction → policy server → simulator → success
-check → replay video. All four episodes succeeded.
-
-> `4/4 smoke-test episodes succeeded; not a benchmark success-rate estimate.`
-
-Step counts: `libero_spatial` 77, `libero_object` 138, `libero_goal` 115, `libero_10` 280.
-Fixed protocol: `seed=7`, `replan_steps=10`, 10 settle steps, 256×256 rendering, 224 policy input,
-camera rotated 180°. Details and caveats: [`reports/phase1-inference-smoke.md`](reports/phase1-inference-smoke.md).
-
-## SO101 training code for review
-
-The SO101 training, data-adaptation and evaluation code is now available under
-[`scripts/so101/`](scripts/so101/), with training parameters in
-[`configs/so101/`](configs/so101/). Start with the
-[training code review guide](docs/so101-code-review.md) for the entry points and host-side tests.
-The training entry calls the external OpenPI trainer with this repository's model configuration
-and data loader. New SO101 experiment records and figures are pending separate human review.
-LIBERO Phase 1 completion remains unchanged.
-
-## Repository layout
-
-```
-configs/          protocol definitions and normalisation statistics
-  libero/         evaluation protocol + norm_stats.json
-environments/     adapter notes per simulator (no upstream code is vendored)
-  libero/
-inference/        observation/action contract shared by all models
-evaluation/       offline, simulation and real-robot evaluation
-  simulation/     LIBERO episode runner and environment probe
-experiments/      append-only ledger of runs and phase gates
-reports/          human-readable experiment reports and public evidence
-scripts/          deploy, tracking, verification and security tooling
-third_party/      provenance of pinned third-party source (code itself is not committed)
-docs/             roadmap, Phase 1 guide, migration notes, reading guide
-```
-
-## Quick start
-
-Deployment targets are resolved from environment variables (or a git-ignored
-`scripts/deploy/config.local.json`); no host, port, user or key path is stored in this repository.
+新克隆先跑一条命令，它给出 R1/R2/R3 等级并列出阻塞项：
 
 ```bash
-cp configs/hosts/example.env .env.local     # fill in your own machine
-set -a && source .env.local && set +a
-
-./scripts/run.sh preflight            # config, source lock, git, disk
-./scripts/run.sh preflight-remote     # ssh, workdir, images, checkpoint, GPU
-./scripts/run.sh deploy               # sync this repository to the remote workdir
-./scripts/run.sh verify               # remote must equal local byte for byte
-./scripts/run.sh smoke --suite libero_spatial --tasks 0 --episodes 1
-./scripts/run.sh status               # phase gates + ledger summary
-./scripts/run.sh release              # give the GPU back when finished
+./scripts/run.sh repro doctor --compile
 ```
 
-The remote side needs two pinned images (`openpi-server`, `openpi-client`) and a `pi05_libero`
-checkpoint. See [`third_party/PROVENANCE.md`](third_party/PROVENANCE.md) for what they must
-contain and how to reproduce the same content.
+R1（结构可复现）是本仓库的最低状态；R2 需镜像访问，R3 需权重。`repro plan` 打印到下一级的命令。详见 [复现](docs/reproduction.md)。
 
-## Reproducibility
+## 阅读入口
 
-Everything needed to re-create an experiment is recorded per run in
-[`experiments/ledger.jsonl`](experiments/ledger.jsonl): policy config, checkpoint id, both image
-digests, `norm_stats` hash, git revision, protocol parameters, command, metrics and artifact
-paths (private prefixes replaced with placeholders).
+- [完整文档目录](docs/index.md)
+- [代码与测试](docs/so101-code-review.md)
+- [研究路线](docs/roadmap.md) · [阅读指南](docs/reading-guide.md)
+- [LIBERO 操作](docs/phase1-libero.md) · [SO101 操作](docs/so101-engineering.md)
+- [实验台账](experiments/ledger.jsonl) · [SO101 证据](experiments/so101/README.md)
+- [仓库规则](AGENTS.md) · [许可](THIRD_PARTY_LICENSES.md) · [来源](third_party/PROVENANCE.md)
 
-Third-party source is not vendored. Its provenance — file counts, byte totals, aggregate SHA-256
-and image digests — is published in `third_party/PROVENANCE.md`; a full per-file manifest can be
-regenerated from the images and compared against the aggregate.
-
-## Security policy
-
-This is a public repository and the deployment target is private. Before every commit:
-
-```bash
-./scripts/run.sh scan        # or: git config core.hooksPath .githooks
-```
-
-The gate blocks real IP addresses, host names, ports, user names, private absolute paths,
-key material, tokens and registry addresses. Rules and the full policy live in
-[`AGENTS.md`](AGENTS.md). Never weaken the scan to make a commit pass.
-
-## Licences
-
-Original code here is MIT (see `LICENSE`). Third-party components keep their own licences:
-OpenPI is Apache-2.0 (plus `LICENSE_GEMMA.txt`), LIBERO code is MIT and its datasets are
-CC BY 4.0. See [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for details and obligations.
-Model weights and datasets are not redistributed here.
-
-## Not affiliated
-
-This is an independent reproduction effort. π0.5, OpenPI, LIBERO, RoboTwin and LeRobot are
-projects of their respective authors; this repository is not endorsed by them.
+环境参数使用模板与环境变量；提交前运行 `bash scripts/security/scan.sh`。实验证据须人工审阅后提交。

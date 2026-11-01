@@ -1,0 +1,215 @@
+{
+  "acceptance_gate": 0.5,
+  "acceptance_rate": 1.0,
+  "accepted": 240,
+  "adapter_sha256": "c8b5d503ec0a556229810b706dce1f0a8d137a00faae7796c2e392ebcff63b13",
+  "all_accepted_have_both_conditions": true,
+  "all_accepted_initial_checks_passed": true,
+  "attempt_reasons": {
+    "accepted": 480,
+    "cube_0_pick_region": 408,
+    "cube_0_tray_keepout": 1964,
+    "cube_0_tray_outer_clearance": 1268,
+    "cube_1_pick_region": 132,
+    "cube_1_tray_keepout": 718,
+    "cube_1_tray_outer_clearance": 432,
+    "pick_blue_hover_ik": 4,
+    "pick_red_hover_ik": 4,
+    "place_blue_checks": 62,
+    "place_red_checks": 90
+  },
+  "attempted": 240,
+  "block": {
+    "x_m": {
+      "count": 480,
+      "max": 0.281435,
+      "mean": 0.213458,
+      "min": 0.160825,
+      "std": 0.031281
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.143345,
+      "mean": 0.000356,
+      "min": -0.146338,
+      "std": 0.08626
+    }
+  },
+  "by_arrangement": {
+    "red_negative_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    },
+    "red_positive_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    }
+  },
+  "by_color_arm": {
+    "blue": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 74.955107,
+        "mean": 52.351946,
+        "min": 30.120842,
+        "std": 12.460179
+      }
+    },
+    "red": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 74.545046,
+        "mean": 51.935284,
+        "min": 30.097528,
+        "std": 13.24942
+      }
+    }
+  },
+  "certificate_sha256": "154819d608023a941d7f4b5f6b355829f1c6bf78b8a7a356d18dfb1a454785e2",
+  "claim": "v2 layout/IK/collision pre-screen; 240/240 seeds accepted; not an expert success rate",
+  "episodes_saved": 0,
+  "expert_executions": 0,
+  "passed": true,
+  "phase": "layout_ik_collision_pilot",
+  "profile_sha256": "862e145b6d2b717c1757671516d38d7cf51e90cecab32111a6191e3db90622a9",
+  "protocol_id": "scene2_dual_random_v2",
+  "protocol_sha256": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+  "rejected": 0,
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "sampler_attempts": {
+    "max": 74,
+    "mean": 11.5875
+  },
+  "schema_version": 1,
+  "seed_grid": [
+    22000,
+    22239
+  ],
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "packages": {
+      "Pillow": "12.3.0",
+      "PyYAML": "6.0.3",
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6"
+    },
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tray": {
+    "x_m": {
+      "count": 480,
+      "max": 0.269936,
+      "mean": 0.237467,
+      "min": 0.210014,
+      "std": 0.016526
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.279814,
+      "mean": 0.000587,
+      "min": -0.279961,
+      "std": 0.252474
+    }
+  },
+  "unique_physical_hashes": 240,
+  "v1_comparison": {
+    "note": "v2 adds the outer-rectangle block clearance and central slot; both runs accepted 240/240 seeds; v2 draws need more attempts",
+    "v1_accepted": 240,
+    "v1_protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+    "v1_sampler_attempts_mean": 4.375,
+    "v2_sampler_attempts_mean": 11.5875
+  },
+  "wall_time_s": 34.36204195022583,
+  "yaw": {
+    "accepted": {
+      "bands_5deg": {
+        "30-35": 54,
+        "35-40": 63,
+        "40-45": 44,
+        "45-50": 52,
+        "50-55": 52,
+        "55-60": 52,
+        "60-65": 63,
+        "65-70": 62,
+        "70-75": 38
+      },
+      "values": {
+        "count": 480,
+        "max": 74.955107,
+        "mean": 52.143615,
+        "min": 30.097528,
+        "std": 12.862542
+      }
+    },
+    "by_object": {
+      "cube_0": {
+        "accepted": {
+          "count": 240,
+          "max": 74.545046,
+          "mean": 51.935284,
+          "min": 30.097528,
+          "std": 13.24942
+        },
+        "draw": {
+          "count": 5562,
+          "max": 74.971665,
+          "mean": 53.164681,
+          "min": 30.021581,
+          "std": 13.102769
+        }
+      },
+      "cube_1": {
+        "accepted": {
+          "count": 240,
+          "max": 74.955107,
+          "mean": 52.351946,
+          "min": 30.120842,
+          "std": 12.460179
+        },
+        "draw": {
+          "count": 5562,
+          "max": 74.992331,
+          "mean": 52.368153,
+          "min": 30.013653,
+          "std": 13.090028
+        }
+      }
+    },
+    "draw": {
+      "bands_5deg": {
+        "30-35": 1254,
+        "35-40": 1226,
+        "40-45": 1172,
+        "45-50": 1202,
+        "50-55": 1188,
+        "55-60": 1250,
+        "60-65": 1216,
+        "65-70": 1354,
+        "70-75": 1262
+      },
+      "values": {
+        "count": 11124,
+        "max": 74.992331,
+        "mean": 52.766417,
+        "min": 30.013653,
+        "std": 13.102454
+      }
+    },
+    "note": "draw and accepted distributions are reported separately; the accepted set is rejection-biased and is never described as uniform"
+  }
+}

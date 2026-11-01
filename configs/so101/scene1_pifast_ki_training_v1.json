@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "plan_id": "scene1-pifast-ki-v1",
+  "status": "draft_requires_audit",
+  "execution_authorized": false,
+  "claim": "Draft Scene1 PI-FAST + Flow Matching + Knowledge Insulation plan; values are frozen for review but not yet runtime audited.",
+  "supersedes": null,
+  "runtime_binding": {
+    "image": "openpi-server@sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "fast_processor_commit": "ec4d7aa71691cac0b8bed6942be45684db2110f4",
+    "fast_tokenizer_license": "Apache-2.0",
+    "language_asset_sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6"
+  },
+  "initialization": {
+    "pi05_base": {
+      "tree_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd",
+      "role": "shared vision-language trunk, continuous action expert base, projections"
+    },
+    "pi0_fast_base": {
+      "checkpoint_file_aggregate_sha256": "13cf65401661075d76aaca294a68ebd28d9f23474ab475f61f3f63a07055360f",
+      "role": "comparison only; not merged into pi05_base",
+      "merge_status": "forbidden_without_separate_weight_mapping_audit"
+    },
+    "fast_output_adapter": {
+      "shape": [
+        2048,
+        2048
+      ],
+      "parameters": 4194304,
+      "initialization": "zero",
+      "purpose": "trainable FAST token input/output residual over frozen tied embedding"
+    },
+    "resume_existing_scene1_checkpoint": false
+  },
+  "data": {
+    "collection_run": "20261029T102500Z-scene1-single-random-v3",
+    "view_sha256": "3c4911b5dd59430288433de8edbff2de1ee88c39da186fe4d59a1c36310031e9",
+    "episodes": 64,
+    "train_episodes": 52,
+    "validation_episodes": 12,
+    "train_red": 26,
+    "train_blue": 26,
+    "validation_red": 6,
+    "validation_blue": 6,
+    "train_frames": 36623,
+    "validation_frames": 8408,
+    "train_windows_action_horizon_16": 35843,
+    "validation_windows_action_horizon_16": 8228,
+    "control_hz": 50,
+    "task_conditioned_split": {
+      "rule": "family never crosses train and validation",
+      "family_crosses": 0
+    },
+    "normalization": {
+      "method": "quantile",
+      "grouping": "task_instruction",
+      "task_instructions": [
+        "Put the red block into the red tray.",
+        "Put the blue block into the blue tray."
+      ],
+      "fit_split": "train_only",
+      "fields": [
+        "state",
+        "actions"
+      ],
+      "quantiles": [
+        0.01,
+        0.99
+      ],
+      "existing_single_group_stats_reusable": false,
+      "recompute_required": true
+    }
+  },
+  "interface": {
+    "state_dim": 12,
+    "action_dim": 12,
+    "internal_action_dim": 32,
+    "action_horizon": 16,
+    "n_action_steps": 16,
+    "action_semantics": "absolute joint-position target applied at the control frame",
+    "state_order": "left five joints, left gripper, right five joints, right gripper",
+    "units": "joints degree; grippers percent",
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "state_mode": "on",
+    "flow_loss_internal_dimensions": 32,
+    "valid_physical_dimensions": 12,
+    "flow_loss_dimension_decision": "prototype used 32; compare masked-12 versus padded-32 before formal launch"
+  },
+  "fast": {
+    "tokenizer": "physical-intelligence/fast",
+    "vocabulary_size": 2048,
+    "dct_scale": 10,
+    "min_token": -354,
+    "max_token_len": 128,
+    "truncation": "forbidden",
+    "padding_id": 0,
+    "eos_id": 1,
+    "action_region_only_for_fast_ce": true,
+    "fast_loss": "action-region token cross entropy",
+    "real_scene_encode_decode_error": "not measured"
+  },
+  "model_scope": {
+    "gemma_2b": {
+      "non_lora": "frozen",
+      "attention_lora": true,
+      "mlp_lora": true,
+      "rank": 16,
+      "alpha": 16.0
+    },
+    "tied_input_embedding": {
+      "state": "frozen",
+      "reason": "preserve language vocabulary, avoid 526647296 trainable parameters and AdamW state, adapt FAST rows through the residual adapter"
+    },
+    "vision_encoder": "full_trainable",
+    "action_expert": {
+      "non_lora": "frozen",
+      "attention_lora": true,
+      "mlp_lora": true,
+      "rank": 64,
+      "alpha": 64.0
+    },
+    "projection_groups": {
+      "action_in_proj": "full kernel and bias",
+      "action_out_proj": "full kernel and bias",
+      "time_mlp_in": "full kernel and bias",
+      "time_mlp_out": "full kernel and bias"
+    },
+    "fast_residual": "trainable",
+    "legacy_parameter_counts": {
+      "status": "obsolete after Action Expert LoRA change",
+      "total_parameters": 3385497360,
+      "trainable_parameters": 876965648,
+      "frozen_parameters": 2508531712
+    },
+    "parameter_counts_after_change": null
+  },
+  "loss": {
+    "formula": "flow_weight * flow_matching_mse + fast_ce_weight * fast_cross_entropy",
+    "flow_weight": 1.0,
+    "fast_ce_weight": null,
+    "formal_weights_frozen": false,
+    "diagnostic_equal_weight_observation": {
+      "flow": 0.024,
+      "fast": 13.4,
+      "note": "direct 1:1 addition is dominated by FAST and is not a formal selection"
+    },
+    "calibration_required_before_launch": true
+  },
+  "knowledge_insulation": {
+    "enabled": true,
+    "fast_and_flow_action_tokens_may_attend": false,
+    "flow_prefix_removes_action_region": true,
+    "stop_gradient_flow_prefix_keys": true,
+    "stop_gradient_flow_prefix_values": true,
+    "flow_gradient_reaches_vision_or_language_lora": false,
+    "flow_gradient_reaches_tied_embedding": false,
+    "flow_gradient_reaches_fast_residual": false,
+    "fast_gradient_reaches_action_expert": false,
+    "fast_gradient_reaches_action_projections": false
+  },
+  "optimization": {
+    "seed": 42,
+    "optimizer": "AdamW",
+    "adamw_beta1": 0.9,
+    "adamw_beta2": 0.95,
+    "adamw_epsilon": 1e-08,
+    "weight_decay": 1e-10,
+    "gradient_clip_norm": 1.0,
+    "global_batch_size": 8,
+    "per_device_batch": 2,
+    "gradient_accumulation_steps": 1,
+    "optimizer_updates": 40000,
+    "warmup_updates": 1000,
+    "peak_lr": 2.5e-05,
+    "cosine_decay_updates": 40000,
+    "final_lr": 2.5e-06,
+    "ema_decay": null,
+    "ema_enabled": false,
+    "dtype": "bfloat16",
+    "data_loader_workers": 8,
+    "batch_policy": "keep global batch 8; use memory headroom for stability and margin, not silent batch increase or reduction"
+  },
+  "devices": {
+    "single_process": true,
+    "gpu_count": 4,
+    "fsdp_devices": 4,
+    "data_parallel_replicas": 1,
+    "minimum_memory_margin_mib": 10,
+    "utilisation_is_not_an_admission_gate": true
+  },
+  "checkpointing": {
+    "save_interval_updates": 2000,
+    "save_steps": [
+      2000,
+      4000,
+      6000,
+      8000,
+      10000,
+      12000,
+      14000,
+      16000,
+      18000,
+      20000,
+      22000,
+      24000,
+      26000,
+      28000,
+      30000,
+      32000,
+      34000,
+      36000,
+      38000,
+      40000
+    ],
+    "full_train_state": true,
+    "include_params": true,
+    "include_optimizer": true,
+    "include_ema": false,
+    "retain_all_saved_steps": true,
+    "step_source": "TrainState.step",
+    "orbax_directory_name_is_not_update_count": true
+  },
+  "validation_loss": {
+    "fast_probe_every_updates": 50,
+    "fast_probe_samples": 256,
+    "full_validation_samples": 8228,
+    "full_validation_at_saved_checkpoints": true,
+    "train_false": true,
+    "gradient_updates": 0,
+    "norm_stats_source": "task-conditioned train-only quantile",
+    "fixed_flow_time_and_noise": true,
+    "equal_weight_per_valid_sample": true
+  },
+  "resource_and_throughput": {
+    "prototype_measurements": {
+      "global_batch": 8,
+      "fsdp_devices": 4,
+      "per_device_batch": 2,
+      "three_cameras": true,
+      "horizon": 10,
+      "max_token_len": 128,
+      "external_peak_mib": 17508,
+      "first_step_including_compile_s": 119.61258322722279
+    },
+    "prototype_measurements_compatible_with_new_scope": false,
+    "steady_state_throughput": null,
+    "checkpoint_save_restore": null,
+    "wall_limit_s": null
+  },
+  "known_blockers": [
+    "Action Expert LoRA rank 64 changes the measured scope and invalidates legacy parameter counts, gradients, memory and throughput.",
+    "FAST/Flow loss weights are not frozen.",
+    "Per-task quantile norm stats and complete real-data FAST encode/decode audit are missing.",
+    "Horizon 16 with max token length 128 has not been checked on every real Scene1 window.",
+    "The old Scene1 checkpoints use horizon 10 and a different action-expert scope and cannot be resumed.",
+    "Checkpoint save/restore, steady throughput and the 40000-update wall budget are unmeasured."
+  ],
+  "preflight_required": [
+    "Strictly load pi05_base and initialize Action Expert LoRA rank64 plus FAST residual.",
+    "Recompute the complete parameter and optimizer tree with trainable and frozen groups.",
+    "Build red and blue train-only quantile norm groups and verify every episode uses the intended group.",
+    "Verify all Scene1 horizon-16 action windows encode within max_token_len 128 without truncation.",
+    "Freeze FAST and Flow loss weights after scale calibration.",
+    "Pass real-data encode/decode, KI gradient isolation, finite-gradient and one-update checks.",
+    "Measure FSDP4 global batch8 memory, throughput, save/restore and validation overhead.",
+    "Start a fresh Scene1 run from pi05_base and never resume the horizon-10 checkpoints."
+  ],
+  "change_log_from_previous_plan": {
+    "action_horizon": {
+      "from": 10,
+      "to": 16
+    },
+    "n_action_steps": {
+      "from": 10,
+      "to": 16
+    },
+    "action_expert": {
+      "from": "full tuning",
+      "to": "attention+MLP LoRA rank64 alpha64; non-LoRA frozen"
+    },
+    "optimizer_updates": {
+      "from": 25000,
+      "to": 40000
+    },
+    "peak_lr": {
+      "from": 5e-05,
+      "to": 2.5e-05
+    },
+    "final_lr": {
+      "from": 5e-06,
+      "to": 2.5e-06
+    },
+    "ema": {
+      "from": "enabled, decay 0.999",
+      "to": "disabled"
+    },
+    "save_interval_updates": {
+      "from": "irregular registered checkpoints",
+      "to": 2000
+    },
+    "normalization": {
+      "from": "single train-only quantile group",
+      "to": "task-instruction-conditioned train-only quantile groups"
+    },
+    "visual_encoder": {
+      "from": "frozen in Scene1 base v3",
+      "to": "full trainable per PI-FAST prototype"
+    },
+    "tied_input_embedding": {
+      "from": "frozen in PI-FAST prototype",
+      "to": "kept frozen after review"
+    }
+  }
+}

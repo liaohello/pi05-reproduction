@@ -1,0 +1,35 @@
+{
+  "best_step_reported": null,
+  "branch": "so101",
+  "checkpoints": [
+    1,
+    15001,
+    20001
+  ],
+  "claim": "open-loop prediction curves on recorded expert observations; no policy action was executed in simulation",
+  "curves_only": true,
+  "figure_root": "train_openloop_figures",
+  "figures": [
+    "curve_error_steps.png",
+    "curve_flow_loss.png",
+    "curve_horizon.png",
+    "curve_horizon_gripper.png",
+    "curve_horizon_p95.png",
+    "curve_lr.png",
+    "curve_per_category.png",
+    "curve_phase_compare.png",
+    "curves.pdf",
+    "gripper_horizon_heatmap.png",
+    "gripper_horizon_heatmap_recovery.png",
+    "joint_horizon_heatmap.png",
+    "joint_horizon_heatmap_recovery.png"
+  ],
+  "gate_line_deg": 2.0,
+  "overlay_episode_ids": [],
+  "overlay_files_by_episode": {},
+  "overlay_horizons": [],
+  "phase": "E3",
+  "schema_version": 1,
+  "split": "train",
+  "substage": "E4-T-T2-curves"
+}

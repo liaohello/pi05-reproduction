@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase_scope": [
+    "E1",
+    "E3"
+  ],
+  "task": {
+    "name": "direct_sorting",
+    "instruction": "Sort the red cubes into the red tray and the blue cubes into the blue tray.",
+    "source": "external dual-SO101 MuJoCo project, scripted physical expert",
+    "transfer_protocol": false
+  },
+  "source_binding": {
+    "external_root_env": "SO101_SOURCE_ROOT",
+    "external_python_env": "SO101_PYTHON",
+    "profile": "configs/profiles/collection_50hz_three_camera.yaml",
+    "fingerprint_tool": "scripts/so101/source_fingerprint.py"
+  },
+  "control": {
+    "physics_hz": 500,
+    "control_hz": 50,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 120.0,
+    "nominal_realtime_claim": false
+  },
+  "observation": {
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "rgb": {
+      "dtype": "uint8",
+      "layout": "HWC",
+      "height": 480,
+      "width": 640,
+      "policy_resize": [
+        224,
+        224
+      ],
+      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
+    },
+    "state": {
+      "key": "observation.state",
+      "shape": [
+        12
+      ],
+      "order": [
+        "left_shoulder_pan.pos",
+        "left_shoulder_lift.pos",
+        "left_elbow_flex.pos",
+        "left_wrist_flex.pos",
+        "left_wrist_roll.pos",
+        "left_gripper.pos",
+        "right_shoulder_pan.pos",
+        "right_shoulder_lift.pos",
+        "right_elbow_flex.pos",
+        "right_wrist_flex.pos",
+        "right_wrist_roll.pos",
+        "right_gripper.pos"
+      ],
+      "units": [
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent"
+      ],
+      "timing": "measured joint state immediately before the action is issued"
+    }
+  },
+  "action": {
+    "key": "action",
+    "shape": [
+      12
+    ],
+    "semantics": "absolute joint-position target, left six then right six",
+    "units": [
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent"
+    ],
+    "label_rule": "clamped actuator target actually applied at that control frame; never the next measured state",
+    "chunk_horizon": 10,
+    "replan_steps": 10
+  },
+  "collection": {
+    "profile": "direct",
+    "direct_seed_range": [
+      12000,
+      13199
+    ],
+    "target_successes": 60,
+    "maximum_attempts": 1200,
+    "attempt_budget_provenance": "31.3% of certified draws meet the registered 0.08 m separation, so ~193 executed layouts are expected for 60 successes; the pool leaves headroom for expert failures and the ceiling is a hard stop",
+    "measured_expert_wall_clock": {
+      "pilot_run": "runs/so101/clean60_exec_pilot_20261027_235557",
+      "successful_episode_frames": 2733,
+      "successful_episode_wall_s": 224.5,
+      "expected_60_episode_execution_s": 12534,
+      "collection_wall_limit_s": 51840,
+      "note": "measured on the certified snapshot with the layout filter active; the historical 823 s/episode figure included perturbation replays and does not apply",
+      "amendment": "measured after 21 attempts / 6 successes (mean 208.9 s per success, 15 zero-cost layout rejects) gives ~43,900 s projected for 60 successes; the first 28,800 s ceiling was raised to 51,840 s with a registered watchdog on this round's own collection pid",
+      "layout_acceptance_measured": "6 successes from 21 attempts (28.6%)"
+    },
+    "diagnostics": true,
+    "split": {
+      "train": 48,
+      "validation": 12,
+      "unit": "episode",
+      "rule": "60 independently successful scenes in collection order; first 48 train, last 12 validation; freeze before training"
+    },
+    "normalisation": "computed from train episodes only",
+    "success_predicate": "external SortingTask.evaluate: tray geometry, support/contact, robot clearance, velocity and sustained stability",
+    "failure_policy": "every attempt and failure reason is kept; a failed attempt never becomes a demonstration",
+    "protocol_id": "clean60_spread_25k_v1",
+    "repo_id": "local/so101_clean60_spread"
+  },
+  "evaluation": {
+    "purpose": "reserved independent clean-layout scenes; no learned-policy rollout in this round",
+    "seed_range": [
+      14000,
+      14199
+    ],
+    "episodes": 20,
+    "attempts_per_scene": 1,
+    "scene_freeze": "SceneSpec and SHA-256 written before any policy rollout",
+    "not_used_for": [
+      "training",
+      "hyper-parameter tuning",
+      "normalisation statistics"
+    ],
+    "timeout_s": 120.0,
+    "record_trace": true,
+    "record_video": false,
+    "success_predicate": "external SortingTask.evaluate, independent of the policy",
+    "report": "success count / 20 with Wilson 95% interval and failure categories"
+  },
+  "claims": {
+    "engineering_chain": "60 clean spread-layout scripted-expert demonstrations -> audited train-only statistics -> 25000 JAX LoRA updates",
+    "explicitly_not": [
+      "a benchmark success rate",
+      "formal training or task-quality acceptance",
+      "LIBERO P1.1 / P1.2 completion",
+      "real-robot validation"
+    ]
+  },
+  "protocol_id": "clean60_spread_25k_v1",
+  "scene_layout": {
+    "object_count": 4,
+    "minimum_pairwise_distance_m": 0.08,
+    "minimum_distance_provenance": "measured by runs/so101/clean60_layout_pilot_wide_* (520 certified sampler draws, public summary reports/so101-clean60-layout-pilot.md): >=0.12 m occurred in 1/400 draws, >=0.10 in 4.75%, >=0.08 in 31.3%; the draft 0.12 m is rejected as unachievable inside the certified sampling region",
+    "cube_edge_m": 0.025,
+    "separation_in_cube_widths": 3.2,
+    "sampling_region": "unchanged certified pick regions and IK certificate; no region widening, no guard relaxation",
+    "boundary_margin_m": "as certified by the external sampler's own region and clearance checks",
+    "maximum_sampler_draws_for_60_layouts": 400,
+    "method": "reject certified direct scenes whose minimum pairwise cube-centre distance is below the registered minimum before any physical execution",
+    "reachable": "external certified pick regions plus per-scene grasp and hover IK; every admitted episode must complete physical sorting and replay",
+    "perturbations_enabled": false,
+    "visual_randomization_enabled": false,
+    "vary_positions_between_episodes": true,
+    "reuse_previous_episodes": false
+  }
+}

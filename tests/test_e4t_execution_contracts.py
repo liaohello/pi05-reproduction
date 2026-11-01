@@ -94,7 +94,7 @@ class E4TExecutionContractTest(unittest.TestCase):
         self.assertIn("_policy_config.create_trained_policy", server)
         self.assertIn("self._policy.infer", server)
         self.assertIn("ACTION_DIM = 12", adapter)
-        self.assertIn("action_horizon=10", adapter)
+        self.assertIn("action_horizon=action_horizon", adapter)
         for camera in ("base_0_rgb", "left_wrist_0_rgb", "right_wrist_0_rgb"):
             self.assertIn(camera, adapter)
 

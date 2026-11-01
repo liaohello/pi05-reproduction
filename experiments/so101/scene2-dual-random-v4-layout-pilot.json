@@ -1,0 +1,214 @@
+{
+  "acceptance_gate": 0.5,
+  "acceptance_rate": 1.0,
+  "accepted": 240,
+  "adapter_sha256": "a6b9867b00dc6105927b077b59ee56a8c0e4777d40690a4aa7005f423222ead3",
+  "all_accepted_have_both_conditions": true,
+  "all_accepted_initial_checks_passed": true,
+  "attempt_reasons": {
+    "accepted": 480,
+    "cube_0_pick_region": 1068,
+    "cube_0_tray_keepout": 3766,
+    "cube_0_tray_outer_clearance": 5260,
+    "cube_1_pick_region": 232,
+    "cube_1_tray_keepout": 796,
+    "cube_1_tray_outer_clearance": 1224,
+    "pick_blue_hover_ik": 2,
+    "pick_red_hover_ik": 12,
+    "place_blue_checks": 94,
+    "place_red_checks": 84
+  },
+  "attempted": 240,
+  "block": {
+    "x_m": {
+      "count": 480,
+      "max": 0.277251,
+      "mean": 0.21129,
+      "min": 0.160033,
+      "std": 0.030846
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.103918,
+      "mean": 0.004918,
+      "min": -0.102286,
+      "std": 0.070405
+    }
+  },
+  "by_arrangement": {
+    "red_negative_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    },
+    "red_positive_y": {
+      "accepted": 120,
+      "attempted": 120,
+      "rate": 1.0
+    }
+  },
+  "by_color_arm": {
+    "blue": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 66.890126,
+        "mean": 49.946857,
+        "min": 33.023084,
+        "std": 9.323156
+      }
+    },
+    "red": {
+      "accepted_layouts": 240,
+      "by_arm": {
+        "left": 120,
+        "right": 120
+      },
+      "yaw": {
+        "count": 240,
+        "max": 66.445048,
+        "mean": 48.991247,
+        "min": 33.028947,
+        "std": 9.235102
+      }
+    }
+  },
+  "certificate_sha256": "1c004f2451f9d713486a2a9d0fde9c920890edcbc276a10d5c0a0e4a61aaf3ad",
+  "claim": "v4 narrowed-family layout/IK/collision pre-screen; 240/240 seeds accepted; not an expert success rate",
+  "episodes_saved": 0,
+  "expert_executions": 0,
+  "family": "narrowed v1/v3 success region; yaw [33,67]; tray x [0.214,0.270]; positive tray y [0.263,0.274]; negative tray y [-0.274,-0.235]; block-tray outer clearance 0.105 m; parked-arm/tray initial check",
+  "passed": true,
+  "phase": "layout_ik_collision_pilot",
+  "preliminary_correction": "one preliminary v4 episode with positive y lower 0.235 m was excluded after arm_not_clear; the positive lower is 0.263 m in this run",
+  "profile_sha256": "5d9073db6799f152dea3ac76282be7a50e65a594ba1327b01f86e5ca11644845",
+  "protocol_id": "scene2_dual_random_v4",
+  "protocol_sha256": "be908cb2d7aaaf8c9d97ae4d201d0ea787d11e76c8c0739984404b78fc313a57",
+  "rejected": 0,
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "sampler_attempts": {
+    "max": 174,
+    "mean": 27.1208
+  },
+  "schema_version": 1,
+  "seed_grid": [
+    24200,
+    24439
+  ],
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "packages": {
+      "Pillow": "12.3.0",
+      "PyYAML": "6.0.3",
+      "mujoco": "3.11.0",
+      "numpy": "2.2.6"
+    },
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tray": {
+    "x_m": {
+      "count": 480,
+      "max": 0.269968,
+      "mean": 0.238906,
+      "min": 0.214087,
+      "std": 0.015112
+    },
+    "y_m": {
+      "count": 480,
+      "max": 0.274,
+      "mean": 0.006453,
+      "min": -0.273966,
+      "std": 0.262087
+    }
+  },
+  "unique_physical_hashes": 240,
+  "v1_v3_basis": {
+    "note": "ranges keep all 7 v1/v3 successes and reject all 9 v1/v3 failures in the recorded layouts; the 24-episode v4 pilot is the generalisation test",
+    "v1_successes": 4,
+    "v1_v3_failures": 9,
+    "v3_successes": 3
+  },
+  "wall_time_s": 32.70086741447449,
+  "yaw": {
+    "accepted": {
+      "bands_5deg": {
+        "30-35": 22,
+        "35-40": 72,
+        "40-45": 81,
+        "45-50": 71,
+        "50-55": 90,
+        "55-60": 64,
+        "60-65": 58,
+        "65-70": 22
+      },
+      "values": {
+        "count": 480,
+        "max": 66.890126,
+        "mean": 49.469052,
+        "min": 33.023084,
+        "std": 9.291527
+      }
+    },
+    "by_object": {
+      "cube_0": {
+        "accepted": {
+          "count": 240,
+          "max": 66.445048,
+          "mean": 48.991247,
+          "min": 33.028947,
+          "std": 9.235102
+        },
+        "draw": {
+          "count": 13018,
+          "max": 66.997507,
+          "mean": 49.953965,
+          "min": 33.000022,
+          "std": 9.748914
+        }
+      },
+      "cube_1": {
+        "accepted": {
+          "count": 240,
+          "max": 66.890126,
+          "mean": 49.946857,
+          "min": 33.023084,
+          "std": 9.323156
+        },
+        "draw": {
+          "count": 13018,
+          "max": 66.973366,
+          "mean": 49.906235,
+          "min": 33.001983,
+          "std": 9.852879
+        }
+      }
+    },
+    "draw": {
+      "bands_5deg": {
+        "30-35": 1566,
+        "35-40": 3812,
+        "40-45": 3756,
+        "45-50": 3992,
+        "50-55": 3866,
+        "55-60": 3766,
+        "60-65": 3764,
+        "65-70": 1514
+      },
+      "values": {
+        "count": 26036,
+        "max": 66.997507,
+        "mean": 49.9301,
+        "min": 33.000022,
+        "std": 9.801063
+      }
+    },
+    "note": "draw and accepted distributions are reported separately; the accepted set is rejection-biased and is never described as uniform"
+  }
+}

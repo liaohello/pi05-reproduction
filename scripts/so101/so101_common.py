@@ -81,12 +81,12 @@ def apply_collection_protocol(config: dict, protocol: dict) -> dict:
     settings = protocol["collection"]
     collection.update({
         "schema_version": 1,
-        "protocol": "so101_pi05_e1_v1",
+        "protocol": settings.get("protocol_id", "so101_pi05_e1_v1"),
         "direct_seeds": list(settings["direct_seed_range"]),
         "target_successes_per_profile": int(settings["target_successes"]),
         "maximum_attempts_per_profile": int(settings["maximum_attempts"]),
         "fps": int(protocol["control"]["recording_fps"]),
-        "repo_id": COLLECTION_REPO_ID,
+        "repo_id": settings.get("repo_id", COLLECTION_REPO_ID),
         "diagnostics": bool(settings["diagnostics"]),
         "pilot_seeds": [],
         "pair_stride": 0,
@@ -96,6 +96,9 @@ def apply_collection_protocol(config: dict, protocol: dict) -> dict:
     config["recording"]["fps"] = int(protocol["control"]["recording_fps"])
     config["runtime"]["control_hz"] = int(protocol["control"]["control_hz"])
     config["recording"]["camera_keys"] = list(protocol["observation"]["cameras"])
+    if protocol.get("scene_layout"):
+        config.setdefault("domain_randomization", {})["enabled"] = False
+        config["sorting"]["timeout_s"] = float(protocol["control"]["timeout_s"])
     return config
 
 

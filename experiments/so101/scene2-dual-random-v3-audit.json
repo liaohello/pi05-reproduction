@@ -1,0 +1,2056 @@
+{
+  "action_jump_failures": [
+    {
+      "attempt": 1,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 1,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 2.109990358352661,
+      "layout_index": 0,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "red"
+    },
+    {
+      "attempt": 2,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 1.4837379455566406,
+      "layout_index": 0,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "blue"
+    },
+    {
+      "attempt": 3,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 1.5990314483642578,
+      "layout_index": 1,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "red"
+    },
+    {
+      "attempt": 4,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 3.7735595703125,
+      "layout_index": 1,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "blue"
+    },
+    {
+      "attempt": 5,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 2.0863157510757446,
+      "layout_index": 2,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "red"
+    },
+    {
+      "attempt": 6,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 2.0377197265625,
+      "layout_index": 2,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "blue"
+    },
+    {
+      "attempt": 7,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 3.757617950439453,
+      "layout_index": 3,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "red"
+    },
+    {
+      "attempt": 8,
+      "first_joint_jump_index": null,
+      "frames_gripper_over_30percent": 2,
+      "frames_joint_over_15deg": 0,
+      "gripper_max_percent": 70.0,
+      "joint_max_deg": 5.236911773681641,
+      "layout_index": 3,
+      "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous",
+      "target_color": "blue"
+    }
+  ],
+  "all_consistency": true,
+  "all_state_action_finite": true,
+  "all_time_checks": true,
+  "all_video_frame_counts_match": true,
+  "camera_order": [
+    "observation.images.central",
+    "observation.images.left_wrist",
+    "observation.images.right_wrist"
+  ],
+  "claim": "v3 frame audit; failures retained; terminal partial frames accounted by substeps",
+  "contact_sheets": [
+    {
+      "created": true,
+      "layout_index": 0,
+      "path": "reports/assets/so101-scene2-dual-random-v3/layout_00_red_vs_blue.png",
+      "size": [
+        1280,
+        1000
+      ]
+    },
+    {
+      "created": true,
+      "layout_index": 1,
+      "path": "reports/assets/so101-scene2-dual-random-v3/layout_01_red_vs_blue.png",
+      "size": [
+        1280,
+        1000
+      ]
+    },
+    {
+      "created": true,
+      "layout_index": 2,
+      "path": "reports/assets/so101-scene2-dual-random-v3/layout_02_red_vs_blue.png",
+      "size": [
+        1280,
+        1000
+      ]
+    },
+    {
+      "created": true,
+      "layout_index": 3,
+      "path": "reports/assets/so101-scene2-dual-random-v3/layout_03_red_vs_blue.png",
+      "size": [
+        1280,
+        1000
+      ]
+    }
+  ],
+  "created": "2026-10-29T05:18:08-07:00",
+  "dt_failures": [],
+  "episodes": 8,
+  "episodes_detail": [
+    {
+      "active_arm": "left",
+      "arrangement": "red_positive_y",
+      "attempt": 1,
+      "cameras": {
+        "central": {
+          "decoded_frames": 575,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "11.500000",
+            "height": 480,
+            "nb_read_frames": "575",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 575,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "11.500000",
+            "height": 480,
+            "nb_read_frames": "575",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 575,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 502,
+            "length": 3,
+            "start": 500
+          },
+          "longest_run_stage": "place_lower",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "11.500000",
+            "height": 480,
+            "nb_read_frames": "575",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "b60c8c5ba0191fa598f67d6cf89806bb3af1ae12ef645e1c70a1ee43bd189752",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": "ik_unreachable",
+      "initial_fingerprint": "f653a663993053a28726d7b7ef56a786d00a898a1b3dc6254f73e84a4f42ab1b",
+      "initial_state_sha256": "dd01b4fc0b58974095b5867804ec8797de55b5d1b3194b85d45f3ed47fd8dda0",
+      "layout_index": 0,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.2506110126943724,
+            0.2732347040192603
+          ],
+          "initial_xy": [
+            0.22268906822778003,
+            0.10943002061396656
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.16621555676586414,
+          "path_length_m": 0.28926776920924674,
+          "role": "target"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.18234306627961658,
+            -0.062421084754019925
+          ],
+          "initial_xy": [
+            0.18234306730426142,
+            -0.062421086057844535
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 2.979406267013391e-09,
+          "path_length_m": 4.135880158467916e-09,
+          "role": "distractor"
+        }
+      },
+      "physical_sha256": "6d9e0ff0c98ec021b4427b29d90f3f705d05b695e6e977142b76f60fc42ebb14",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 2.98107791290306e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": "ik_unreachable",
+        "failure_stage": "place_withdraw",
+        "soft_contact_count": 0,
+        "sorted_count": 0,
+        "status_success": false,
+        "summary_success": false,
+        "target_contained": true,
+        "target_robot_contacts": [
+          {
+            "arm": "left",
+            "geoms": [
+              "cube_0_geom",
+              "left_gripper_collision_band_0"
+            ],
+            "penetration_m": 1.156328104244306e-06
+          }
+        ],
+        "target_stable_in_tray": false,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 575,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 575,
+        "wall_dt_max_s": 0.3074378967285156,
+        "wall_dt_min_s": 0.15099620819091797,
+        "wall_rate_hz": 5.7916825795013365
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 1,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 2.109990358352661,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          575,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 575,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          575,
+          12
+        ]
+      },
+      "success": false,
+      "target_color": "red",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000001107,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 575,
+        "incomplete_frames": 0,
+        "partial_frames": [],
+        "substeps": {
+          "10": 575
+        },
+        "terminal_partial_frame": null,
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "right",
+      "arrangement": "red_positive_y",
+      "attempt": 2,
+      "cameras": {
+        "central": {
+          "decoded_frames": 583,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "11.660000",
+            "height": 480,
+            "nb_read_frames": "583",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 583,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 501,
+            "length": 2,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_1",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "11.660000",
+            "height": 480,
+            "nb_read_frames": "583",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 583,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "11.660000",
+            "height": 480,
+            "nb_read_frames": "583",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "02ddc42e128b531d9dff5c3c0b4b09ef241777e3035514057a060182060be292",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": "unexpected_contact",
+      "initial_fingerprint": "f653a663993053a28726d7b7ef56a786d00a898a1b3dc6254f73e84a4f42ab1b",
+      "initial_state_sha256": "dd01b4fc0b58974095b5867804ec8797de55b5d1b3194b85d45f3ed47fd8dda0",
+      "layout_index": 0,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.2226890665839895,
+            0.10943002010676993
+          ],
+          "initial_xy": [
+            0.22268906822778003,
+            0.10943002061396656
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.0143498677027553e-09,
+          "path_length_m": 4.197613349365996e-09,
+          "role": "distractor"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.20870377388883313,
+            -0.24774620299490172
+          ],
+          "initial_xy": [
+            0.18234306730426142,
+            -0.062421086057844535
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.18722630740919977,
+          "path_length_m": 0.3167307456882865,
+          "role": "target"
+        }
+      },
+      "physical_sha256": "6d9e0ff0c98ec021b4427b29d90f3f705d05b695e6e977142b76f60fc42ebb14",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.0143498677027553e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": "unexpected_contact",
+        "failure_stage": "place_release",
+        "soft_contact_count": 0,
+        "sorted_count": 1,
+        "status_success": false,
+        "summary_success": false,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": true,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 583,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 583,
+        "wall_dt_max_s": 0.26159143447875977,
+        "wall_dt_min_s": 0.14534592628479004,
+        "wall_rate_hz": 6.147719353114244
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 1.4837379455566406,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          583,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 583,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          583,
+          12
+        ]
+      },
+      "success": false,
+      "target_color": "blue",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000001183,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 583,
+        "incomplete_frames": 1,
+        "partial_frames": [],
+        "substeps": {
+          "1": 1,
+          "10": 582
+        },
+        "terminal_partial_frame": {
+          "expected_terminal_time_s": 12.04200000000069,
+          "gap_s": 0.0,
+          "incomplete": true,
+          "index": 582,
+          "substeps": 1,
+          "summary_sim_time_s": 12.04200000000069,
+          "trace_time_s": 12.04000000000069
+        },
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "right",
+      "arrangement": "red_negative_y",
+      "attempt": 3,
+      "cameras": {
+        "central": {
+          "decoded_frames": 585,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "11.700000",
+            "height": 480,
+            "nb_read_frames": "585",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 585,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 501,
+            "length": 2,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_0",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "11.700000",
+            "height": 480,
+            "nb_read_frames": "585",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 585,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "11.700000",
+            "height": 480,
+            "nb_read_frames": "585",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "e676b46f658c8dee6b3569d1f562bab191c5c5cf74e5733b1cb58fbe0dd56fb0",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": "unexpected_contact",
+      "initial_fingerprint": "a39838c68b91ff5e1dc2004535910f30585e5f6bc5f8f6093e337b0c0abb290d",
+      "initial_state_sha256": "85d70db10adf3b24587e73b84b9e43ce925c8eae6527438c3abb0c93e48b0434",
+      "layout_index": 1,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.2168145894987459,
+            -0.22186365393752935
+          ],
+          "initial_xy": [
+            0.17898391871923355,
+            -0.04160795897542357
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.18421928330285597,
+          "path_length_m": 0.31300685972428166,
+          "role": "target"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.2374490952778852,
+            0.06109505492961757
+          ],
+          "initial_xy": [
+            0.2374490966216016,
+            0.06109505570225335
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 2.9205386164151928e-09,
+          "path_length_m": 4.115645455486797e-09,
+          "role": "distractor"
+        }
+      },
+      "physical_sha256": "2598698b26ac095090f698950397f2772db165c0a2638647c7164ede8fbec2eb",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 2.9199043049248716e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": "unexpected_contact",
+        "failure_stage": "place_release",
+        "soft_contact_count": 0,
+        "sorted_count": 0,
+        "status_success": false,
+        "summary_success": false,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": false,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 585,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 585,
+        "wall_dt_max_s": 0.30043935775756836,
+        "wall_dt_min_s": 0.1465167999267578,
+        "wall_rate_hz": 5.986067145470813
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 1.5990314483642578,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          585,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 585,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          585,
+          12
+        ]
+      },
+      "success": false,
+      "target_color": "red",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000001204,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 585,
+        "incomplete_frames": 1,
+        "partial_frames": [],
+        "substeps": {
+          "10": 584,
+          "5": 1
+        },
+        "terminal_partial_frame": {
+          "expected_terminal_time_s": 12.090000000000703,
+          "gap_s": 3.552713678800501e-15,
+          "incomplete": true,
+          "index": 584,
+          "substeps": 5,
+          "summary_sim_time_s": 12.090000000000707,
+          "trace_time_s": 12.080000000000704
+        },
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "left",
+      "arrangement": "red_negative_y",
+      "attempt": 4,
+      "cameras": {
+        "central": {
+          "decoded_frames": 622,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "12.440000",
+            "height": 480,
+            "nb_read_frames": "622",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 622,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "12.440000",
+            "height": 480,
+            "nb_read_frames": "622",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 622,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 502,
+            "length": 3,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_1",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "12.440000",
+            "height": 480,
+            "nb_read_frames": "622",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "6b50503cf7222327a26d33fc75bb1c4e45cb8047d0622c769361f0ba57bde5c4",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": "ik_unreachable",
+      "initial_fingerprint": "a39838c68b91ff5e1dc2004535910f30585e5f6bc5f8f6093e337b0c0abb290d",
+      "initial_state_sha256": "85d70db10adf3b24587e73b84b9e43ce925c8eae6527438c3abb0c93e48b0434",
+      "layout_index": 1,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.17898392032256327,
+            -0.041607959780932166
+          ],
+          "initial_xy": [
+            0.17898391871923355,
+            -0.04160795897542357
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.0572073654636932e-09,
+          "path_length_m": 4.2717402828784334e-09,
+          "role": "distractor"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.24857750442031426,
+            0.279770400025004
+          ],
+          "initial_xy": [
+            0.2374490966216016,
+            0.06109505570225335
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.21899485679956734,
+          "path_length_m": 0.3384046807219152,
+          "role": "target"
+        }
+      },
+      "physical_sha256": "2598698b26ac095090f698950397f2772db165c0a2638647c7164ede8fbec2eb",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.059121571428591e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": "ik_unreachable",
+        "failure_stage": "place_withdraw",
+        "soft_contact_count": 0,
+        "sorted_count": 1,
+        "status_success": false,
+        "summary_success": false,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": true,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 622,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 622,
+        "wall_dt_max_s": 0.28078699111938477,
+        "wall_dt_min_s": 0.14808344841003418,
+        "wall_rate_hz": 5.663550428903177
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 3.7735595703125,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          622,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 622,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          622,
+          12
+        ]
+      },
+      "success": false,
+      "target_color": "blue",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.02000000000000153,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 622,
+        "incomplete_frames": 0,
+        "partial_frames": [],
+        "substeps": {
+          "10": 622
+        },
+        "terminal_partial_frame": null,
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "left",
+      "arrangement": "red_positive_y",
+      "attempt": 5,
+      "cameras": {
+        "central": {
+          "decoded_frames": 792,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "15.840000",
+            "height": 480,
+            "nb_read_frames": "792",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 792,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "15.840000",
+            "height": 480,
+            "nb_read_frames": "792",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 792,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 502,
+            "length": 3,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_0",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "15.840000",
+            "height": 480,
+            "nb_read_frames": "792",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "58f41a8fd4ffa1c81983f8163a6b04f87f254a9d6c1cb488c26779dd2164ba15",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": null,
+      "initial_fingerprint": "04951e75b65d1cb7e933985336faa9f49f401e734ea56e63cd69b49a7d9fff58",
+      "initial_state_sha256": "4dee59de993b2e4a1b4cfbc496e471d31dfa5fb4a2800114345fac201b1e5e2a",
+      "layout_index": 2,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.22153841817042985,
+            0.268231281081026
+          ],
+          "initial_xy": [
+            0.2077849359277035,
+            0.08171398960708108
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.18706645426794125,
+          "path_length_m": 0.3085641868403401,
+          "role": "target"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.17896912380259064,
+            -0.08940405551001752
+          ],
+          "initial_xy": [
+            0.17896912596175418,
+            -0.08940405647286412
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.4228740561575406e-09,
+          "path_length_m": 4.841868286403836e-09,
+          "role": "distractor"
+        }
+      },
+      "physical_sha256": "1b8f67b58ea7af5102d84c068a433ac9bca4ab7b973de3e6a224f542f1d80dd4",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.4251429759917475e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": null,
+        "failure_stage": null,
+        "soft_contact_count": 0,
+        "sorted_count": 1,
+        "status_success": true,
+        "summary_success": true,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": true,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 792,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 792,
+        "wall_dt_max_s": 0.31733083724975586,
+        "wall_dt_min_s": 0.13538146018981934,
+        "wall_rate_hz": 5.7369570249467134
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 2.0863157510757446,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          792,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 792,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          792,
+          12
+        ]
+      },
+      "success": true,
+      "target_color": "red",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000002387,
+        "dt_min_s": 0.019999999999988916,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 792,
+        "incomplete_frames": 0,
+        "partial_frames": [],
+        "substeps": {
+          "10": 792
+        },
+        "terminal_partial_frame": null,
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "right",
+      "arrangement": "red_positive_y",
+      "attempt": 6,
+      "cameras": {
+        "central": {
+          "decoded_frames": 770,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "15.400000",
+            "height": 480,
+            "nb_read_frames": "770",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 770,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 501,
+            "length": 2,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_1",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "15.400000",
+            "height": 480,
+            "nb_read_frames": "770",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 770,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "15.400000",
+            "height": 480,
+            "nb_read_frames": "770",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "4ae633ed506372f5af562eeb6c9fa8c539a7d1deae68f725281412d3d2b304b7",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": null,
+      "initial_fingerprint": "04951e75b65d1cb7e933985336faa9f49f401e734ea56e63cd69b49a7d9fff58",
+      "initial_state_sha256": "4dee59de993b2e4a1b4cfbc496e471d31dfa5fb4a2800114345fac201b1e5e2a",
+      "layout_index": 2,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.20778493817940105,
+            0.08171398996182691
+          ],
+          "initial_xy": [
+            0.2077849359277035,
+            0.08171398960708108
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.364965616511697e-09,
+          "path_length_m": 4.756814393988061e-09,
+          "role": "distractor"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.21988705763421487,
+            -0.25035171195437894
+          ],
+          "initial_xy": [
+            0.17896912596175418,
+            -0.08940405647286412
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.16611569750373018,
+          "path_length_m": 0.2945579359956733,
+          "role": "target"
+        }
+      },
+      "physical_sha256": "1b8f67b58ea7af5102d84c068a433ac9bca4ab7b973de3e6a224f542f1d80dd4",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.3671881885364324e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": null,
+        "failure_stage": null,
+        "soft_contact_count": 0,
+        "sorted_count": 1,
+        "status_success": true,
+        "summary_success": true,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": true,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 770,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 770,
+        "wall_dt_max_s": 0.2968742847442627,
+        "wall_dt_min_s": 0.1365354061126709,
+        "wall_rate_hz": 5.739193021018175
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 2.0377197265625,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          770,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 770,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          770,
+          12
+        ]
+      },
+      "success": true,
+      "target_color": "blue",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000002523,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 770,
+        "incomplete_frames": 0,
+        "partial_frames": [],
+        "substeps": {
+          "10": 770
+        },
+        "terminal_partial_frame": null,
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "right",
+      "arrangement": "red_negative_y",
+      "attempt": 7,
+      "cameras": {
+        "central": {
+          "decoded_frames": 772,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "15.440000",
+            "height": 480,
+            "nb_read_frames": "772",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 772,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 501,
+            "length": 2,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_0",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "15.440000",
+            "height": 480,
+            "nb_read_frames": "772",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 772,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "15.440000",
+            "height": 480,
+            "nb_read_frames": "772",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "7a7bff9c65bcf1d5ed1e98599a1902db35e20ad8b900bc3c55f3bb085be066ff",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": null,
+      "initial_fingerprint": "43ae825c162c3a66323357f48ecedc18eaf430002972c88221cd72b838fe00d2",
+      "initial_state_sha256": "7b4178ca9ac1f364d713d1b227b5c8ae7c5d4c12d4c55150efb4d88bf8734861",
+      "layout_index": 3,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.2173113672728889,
+            -0.25791971548767445
+          ],
+          "initial_xy": [
+            0.2699889837288267,
+            -0.0967110730139382
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.16964420916584816,
+          "path_length_m": 0.2918782231052019,
+          "role": "target"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.25098189791861547,
+            0.06758502627960332
+          ],
+          "initial_xy": [
+            0.2509818956949295,
+            0.06758502684703972
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.3754662041992404e-09,
+          "path_length_m": 4.77242280685707e-09,
+          "role": "distractor"
+        }
+      },
+      "physical_sha256": "fa4b165e29ea9d1e9ff8b848e28192884038dc9223beba5bdb17e2b372a41807",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.377532739235294e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": null,
+        "failure_stage": null,
+        "soft_contact_count": 0,
+        "sorted_count": 1,
+        "status_success": true,
+        "summary_success": true,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": true,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 772,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 772,
+        "wall_dt_max_s": 0.2732975482940674,
+        "wall_dt_min_s": 0.13631987571716309,
+        "wall_rate_hz": 6.075415070352526
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 3.757617950439453,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          772,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 772,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          772,
+          12
+        ]
+      },
+      "success": true,
+      "target_color": "red",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000002533,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 772,
+        "incomplete_frames": 0,
+        "partial_frames": [],
+        "substeps": {
+          "10": 772
+        },
+        "terminal_partial_frame": null,
+        "unexplained_short": 0
+      }
+    },
+    {
+      "active_arm": "left",
+      "arrangement": "red_negative_y",
+      "attempt": 8,
+      "cameras": {
+        "central": {
+          "decoded_frames": 594,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "central.mp4",
+          "probe": {
+            "duration": "11.880000",
+            "height": 480,
+            "nb_read_frames": "594",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "left_wrist": {
+          "decoded_frames": 594,
+          "duplicate_runs": 0,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": null,
+          "longest_run_stage": null,
+          "longest_run_time_s": null,
+          "path": "left_wrist.mp4",
+          "probe": {
+            "duration": "11.880000",
+            "height": 480,
+            "nb_read_frames": "594",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        },
+        "right_wrist": {
+          "decoded_frames": 594,
+          "duplicate_runs": 1,
+          "frame_count_matches_trace": true,
+          "longest_duplicate_run": {
+            "end": 502,
+            "length": 3,
+            "start": 500
+          },
+          "longest_run_stage": "direct_carry_cube_1",
+          "longest_run_time_s": 10.400000000000142,
+          "path": "right_wrist.mp4",
+          "probe": {
+            "duration": "11.880000",
+            "height": 480,
+            "nb_read_frames": "594",
+            "r_frame_rate": "50/1",
+            "width": 640
+          }
+        }
+      },
+      "condition_sha256": "69a09637164a6ebb4d8e5cfe8cba4537dec58039ca36a2deaa34e7afeb029b79",
+      "consistency": {
+        "success_distractor_displacement_ok": true,
+        "success_matches_status": true,
+        "success_no_distractor_contact": true,
+        "success_no_distractor_grasp": true,
+        "success_no_target_robot_contact": true,
+        "success_sorted_one": true,
+        "success_target_contained": true,
+        "success_target_supported": true
+      },
+      "consistency_passed": true,
+      "failure_reason": "unexpected_contact",
+      "initial_fingerprint": "43ae825c162c3a66323357f48ecedc18eaf430002972c88221cd72b838fe00d2",
+      "initial_state_sha256": "7b4178ca9ac1f364d713d1b227b5c8ae7c5d4c12d4c55150efb4d88bf8734861",
+      "layout_index": 3,
+      "objects": {
+        "cube_0": {
+          "color": "red",
+          "final_xy": [
+            0.26998898411487804,
+            -0.09671107131256619
+          ],
+          "initial_xy": [
+            0.2699889837288267,
+            -0.0967110730139382
+          ],
+          "moved_over_5mm": false,
+          "net_displacement_m": 3.0283180269418883e-09,
+          "path_length_m": 4.22200626248707e-09,
+          "role": "distractor"
+        },
+        "cube_1": {
+          "color": "blue",
+          "final_xy": [
+            0.24790929609857024,
+            0.2677838451222251
+          ],
+          "initial_xy": [
+            0.2509818956949295,
+            0.06758502684703972
+          ],
+          "moved_over_5mm": true,
+          "net_displacement_m": 0.20025277711831635,
+          "path_length_m": 0.32664631744270806,
+          "role": "target"
+        }
+      },
+      "physical_sha256": "fa4b165e29ea9d1e9ff8b848e28192884038dc9223beba5bdb17e2b372a41807",
+      "predicate": {
+        "contact_monitor_error_count": 0,
+        "distractor_displacement_m": 3.0294387121077526e-09,
+        "distractor_displacement_ok": true,
+        "distractor_grasped": false,
+        "distractor_robot_contacts": [],
+        "distractor_stable_on_table": true,
+        "failure_reason": "unexpected_contact",
+        "failure_stage": "place_release",
+        "soft_contact_count": 0,
+        "sorted_count": 0,
+        "status_success": false,
+        "summary_success": false,
+        "target_contained": true,
+        "target_robot_contacts": [],
+        "target_stable_in_tray": false,
+        "target_supported": true
+      },
+      "sink": {
+        "backend": "ffmpeg",
+        "errors": [],
+        "frames": 594,
+        "sim_time_max_abs_diff_s": 0.0,
+        "sink_reported_frames": 594,
+        "wall_dt_max_s": 0.2861800193786621,
+        "wall_dt_min_s": 0.15222811698913574,
+        "wall_rate_hz": 6.029831274806907
+      },
+      "state_action": {
+        "action_finite": true,
+        "action_jumps": {
+          "first_joint_jump_index": null,
+          "frames_gripper_over_30percent": 2,
+          "frames_joint_over_15deg": 0,
+          "gripper_max_percent": 70.0,
+          "joint_max_deg": 5.236911773681641,
+          "note": "expert stage boundaries can legitimately change the gripper target; joints are expected to be continuous"
+        },
+        "action_shape": [
+          594,
+          12
+        ],
+        "applied_vs_commanded": {
+          "compared_frames": 594,
+          "frames_over_1e_5": 0,
+          "max_abs_diff": 0.0,
+          "note": "applied is the clamped canonical target; commanded is the plan target"
+        },
+        "state_finite": true,
+        "state_shape": [
+          594,
+          12
+        ]
+      },
+      "success": false,
+      "target_color": "blue",
+      "time": {
+        "dt_duplicate": 0,
+        "dt_long": 0,
+        "dt_max_s": 0.02000000000000668,
+        "dt_mean_s": 0.020000000000001288,
+        "dt_min_s": 0.019999999999997797,
+        "dt_missing": 0,
+        "dt_nonmonotonic": 0,
+        "dt_short": 0,
+        "expected_dt_s": 0.02,
+        "expected_substeps": 10,
+        "explained_short": 0,
+        "frames": 594,
+        "incomplete_frames": 1,
+        "partial_frames": [],
+        "substeps": {
+          "10": 593,
+          "7": 1
+        },
+        "terminal_partial_frame": {
+          "expected_terminal_time_s": 12.274000000000763,
+          "gap_s": 5.329070518200751e-15,
+          "incomplete": true,
+          "index": 593,
+          "substeps": 7,
+          "summary_sim_time_s": 12.274000000000768,
+          "trace_time_s": 12.260000000000764
+        },
+        "unexplained_short": 0
+      }
+    }
+  ],
+  "episodes_with_errors": 0,
+  "initial_pair_checks_agree": true,
+  "initial_pair_matches": 4,
+  "initial_pair_states": {
+    "0": {
+      "blue": "dd01b4fc0b58974095b5867804ec8797de55b5d1b3194b85d45f3ed47fd8dda0",
+      "match": true,
+      "red": "dd01b4fc0b58974095b5867804ec8797de55b5d1b3194b85d45f3ed47fd8dda0"
+    },
+    "1": {
+      "blue": "85d70db10adf3b24587e73b84b9e43ce925c8eae6527438c3abb0c93e48b0434",
+      "match": true,
+      "red": "85d70db10adf3b24587e73b84b9e43ce925c8eae6527438c3abb0c93e48b0434"
+    },
+    "2": {
+      "blue": "4dee59de993b2e4a1b4cfbc496e471d31dfa5fb4a2800114345fac201b1e5e2a",
+      "match": true,
+      "red": "4dee59de993b2e4a1b4cfbc496e471d31dfa5fb4a2800114345fac201b1e5e2a"
+    },
+    "3": {
+      "blue": "7b4178ca9ac1f364d713d1b227b5c8ae7c5d4c12d4c55150efb4d88bf8734861",
+      "match": true,
+      "red": "7b4178ca9ac1f364d713d1b227b5c8ae7c5d4c12d4c55150efb4d88bf8734861"
+    }
+  },
+  "manifest_pair_initial_fingerprint_matches": 4,
+  "passed": true,
+  "phase": "pilot_frame_audit",
+  "pilot_manifest": {
+    "adapter_sha256": "a63f60213e753cc35505eebbfa739a9c4f4d422b23ad265279bbed5bd19b7f76",
+    "arm_balance": {
+      "blue": {
+        "left": 2,
+        "right": 2
+      },
+      "red": {
+        "left": 2,
+        "right": 2
+      }
+    },
+    "arrangement_balance": {
+      "red_negative_y": 4,
+      "red_positive_y": 4
+    },
+    "attempts_file": "attempts.jsonl",
+    "certificate_sha256": "f593c0422a6f4aee3f6c2adcc4f4315e65dcd8c555caaf847ad84b5c0d0a7ad4",
+    "claim": "4 layouts x 2 instructions = 8 condition episodes; not 8 independent scenes; pilot data are excluded from training and from the formal validation split",
+    "conditions": {
+      "blue": 4,
+      "red": 4
+    },
+    "created": "2026-10-29T05:17:07-07:00",
+    "distinct_initial_states": 4,
+    "engineering_smoke_limit": null,
+    "episode_cap": 8,
+    "episodes_executed": 8,
+    "failures": 5,
+    "layout_successes_both_conditions": 1,
+    "layouts": 4,
+    "pair_checks": [
+      {
+        "action_divergence": {
+          "common_frames": 575,
+          "first_divergence_index": 3,
+          "frames_over_1deg": 572,
+          "max_abs_diff_degrees": 100.45128631591797,
+          "per_arm_max_abs_diff_degrees": {
+            "left": 100.45128631591797,
+            "right": 98.16385650634766
+          }
+        },
+        "arrangement": "red_positive_y",
+        "blue_success": false,
+        "initial_fingerprint_match": true,
+        "initial_fingerprints": {
+          "blue": "f653a663993053a28726d7b7ef56a786d00a898a1b3dc6254f73e84a4f42ab1b",
+          "red": "f653a663993053a28726d7b7ef56a786d00a898a1b3dc6254f73e84a4f42ab1b"
+        },
+        "layout_index": 0,
+        "physical_sha256": "6d9e0ff0c98ec021b4427b29d90f3f705d05b695e6e977142b76f60fc42ebb14",
+        "red_success": false
+      },
+      {
+        "action_divergence": {
+          "common_frames": 585,
+          "first_divergence_index": 3,
+          "frames_over_1deg": 582,
+          "max_abs_diff_degrees": 102.45276641845703,
+          "per_arm_max_abs_diff_degrees": {
+            "left": 102.45276641845703,
+            "right": 92.28300476074219
+          }
+        },
+        "arrangement": "red_negative_y",
+        "blue_success": false,
+        "initial_fingerprint_match": true,
+        "initial_fingerprints": {
+          "blue": "a39838c68b91ff5e1dc2004535910f30585e5f6bc5f8f6093e337b0c0abb290d",
+          "red": "a39838c68b91ff5e1dc2004535910f30585e5f6bc5f8f6093e337b0c0abb290d"
+        },
+        "layout_index": 1,
+        "physical_sha256": "2598698b26ac095090f698950397f2772db165c0a2638647c7164ede8fbec2eb",
+        "red_success": false
+      },
+      {
+        "action_divergence": {
+          "common_frames": 770,
+          "first_divergence_index": 3,
+          "frames_over_1deg": 762,
+          "max_abs_diff_degrees": 106.58834075927734,
+          "per_arm_max_abs_diff_degrees": {
+            "left": 103.51609802246094,
+            "right": 106.58834075927734
+          }
+        },
+        "arrangement": "red_positive_y",
+        "blue_success": true,
+        "initial_fingerprint_match": true,
+        "initial_fingerprints": {
+          "blue": "04951e75b65d1cb7e933985336faa9f49f401e734ea56e63cd69b49a7d9fff58",
+          "red": "04951e75b65d1cb7e933985336faa9f49f401e734ea56e63cd69b49a7d9fff58"
+        },
+        "layout_index": 2,
+        "physical_sha256": "1b8f67b58ea7af5102d84c068a433ac9bca4ab7b973de3e6a224f542f1d80dd4",
+        "red_success": true
+      },
+      {
+        "action_divergence": {
+          "common_frames": 594,
+          "first_divergence_index": 3,
+          "frames_over_1deg": 591,
+          "max_abs_diff_degrees": 108.2610855102539,
+          "per_arm_max_abs_diff_degrees": {
+            "left": 108.2610855102539,
+            "right": 102.17901611328125
+          }
+        },
+        "arrangement": "red_negative_y",
+        "blue_success": false,
+        "initial_fingerprint_match": true,
+        "initial_fingerprints": {
+          "blue": "43ae825c162c3a66323357f48ecedc18eaf430002972c88221cd72b838fe00d2",
+          "red": "43ae825c162c3a66323357f48ecedc18eaf430002972c88221cd72b838fe00d2"
+        },
+        "layout_index": 3,
+        "physical_sha256": "fa4b165e29ea9d1e9ff8b848e28192884038dc9223beba5bdb17e2b372a41807",
+        "red_success": true
+      }
+    ],
+    "pair_initial_fingerprint_matches": 4,
+    "phase": "physical_pilot",
+    "pilot_is_not_validation": true,
+    "profile_sha256": "58bc734ed6ff6309d67cc24a7a7a94e3ae2c01c3d38c8deb223f10f54ee637bf",
+    "protocol_episode_cap": 8,
+    "protocol_id": "scene2_dual_random_v3",
+    "protocol_sha256": "48117757fc1c52fa09fd2707a3bc0489907e36e80730873e919a304f251db2c9",
+    "scenes_file": "pilot_scenes.json",
+    "scenes_sha256": "0a3d78e3bc5432418c924ebcc19af5c55ffe590b805252bb101b7bf58021ab82",
+    "schema_version": 1,
+    "source_fingerprint": {
+      "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+      "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+      "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+      "packages": {
+        "Pillow": "12.3.0",
+        "PyYAML": "6.0.3",
+        "mujoco": "3.11.0",
+        "numpy": "2.2.6"
+      },
+      "source_files": 113,
+      "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+    },
+    "successes": 3,
+    "wall_clock_limit_s": 14400.0,
+    "wall_time_s": 904.6890923976898
+  },
+  "protocol_id": "scene2_dual_random_v3",
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "terminal_partial_frames": [
+    {
+      "attempt": 2,
+      "expected_terminal_time_s": 12.04200000000069,
+      "gap_s": 0.0,
+      "incomplete": true,
+      "index": 582,
+      "layout_index": 0,
+      "substeps": 1,
+      "summary_sim_time_s": 12.04200000000069,
+      "target_color": "blue",
+      "trace_time_s": 12.04000000000069
+    },
+    {
+      "attempt": 3,
+      "expected_terminal_time_s": 12.090000000000703,
+      "gap_s": 3.552713678800501e-15,
+      "incomplete": true,
+      "index": 584,
+      "layout_index": 1,
+      "substeps": 5,
+      "summary_sim_time_s": 12.090000000000707,
+      "target_color": "red",
+      "trace_time_s": 12.080000000000704
+    },
+    {
+      "attempt": 8,
+      "expected_terminal_time_s": 12.274000000000763,
+      "gap_s": 5.329070518200751e-15,
+      "incomplete": true,
+      "index": 593,
+      "layout_index": 3,
+      "substeps": 7,
+      "summary_sim_time_s": 12.274000000000768,
+      "target_color": "blue",
+      "trace_time_s": 12.260000000000764
+    }
+  ],
+  "video_duplicate_runs": [
+    {
+      "attempt": 1,
+      "camera": "right_wrist",
+      "decoded_frames": 575,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 502,
+        "length": 3,
+        "start": 500
+      },
+      "longest_run_stage": "place_lower",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "right_wrist.mp4",
+      "probe": {
+        "duration": "11.500000",
+        "height": 480,
+        "nb_read_frames": "575",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 2,
+      "camera": "left_wrist",
+      "decoded_frames": 583,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 501,
+        "length": 2,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_1",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "left_wrist.mp4",
+      "probe": {
+        "duration": "11.660000",
+        "height": 480,
+        "nb_read_frames": "583",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 3,
+      "camera": "left_wrist",
+      "decoded_frames": 585,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 501,
+        "length": 2,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_0",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "left_wrist.mp4",
+      "probe": {
+        "duration": "11.700000",
+        "height": 480,
+        "nb_read_frames": "585",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 4,
+      "camera": "right_wrist",
+      "decoded_frames": 622,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 502,
+        "length": 3,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_1",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "right_wrist.mp4",
+      "probe": {
+        "duration": "12.440000",
+        "height": 480,
+        "nb_read_frames": "622",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 5,
+      "camera": "right_wrist",
+      "decoded_frames": 792,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 502,
+        "length": 3,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_0",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "right_wrist.mp4",
+      "probe": {
+        "duration": "15.840000",
+        "height": 480,
+        "nb_read_frames": "792",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 6,
+      "camera": "left_wrist",
+      "decoded_frames": 770,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 501,
+        "length": 2,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_1",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "left_wrist.mp4",
+      "probe": {
+        "duration": "15.400000",
+        "height": 480,
+        "nb_read_frames": "770",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 7,
+      "camera": "left_wrist",
+      "decoded_frames": 772,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 501,
+        "length": 2,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_0",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "left_wrist.mp4",
+      "probe": {
+        "duration": "15.440000",
+        "height": 480,
+        "nb_read_frames": "772",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    },
+    {
+      "attempt": 8,
+      "camera": "right_wrist",
+      "decoded_frames": 594,
+      "duplicate_runs": 1,
+      "frame_count_matches_trace": true,
+      "longest_duplicate_run": {
+        "end": 502,
+        "length": 3,
+        "start": 500
+      },
+      "longest_run_stage": "direct_carry_cube_1",
+      "longest_run_time_s": 10.400000000000142,
+      "path": "right_wrist.mp4",
+      "probe": {
+        "duration": "11.880000",
+        "height": 480,
+        "nb_read_frames": "594",
+        "r_frame_rate": "50/1",
+        "width": 640
+      }
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "phase": "E3.1",
+  "substage": "G3-offline-action-diagnostics",
+  "claim": "Fixed-window fit diagnostic on the single training trajectory; fixed noise/time are used only for measurement. It is not a closed-loop result and not a generalisation estimate.",
+  "setup": {
+    "episode_index": 0,
+    "windows": 32,
+    "window_length": 10,
+    "window_start_indices": [
+      0,
+      87,
+      174,
+      261,
+      349,
+      436,
+      523,
+      611,
+      698,
+      785,
+      873,
+      960,
+      1047,
+      1135,
+      1222,
+      1309,
+      1397,
+      1484,
+      1571,
+      1659,
+      1746,
+      1833,
+      1921,
+      2008,
+      2095,
+      2183,
+      2270,
+      2357,
+      2445,
+      2532,
+      2619,
+      2707
+    ],
+    "flow_seed_base": 1000,
+    "infer_seed_base": 2000,
+    "training_noise": "normal random flow-matching noise/time; fixed seeds are diagnostic only",
+    "metrics": {
+      "flow_true12_mse": "mean squared flow error over the 12 real action dimensions",
+      "flow_padding20_mse": "mean squared flow error over the 20 zero-padded dimensions",
+      "flow_all32_mse": "mean squared flow error over all 32 dimensions",
+      "joint_mae_deg": "mean absolute error after denormalisation over the 10 joint dimensions",
+      "gripper_mae_pct": "mean absolute error after denormalisation over the two gripper dimensions",
+      "short_term_change_abs_error": "absolute error of the first action change, in the same normalised units"
+    },
+    "flow_target": "u = noise - actions; padded actions are zero, so the 20 padded targets are noise",
+    "dimension_note": "12 real / 20 padded are reported separately; the 20/32 dimension ratio is not a loss or gradient contribution fraction"
+  },
+  "checkpoints": [
+    {
+      "label": "initial_off",
+      "state_mode": "off",
+      "train_state_step": 0,
+      "flow_true12_mse": 3.392437013797462,
+      "flow_padding20_mse": 0.008680943371473404,
+      "flow_all32_mse": 1.2775894505903125,
+      "model_compute_loss_sanity": 5.610421657562256,
+      "joint_mae_deg": 24.258571684360504,
+      "gripper_mae_pct": 18.99670496582985,
+      "short_term_change_abs_error": 4.0030036782845855
+    },
+    {
+      "label": "off_250",
+      "state_mode": "off",
+      "train_state_step": 251,
+      "flow_true12_mse": 0.20542256883345544,
+      "flow_padding20_mse": 0.010132037547919026,
+      "flow_all32_mse": 0.083365986822173,
+      "joint_mae_deg": 9.153602838516235,
+      "gripper_mae_pct": 7.746423400938511,
+      "short_term_change_abs_error": 2.659042738378048
+    },
+    {
+      "label": "off_500",
+      "state_mode": "off",
+      "train_state_step": 501,
+      "flow_true12_mse": 0.10148170863976702,
+      "flow_padding20_mse": 0.0063050562366697704,
+      "flow_all32_mse": 0.0419963015592657,
+      "joint_mae_deg": 6.6099726259708405,
+      "gripper_mae_pct": 6.091987382620573,
+      "short_term_change_abs_error": 2.0366118997335434
+    },
+    {
+      "label": "off_750",
+      "state_mode": "off",
+      "train_state_step": 751,
+      "flow_true12_mse": 0.07986401507514529,
+      "flow_padding20_mse": 0.003983487634741323,
+      "flow_all32_mse": 0.03243868651043158,
+      "joint_mae_deg": 4.9766364097595215,
+      "gripper_mae_pct": 4.060593266040087,
+      "short_term_change_abs_error": 1.6316477078944445
+    },
+    {
+      "label": "off_999",
+      "state_mode": "off",
+      "train_state_step": 1000,
+      "flow_true12_mse": 0.0769820872519631,
+      "flow_padding20_mse": 0.003803082991453266,
+      "flow_all32_mse": 0.03124520908750128,
+      "model_compute_loss_sanity": 0.050399232655763626,
+      "joint_mae_deg": 4.862982522696257,
+      "gripper_mae_pct": 3.544594969600439,
+      "short_term_change_abs_error": 1.5294972900301218
+    },
+    {
+      "label": "initial_on",
+      "state_mode": "on",
+      "train_state_step": 0,
+      "flow_true12_mse": 3.384475264698267,
+      "flow_padding20_mse": 0.009381861775295874,
+      "flow_all32_mse": 1.2750418563373387,
+      "model_compute_loss_sanity": 5.512157917022705,
+      "joint_mae_deg": 23.980190336704254,
+      "gripper_mae_pct": 19.09737166762352,
+      "short_term_change_abs_error": 4.083863351494074
+    },
+    {
+      "label": "on_250",
+      "state_mode": "on",
+      "train_state_step": 251,
+      "flow_true12_mse": 0.16772345290519297,
+      "flow_padding20_mse": 0.011403121277908213,
+      "flow_all32_mse": 0.07002324477070943,
+      "joint_mae_deg": 7.524492874741554,
+      "gripper_mae_pct": 6.649461895227432,
+      "short_term_change_abs_error": 2.6462114863097668
+    },
+    {
+      "label": "on_500",
+      "state_mode": "on",
+      "train_state_step": 501,
+      "flow_true12_mse": 0.058373449894133955,
+      "flow_padding20_mse": 0.0056839745102479355,
+      "flow_all32_mse": 0.025442527694394812,
+      "joint_mae_deg": 3.675229534506798,
+      "gripper_mae_pct": 3.0479173362255096,
+      "short_term_change_abs_error": 1.779973627999425
+    },
+    {
+      "label": "on_750",
+      "state_mode": "on",
+      "train_state_step": 751,
+      "flow_true12_mse": 0.03922574433090631,
+      "flow_padding20_mse": 0.004015417951904965,
+      "flow_all32_mse": 0.01721929012273904,
+      "joint_mae_deg": 2.5668698754161596,
+      "gripper_mae_pct": 1.68863236438483,
+      "short_term_change_abs_error": 1.5257788971066475
+    },
+    {
+      "label": "on_999",
+      "state_mode": "on",
+      "train_state_step": 1000,
+      "flow_true12_mse": 0.03689618619682733,
+      "flow_padding20_mse": 0.0023592564289174334,
+      "flow_all32_mse": 0.01531060475645063,
+      "model_compute_loss_sanity": 0.032760828733444214,
+      "joint_mae_deg": 2.1888635866343975,
+      "gripper_mae_pct": 1.4398988792672753,
+      "short_term_change_abs_error": 1.4048798643052578
+    }
+  ],
+  "initial_to_final": {
+    "off": {
+      "true12_mse_relative_reduction_pct": 97.73,
+      "joint_mae_relative_reduction_pct": 79.95,
+      "gripper_mae_relative_reduction_pct": 81.34,
+      "padding20_note": "padding MSE decreases but the padded targets are noise; it is not evidence of task learning"
+    },
+    "on": {
+      "true12_mse_relative_reduction_pct": 98.91,
+      "joint_mae_relative_reduction_pct": 90.87,
+      "gripper_mae_relative_reduction_pct": 92.46,
+      "padding20_note": "padding MSE decreases but the padded targets are noise; it is not evidence of task learning"
+    }
+  },
+  "integrity": {
+    "all_32_windows_present": true,
+    "model_loss_matches_all32": true,
+    "all_values_finite": true,
+    "same_windows_for_both_branches": true,
+    "same_flow_and_inference_seeds": true
+  },
+  "interpretation": "Both branches fit the fixed windows far better than their common step-0 initialisation, and the state-on branch fits better than state-off. This proves that the parameter-update path is live and that the saved statistics/action mapping are learnable. It does not prove closed-loop task behaviour: the paired training-scene rollouts in e31-paired.json place zero objects for both branches.",
+  "claim_boundary": [
+    "one training trajectory and 32 fixed windows",
+    "fixed flow noise/time only for diagnostics; training kept normal random sampling",
+    "denormalised MAE is on the training trajectory, not held-out task data",
+    "not a success rate and not a generalisation result"
+  ],
+  "feature_names": [
+    "left_shoulder_pan.pos",
+    "left_shoulder_lift.pos",
+    "left_elbow_flex.pos",
+    "left_wrist_flex.pos",
+    "left_wrist_roll.pos",
+    "left_gripper.pos",
+    "right_shoulder_pan.pos",
+    "right_shoulder_lift.pos",
+    "right_elbow_flex.pos",
+    "right_wrist_flex.pos",
+    "right_wrist_roll.pos",
+    "right_gripper.pos"
+  ],
+  "final_per_dim_mae_deg": {
+    "off_999": [
+      2.996983024291694,
+      4.921380587853491,
+      3.7937753973528743,
+      7.113802580162883,
+      4.257496089674532,
+      4.000260733999312,
+      4.521395130082965,
+      4.178085346706212,
+      4.874208047986031,
+      8.854402970522642,
+      3.1182946683838964,
+      3.088929125107825
+    ],
+    "on_999": [
+      1.41983891883865,
+      2.9467770736664534,
+      1.421816136687994,
+      3.437596975825727,
+      1.5987986573018134,
+      1.4564345013350248,
+      1.6078457427211106,
+      1.9866059552878141,
+      2.3096116362139583,
+      3.2218251265585423,
+      1.937919962219894,
+      1.4233632702380419
+    ]
+  },
+  "final_per_dim_note": "The last two entries (indices 5 and 11) are grippers; the other ten are joints. Values are denormalised absolute errors in degrees or percentage points."
+}

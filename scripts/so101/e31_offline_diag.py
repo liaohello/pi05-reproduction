@@ -29,10 +29,17 @@ import openpi.training.checkpoints as _checkpoints  # noqa: E402
 from openpi.models import model as _model  # noqa: E402
 from openpi.models.pi0 import make_attn_mask  # noqa: E402
 from openpi.policies import policy_config as _policy_config  # noqa: E402
+from model_scope import resolve_model_scope  # noqa: E402
 
 TASK = openpi_so101.TASK
 JOINT_INDICES = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
 GRIPPER_INDICES = [5, 11]
+
+
+def _make_offline_config(run_config: dict, **kwargs):
+    """Build the diagnostic model with the variants recorded for its run."""
+    return openpi_so101.make_train_config(
+        **kwargs, **resolve_model_scope(run_config))
 
 
 def _raw(view: Path, frame: int, action: np.ndarray | None = None) -> dict:
@@ -115,7 +122,9 @@ def main() -> int:
             raise SystemExit(f"window {index} has bad shape {demo.shape}")
         windows.append({"index": index, "start": int(start), "end": int(start) + 9,
                         "demo_action_sha256": _array_sha(demo)})
-    config = openpi_so101.make_train_config(
+    model_scope = resolve_model_scope(run_config)
+    config = _make_offline_config(
+        run_config,
         mode="serve", run_root=output, train_view=view,
         base_checkpoint=checkpoint, exp_name="offline_diag", state_mode=state_mode)
     data_config = config.data.create(config.assets_dirs, config.model)
@@ -208,6 +217,7 @@ def main() -> int:
         "substage": "G3-offline",
         "label": args.label,
         "state_mode": state_mode,
+        "model_scope": model_scope,
         "checkpoint": str(checkpoint),
         "checkpoint_name": checkpoint.name,
         "run_config": str(args.run_config),

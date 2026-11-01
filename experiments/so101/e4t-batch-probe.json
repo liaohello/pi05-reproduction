@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-T1-batch-probe",
+  "purpose": "measure whether a real batch-8 pi0.5 step fits on one admissible GPU before any long run is started",
+  "mode": "probe",
+  "state_mode": "on",
+  "initialisation": "pi05_libero parameter checkpoint, new LoRA, no resume of the E3.1 single-episode checkpoint",
+  "gpu_admission": {
+    "policy": "free memory must cover the measured peak plus margin; utilisation is explicitly not an admission gate",
+    "margin_mib": 1500,
+    "jax_memory_fraction_computed": 0.626567,
+    "hardcoded_mem_fraction_095_used": false,
+    "peak_mib_sampled": 22747,
+    "registered_in_resource_owner": true,
+    "peak_mib_sampled_includes_other_tenants": 7202,
+    "job_footprint_estimate_mib": 15545,
+    "training_admission_derivation": "the sampled peak on that card includes 7,202 MiB held by another job, so this run's own footprint is about 15,545 MiB; the 30,000-update run therefore asks for 15,500 MiB plus the 1,500 MiB margin, and the computed preallocation fraction is capped at 0.80 by the launcher (never the old hard-coded 0.95)",
+    "admission_passed": true
+  },
+  "real_batch_tensors": [
+    "images['base_0_rgb'] (8, 224, 224, 3) float32",
+    "images['left_wrist_0_rgb'] (8, 224, 224, 3) float32",
+    "images['right_wrist_0_rgb'] (8, 224, 224, 3) float32",
+    "action/target (8, 10, 32) float32"
+  ],
+  "first_step_metrics": {
+    "step": 0,
+    "grad_norm": 1.8849,
+    "loss": 0.7774,
+    "param_norm": 1833.2808
+  },
+  "result": {
+    "exit_code": 0,
+    "checkpoint_saved": true,
+    "out_of_memory": false,
+    "fallback_ladder_used": false,
+    "conclusion": "batch 8 fits on this card with the computed preallocation fraction; the 4/2/1 fallback was not needed"
+  },
+  "scope_note": "memory probe only; it is not counted as a training run, no updates from it are used, and the 30k run did not start because the E4-T data gate did not pass",
+  "claim": "throughput and memory measurement of one real optimizer step, not a learning result",
+  "related": [
+    "experiments/so101/e4t-pilot.json",
+    "configs/so101/e4t_training.json"
+  ],
+  "status_update_20261026": "superseded for this field: the 30,000-update run was started after pilot v14 passed and the data gate closed; the probe itself remains a single optimizer step and its updates still do not count toward the run"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED",
+  "reason": "Requires loading the step-2000 checkpoint and running the flow-matching forward on a GPU. GPUs 0-3 are fully committed to the running LIBERO job (jax memory fraction 0.7119, 17.1 GB demand), and the local host cannot fork. Deferred by the task's own rule: audit cheaply first, postpone large model diagnostics under resource contention.",
+  "not_executed": true,
+  "must_not_be_read_as_a_result": true,
+  "checkpoint": {
+    "step": 2000,
+    "parameters_sha256": "b307d931bc12fb4672a866ef91c2f986e7438162bee31fd5daeb6e7eff0b5ab5",
+    "ema_sha256": "76b5e54576195a2686a9af012687f53993b078687839712d3387374a51064f77"
+  },
+  "required_command": "python scene1_libero_audit/tools/padding_grad.py --checkpoint <checkpoints> --step 2000 --train-view <data_view_v3> --batch 8 --seed 42 --capture-identity-check --out scene1_libero_audit/per_dimension_loss.measured.json",
+  "planned_schema": {
+    "method": "wrap model.action_out_proj, call the official Pi0.compute_loss, reconstruct u_t from the same rng; no forward is reimplemented",
+    "identity_check": {"L32_recomputed": "float", "L32_official": "float", "abs_diff_must_be_lt": 1e-06},
+    "batch_size": "int", "seed": 42, "rng_key": "uint32[2]",
+    "loss": {
+      "L_real_12d": "float", "L_pad_20d": "float", "L_total_32d": "float",
+      "per_dim_32": ["float x32"],
+      "per_horizon_step_real_12d": ["float x10"],
+      "per_phase": {"reach|pregrasp|grasp|lift|transport|place|release|UNKNOWN": "float"}
+    }
+  }
+}

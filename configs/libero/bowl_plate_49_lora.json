@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "protocol_id": "pi05-libero-bowl-plate-49-lora-v1",
+  "experiment_prefix": "libero-bowl-plate-",
+  "policy_config": "pi05_libero",
+  "suite": "libero_goal",
+  "task_id": 8,
+  "dataset_task_index": 10,
+  "task": "put the bowl on the plate",
+  "base": {
+    "name": "pi05_base",
+    "tree_sha256": "9909d717ec51c078a3d5fd3464cb7612ae7b6a0a713121190e9455420b2350cd"
+  },
+  "data": {
+    "view_sha256": "c4e070531a8ffe2451095d68ee65ed51de87e4ffed8680b4268b561906bdd042",
+    "norm_stats_sha256": "9ff53219b6a1ea55194ba5d291faafa217847c7d4b034800ec7fa7cc5e5ea7a5",
+    "train_episodes": 49,
+    "train_frames": 4563,
+    "validation_episodes": 0,
+    "fps": 10,
+    "state_dim": 8,
+    "action_dim": 7,
+    "internal_action_dim": 32,
+    "action_horizon": 10,
+    "action_semantics": "delta_end_effector",
+    "cameras": [
+      "image",
+      "wrist_image"
+    ],
+    "norm_stats_scope": "all_49_selected_episodes",
+    "validation_split": false
+  },
+  "runtime": {
+    "image_digest": "sha256:405af52051682d5e13169d1de1523fd0adc116eceae4fc314cadfacd45b1ad52",
+    "openpi_src": {
+      "files": 56,
+      "bytes": 497539,
+      "sha256": "6bb8d9f5babb8ab3b655a5a320ea75bb7380851418d8e0cb22f4da610343d7ad"
+    },
+    "openpi_scripts": {
+      "files": 10,
+      "bytes": 50118,
+      "sha256": "5637d3f1407d072c7d201487406821f868670941a6e3a9f9e0536a3a9b4e20fd"
+    },
+    "libero_source": {
+      "files": 1116,
+      "bytes": 443644276,
+      "sha256": "d874a4c9729fad981dc7fc3dd89e6d705d4f437870204e721eac77b6ef5f807a"
+    },
+    "lerobot_version": "0.1.0",
+    "dataset_format": "v2.0"
+  },
+  "model": {
+    "pi05": true,
+    "paligemma_variant": "gemma_2b_lora",
+    "action_expert_variant": "gemma_300m_lora",
+    "discrete_state_input": false,
+    "dtype": "bfloat16",
+    "freeze_filter": "Pi0Config.get_freeze_filter()",
+    "freeze_language_non_lora": true,
+    "freeze_action_expert_non_lora": true,
+    "freeze_vision_encoder": false,
+    "scope": "language_lora_action_expert_lora_vision_default"
+  },
+  "training": {
+    "seed": 42,
+    "configured_batch_size": 32,
+    "allowed_batch_sizes": [
+      32,
+      16,
+      8,
+      4
+    ],
+    "step_scaling": {
+      "mode": "preserve_sample_budget",
+      "basis_batch_size": 32,
+      "scale_by": "basis_batch_size / selected_batch_size",
+      "scaled_fields": [
+        "optimizer_updates",
+        "warmup_steps",
+        "cosine_decay_steps",
+        "log_interval",
+        "save_interval",
+        "keep_period",
+        "checkpoint_steps"
+      ]
+    },
+    "optimizer_updates": 1500,
+    "optimizer": "AdamW",
+    "adamw_b1": 0.9,
+    "adamw_b2": 0.95,
+    "adamw_eps": 1e-08,
+    "adamw_weight_decay": 1e-10,
+    "gradient_clip_norm": 1.0,
+    "warmup_steps": 100,
+    "peak_lr": 2.5e-05,
+    "cosine_decay_steps": 1500,
+    "final_lr": 2.5e-06,
+    "ema_decay": null,
+    "log_interval": 20,
+    "data_loader_workers": 8,
+    "fsdp_devices": [
+      4,
+      2
+    ],
+    "wandb_enabled": false
+  },
+  "checkpoint": {
+    "save_steps": [
+      500,
+      1000,
+      1500
+    ],
+    "save_interval": 500,
+    "keep_period": 500,
+    "full_train_state": true,
+    "retain_all_saved_steps": true,
+    "step_semantics": "actual_train_state_step"
+  },
+  "resource": {
+    "minimum_memory_margin_mib": 512,
+    "jax_preallocate": false,
+    "utilisation_is_not_admission_gate": true
+  },
+  "evaluation": {
+    "suite": "libero_goal",
+    "task_id": 8,
+    "num_trials_per_task": 10,
+    "seed": 7,
+    "replan_steps": 10,
+    "status": "pending"
+  }
+}

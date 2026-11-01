@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-gate-calibration",
+  "created": "2026-10-26T12:41:59+08:00",
+  "scope": "40 train episodes only",
+  "train_episodes": 40,
+  "view_sha256": "66faffa6d7186ab905e4b8402f1fc45faf27d4f308a865984985ee382a08557e",
+  "floors": {
+    "joint_deg_per_frame": 0.02,
+    "gripper_pct_per_frame": 0.05,
+    "declared_in": "configs/so101/e4t_training.json"
+  },
+  "expert_joint_delta_per_frame_deg": {
+    "frames": 117061,
+    "max": 5.002223968505859,
+    "p50": 0.3955116271972656,
+    "p90": 1.3049602508544922,
+    "p99": 1.9564819335937491,
+    "exact_zero_share": 0.2679799420814789
+  },
+  "expert_gripper_delta_per_frame_pct": {
+    "frames": 117061,
+    "max": 30.0,
+    "p50": 0.0,
+    "p90": 0.15360450744628906,
+    "p99": 0.48592376708984375,
+    "exact_zero_share": 0.8292514159284475
+  },
+  "frames_with_no_joint_change": 31370,
+  "share_of_frames_below_joint_floor": 0.2686377187961832,
+  "share_of_frames_below_gripper_floor": 0.847771674597005,
+  "joint_floor_as_deg_per_second": 1.0,
+  "reading": "the floor is compared with the largest non-zero expert delta and with the share of truly frozen frames: it must be far below deliberate motion and far above zero",
+  "geometric_margin_note": "not reported: the pinned OpenPI model has no SO101 FK interface and this round performs no physics rollout",
+  "conclusion": "accepted",
+  "share_of_moving_frames_above_joint_floor": 0.999101422553127
+}

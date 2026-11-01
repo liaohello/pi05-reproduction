@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-replay-divergence",
+  "created": "2026-10-26T03:29:00+00:00",
+  "question": "can the recorded event timeline of a gripper-release-slip episode be replayed inside this round's tolerance, and can a carrying-arm bump episode?",
+  "method": "scripts/so101/e4t_slip_replay_probe.py replays episodes listed by the shard audit with the patched external replay (exact frame and substep re-application of the recorded event).",
+  "raw_artifact": "runs/so101/e4t/slip_replay_divergence_20261026_111951.json",
+  "audit_binding": "runs/so101/e4t/audit_20261026_104940/main_20261026_050822.json",
+  "episodes": {
+    "recovery_B_8220_000": {
+      "mechanism": "gripper_release_slip",
+      "frames": 3021,
+      "replayed": false,
+      "reported_success": true,
+      "replay_success": true,
+      "transfers_complete": true,
+      "max_public_state_error_deg": 69.54492950439453,
+      "max_object_position_error_m": 0.0027766065330037115,
+      "max_clock_error_s": 0.0,
+      "full_final_qpos_error": 0.013199340576364404,
+      "full_final_qvel_error": 1.1300623946245482e-08,
+      "event": {"category": "B", "stage": "pick_lift", "control_frame": 267, "substep": 5, "sim_time_s": 5.75}
+    },
+    "recovery_B_8223_003": {
+      "mechanism": "gripper_release_slip",
+      "frames": 3051,
+      "replayed": false,
+      "reported_success": true,
+      "replay_success": true,
+      "transfers_complete": true,
+      "max_public_state_error_deg": 69.54647064208984,
+      "max_object_position_error_m": 0.004819634284326385,
+      "max_clock_error_s": 0.0,
+      "full_final_qpos_error": 0.014121234180861331,
+      "full_final_qvel_error": 8.68679236722014e-09,
+      "event": {"category": "B", "stage": "pick_lift", "control_frame": 267, "substep": 5, "sim_time_s": 5.75}
+    },
+    "recovery_C_8260_000": {
+      "mechanism": "arm_bump_impulse",
+      "replayed": true,
+      "max_public_state_error_deg": 0.0,
+      "max_object_position_error_m": 0.0,
+      "max_clock_error_s": 0.0,
+      "full_final_qpos_error": 0.0
+    },
+    "recovery_C_8261_001": {
+      "mechanism": "arm_bump_impulse",
+      "replayed": true,
+      "max_public_state_error_deg": 0.0,
+      "max_object_position_error_m": 0.0,
+      "max_clock_error_s": 0.0,
+      "full_final_qpos_error": 0.0
+    }
+  },
+  "summary": {
+    "slip_replayed": 0,
+    "slip_total": 2,
+    "bump_replayed": 2,
+    "bump_total": 2
+  },
+  "reading": [
+    "the slip episodes still complete the task when replayed (replay_success true, transfers complete) but their arm state diverges by about 69.5 degrees, so the recorded timeline is not reproducible inside the tolerance",
+    "the clock error and the final velocity error stay at zero, which places the divergence in the released payload's contact sequence rather than in the timing of the replay",
+    "the bump episodes replay bit-for-bit on the audited metrics, which is why categories A and C are the ones admitted into the 50-episode view"
+  ],
+  "consequence": "the 8 collected slip episodes are excluded by protocol in every audit and enter no training view; category B contributes zero episodes this round (configs/so101/e4t_protocol.json perturbations.mechanism_amendment_v21)",
+  "claim": "expert recording and expert replay only; no learned policy action was executed in simulation"
+}

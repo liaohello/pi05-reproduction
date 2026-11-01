@@ -26,8 +26,27 @@ import openpi.training.checkpoints as _checkpoints  # noqa: E402
 from openpi import transforms as _transforms  # noqa: E402
 from openpi.models import tokenizer as _tokenizer  # noqa: E402
 from openpi.policies import policy_config as _policy_config  # noqa: E402
+from model_scope import resolve_model_scope  # noqa: E402
 
 TASK = openpi_so101.TASK
+
+
+def _scope_for_checkpoint(checkpoint: Path, run_config_path: Path | None = None) -> dict:
+    """Prefer an explicit run config, then the nearest checkpoint ancestor snapshot."""
+    if run_config_path is not None:
+        document = json.loads(run_config_path.read_text(encoding="utf-8"))
+        return resolve_model_scope(document)
+    for directory in (checkpoint, *checkpoint.parents):
+        candidate = directory / "config_initial.json"
+        if candidate.is_file():
+            document = json.loads(candidate.read_text(encoding="utf-8"))
+            return resolve_model_scope(document)
+    return resolve_model_scope({})
+
+
+def _make_state_mode_config(state_mode: str, scope: dict, **kwargs):
+    return openpi_so101.make_train_config(
+        **kwargs, state_mode=state_mode, **scope)
 
 
 def _raw_observation(view: Path, state: np.ndarray) -> dict:
@@ -84,12 +103,15 @@ def _infer(policy, raw: dict, noise: np.ndarray) -> np.ndarray:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument("--run-config", type=Path, default=None,
+                        help="saved run config; otherwise discover config_initial.json above the checkpoint")
     parser.add_argument("--train-view", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--frames", type=int, nargs=2, default=[0, 100])
     parser.add_argument("--noise-seed", type=int, default=1234)
     args = parser.parse_args()
     checkpoint = args.checkpoint.expanduser().resolve()
+    model_scope = _scope_for_checkpoint(checkpoint, args.run_config)
     view = args.train_view.expanduser().resolve()
     output = args.output.expanduser().resolve()
     if output.exists():
@@ -104,9 +126,9 @@ def main() -> int:
     noise = np.random.default_rng(args.noise_seed).standard_normal((10, 32)).astype(np.float32)
     reports = {}
     for mode in ("off", "on"):
-        config = openpi_so101.make_train_config(
-            mode="serve", run_root=output, train_view=view,
-            base_checkpoint=checkpoint, exp_name="state_check", state_mode=mode)
+        config = _make_state_mode_config(
+            mode, model_scope, mode="serve", run_root=output, train_view=view,
+            base_checkpoint=checkpoint, exp_name="state_check")
         data_config = config.data.create(config.assets_dirs, config.model)
         norm_stats = _checkpoints.load_norm_stats(checkpoint / "assets", data_config.asset_id)
         tokens_a = _token_report(config, norm_stats, raw_a, mode)
@@ -178,6 +200,7 @@ def main() -> int:
         "train_view": str(view),
         "frame_indices": [frame_a, frame_b],
         "noise_seed": args.noise_seed,
+        "model_scope": model_scope,
         "checks": checks,
         "modes": reports,
         "claim": "fixed-noise state sensitivity diagnostic; state-on is the discrete token path, "

@@ -1,0 +1,64 @@
+{
+  "adapter_sha256": "c8b5d503ec0a556229810b706dce1f0a8d137a00faae7796c2e392ebcff63b13",
+  "certificate_sha256": "154819d608023a941d7f4b5f6b355829f1c6bf78b8a7a356d18dfb1a454785e2",
+  "claim": "v2 4 layouts x 2 instructions = 8 condition episodes; 2/8; failure-mode trade-off; v1 4/8 remains the reference; no formal collection",
+  "ignored_artifacts": {
+    "certificate": "ignored external certificate; bytes not redistributed; hash recorded above",
+    "frozen_scenes_file_sha256": "4edbd0cd644648a8ae605d298512fe9f27ad46d1b29d8a1065841c8e6d2b3024",
+    "raw_run_directories": "ignored; traces, three camera MP4s, events, applied actions and initial states are not redistributed"
+  },
+  "ledger_note": "the shared ledger was appended with v3 rows after this v2 manifest; the v3 artifact manifest records the current ledger hash",
+  "ledger_sha256": "17db4d1396a4ad89be34fbd0438002a9e6d70f00268535968046f8b2ddf82ce8",
+  "ledger_sha256_at_v2_completion": "17db4d1396a4ad89be34fbd0438002a9e6d70f00268535968046f8b2ddf82ce8",
+  "patch": {
+    "path": "patches/so101/scene2-dual-random-scene-v2.patch",
+    "sha256": "c4b5c5d04eea26b5cd506b458b660d9e2f8b9c107224d7469f3254d97d00f9d0"
+  },
+  "phase": "scene2_v2_artifact_manifest",
+  "profile_sha256": "862e145b6d2b717c1757671516d38d7cf51e90cecab32111a6191e3db90622a9",
+  "protocol_id": "scene2_dual_random_v2",
+  "protocol_sha256": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+  "report_assets": {
+    "reports/assets/so101-scene2-dual-random-v2/layout_00_red_vs_blue.png": "ae3994e9d2711d2e28716233c63a8bde1a049cb1818027dad59015d2262ddc5f",
+    "reports/assets/so101-scene2-dual-random-v2/layout_01_red_vs_blue.png": "5697c570ad25f802f1534c6e2a801a68774dce1d7deb844ab9609fb6b0a67360",
+    "reports/assets/so101-scene2-dual-random-v2/layout_02_red_vs_blue.png": "55bc40b2ab31ea337469358efc46dc155449dca1c6f8d9ec0b2b3133b563b325",
+    "reports/assets/so101-scene2-dual-random-v2/layout_03_red_vs_blue.png": "9fd0183347768a0ce8c1dd8d49743f6a85b2d5d47870852e28f0726aeac89057"
+  },
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tracked_files": {
+    "configs/so101/scene2_dual_random_profile_v2.yaml": "862e145b6d2b717c1757671516d38d7cf51e90cecab32111a6191e3db90622a9",
+    "configs/so101/scene2_dual_random_protocol_v2.json": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+    "docs/so101-scene2-dual-random-v2.md": "54197dc133aff10b54dbaac856e195946cab0171c8b2fd7970a8d2e37b530d04",
+    "experiments/so101/scene2-dual-random-v2-audit.json": "f8a656c49869ffb3f80033b107fcf83518c12b66f8bdf3bde14b6a5053a9f732",
+    "experiments/so101/scene2-dual-random-v2-baseline.json": "8927888d3caa2102fc88d5875acc9b35ccb0b333014effb70401f879b22ef71a",
+    "experiments/so101/scene2-dual-random-v2-layout-pilot.json": "1fe1864f95d83cc8c1aaaabaa491b1e2bed5d1857fb0b97469c09789ce8dfc38",
+    "experiments/so101/scene2-dual-random-v2-pilot-scenes.json": "493c0f87f782d8d7518254c1be4c76f4556838d6e153796cacaa7b7cc5d0646f",
+    "experiments/so101/scene2-dual-random-v2-pilot.json": "b30b030aafb41f2b82b0fcb5ae0335254fcf301ddbc3e2fa7cb9699d4fcbec20",
+    "reports/so101-scene2-dual-random-v2-data.md": "0850553412d4dad36368bf5ffcfcdf5beebbb3d11faf56801f6a5dbdb3bb4dfc",
+    "reports/so101-scene2-dual-random-v2-engineering.md": "0f77c2ae33b215c43c759768f56b6005ef3aa15b693848d7eb7e4b43b40e3d1a",
+    "reports/so101-scene2-dual-random-v2-scene.md": "498371024be9606bbebd3273640a61ec874fb68f4695f9c65161e835654f5110",
+    "scripts/so101/scene2_audit_v2.py": "6e66b01dfba7bae8a0cd64fbb48012c3d30dcbd6ce5bf408811c0723b9660aa4",
+    "scripts/so101/scene2_certify_v2.py": "d4edc03c1fdb6a61fee8e3c5524045f2a8c7157313681439a5e75ef0bd42182f",
+    "scripts/so101/scene2_collect_v2.py": "dea50ec0d8e6c3800507307bca2735861ad1c9292af21843dcfc5e49f7446f0c",
+    "scripts/so101/scene2_common_v2.py": "c8b5d503ec0a556229810b706dce1f0a8d137a00faae7796c2e392ebcff63b13",
+    "scripts/so101/scene2_layout_pilot_v2.py": "0c2295fd51fb844785d8339cbd0f2ea85efc388d0ec0986b16fef78e7f2c1a1b",
+    "scripts/so101/scene2_pregenerate_v2.py": "8f9c57518e87f78d6354e941261c6ead971c4917d403c6360544267bad1e90a5",
+    "scripts/so101/scene2_settle_baseline_v2.py": "99c4c5d0c2c3bf90151a63a6de2ef27d96e47c2af5e4ce7f87ba66cfe3517b1f",
+    "tests/test_scene2_v2_contracts.py": "77cfd18e4a1ef9f7b62ef3cdcd43ede693e8dbbcd21db878569b5aafc154beb4"
+  },
+  "v1_reference": {
+    "adapter_sha256": "e1f826b355f0abc945d1cf54698376455f776908bdea8afd35b124620eec6c0c",
+    "artifact_manifest": "experiments/so101/scene2-dual-random-artifacts.json",
+    "layout_successes_both_conditions": 1,
+    "pilot_successes": 4,
+    "protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc"
+  }
+}

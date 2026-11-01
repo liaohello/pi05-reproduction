@@ -1,0 +1,815 @@
+diff -ruN a/configs/profiles/scene1_single_random_50hz_three_camera.yaml b/configs/profiles/scene1_single_random_50hz_three_camera.yaml
+--- a/configs/profiles/scene1_single_random_50hz_three_camera.yaml	1969-12-31 16:00:00.000000000 -0800
++++ b/configs/profiles/scene1_single_random_50hz_three_camera.yaml	2026-10-29 03:17:01.326556556 -0700
+@@ -0,0 +1,62 @@
++schema_version: 1
++extends: configs/profiles/collection_50hz_three_camera.yaml
++
++# Workstream B scene profile: one block, two randomly positioned trays and the
++# same three-camera observation contract as the audited SO101 runtime.
++evaluation:
++  certificate: configs/certification/scene1_single_random_certificate_v3.json
++
++task:
++  type: single_block_place
++
++sorting:
++  instruction: "Put the red block into the red tray."
++  instruction_template: "Put the {color} block into the {color} tray."
++  initial_positions_xy:
++    - [0.25, 0.14]
++  objects:
++    cube_0:
++      color: red
++  timeout_s: 60.0
++  stable_success_s: 0.5
++  linear_speed_m_s: 0.02
++  angular_speed_rad_s: 0.2
++  block_jitter_m: 0.004
++  yaw_domain_degrees: [0.0, 72.0]
++  active_arm_by_color:
++    red: left
++    blue: right
++  tray_sampling:
++    red:
++      x_m: [0.21, 0.27]
++      y_m: [0.22, 0.28]
++    blue:
++      x_m: [0.21, 0.27]
++      y_m: [-0.28, -0.22]
++  tray_table_margin_m: 0.02
++  tray_tray_gap_m: 0.03
++  block_tray_clearance_m: 0.04
++  arm_park_joint_tolerance_deg: 2.0
++  arm_park_gripper_tolerance_percent: 5.0
++  arm_clearance_m: 0.01
++
++grasp:
++  # The reference gripper is closed at 0 percent.  The pilot found 35 percent
++  # clears the tray walls at every tested yaw (0-70 degrees) while still
++  # straddling the 45-degree square footprint; 40-50 percent hits the tray wall.
++  open_percent: 35.0
++  closed_percent: 0.0
++  hover_height_m: 0.060
++  place_hover_height_m: 0.040
++  release_clearance_m: 0.006
++  retreat_clearance_x_m: 0.012
++
++scene:
++  transfer:
++    marker: false
++
++domain_randomization:
++  enabled: false
++
++collection:
++  recording_type: scripted_single_block_place_demonstration
+diff -ruN a/src/bimanual/experts/single_block.py b/src/bimanual/experts/single_block.py
+--- a/src/bimanual/experts/single_block.py	1969-12-31 16:00:00.000000000 -0800
++++ b/src/bimanual/experts/single_block.py	2026-10-29 03:05:49.405688273 -0700
+@@ -0,0 +1,29 @@
++"""Single-block direct expert: one arm picks, carries, places and parks."""
++from __future__ import annotations
++
++from ..experts.allocation import Assignment
++from ..experts.sorting import SortingExpert
++from ..tasks.sorting import regions
++
++
++class SingleBlockExpert(SortingExpert):
++    """Both arms stay in the model; only the registered active arm moves."""
++
++    def _slot(self, name):
++        extra = self.scene.extra
++        return regions.TraySlot(name=name, color=extra["color"],
++                                xy=(float(extra["slot_xy"][0]), float(extra["slot_xy"][1])),
++                                support_z=float(extra["support_z"]))
++
++    def episode(self, env):
++        entry = self.scene.objects[0]
++        slot = self._slot(self.scene.extra["slot_name"])
++        assignment = Assignment(
++            object_id=entry.name, color=entry.color, route="direct",
++            supply_arm=self.scene.extra["active_arm"],
++            destination_arm=self.scene.extra["active_arm"],
++            slot_name=slot.name,
++            reasons=("single-block scene", f"colour {entry.color} maps to {self.scene.extra['active_arm']}",
++                     f"slot {slot.name}"),
++        )
++        yield from self.direct_episode(env, assignment)
+diff -ruN a/src/bimanual/recording/episode.py b/src/bimanual/recording/episode.py
+--- a/src/bimanual/recording/episode.py	2026-10-06 13:21:27.000000000 -0700
++++ b/src/bimanual/recording/episode.py	2026-10-29 03:02:39.217243679 -0700
+@@ -12,6 +12,7 @@
+ from ..control.errors import MotionFailure
+ from ..control.motion import MotionExecutor
+ from ..experts.sorting import SortingExpert
++from ..experts.single_block import SingleBlockExpert
+ from ..tasks.sorting.scene_sampling import SceneSpec
+ from .smoke import provenance
+ 
+@@ -85,7 +86,7 @@
+                 # value handed to the sink is exactly what ``step`` executes.
+                 sink.frame(self.env.observe(), self.env.robot.apply_action(self.env.data, action))
+             try:
+-                self.env.step(action, substep_callback=executor.guard)
++                self.env.step(action, substep_callback=executor.guard, observe=sink is None)
+             except MotionFailure as failure:
+                 failure.substeps = executor.substeps
+                 failure.evidence = {**(failure.evidence or {}), "partial_frame": True}
+@@ -193,7 +194,10 @@
+             output_dir.mkdir(parents=True, exist_ok=True)
+             recorder = EpisodeRecorder(self.env, scene, output_dir)
+             recorder.event({"type": "scene", "scene": scene.as_dict()})
+-        expert = SortingExpert(self.config, scene, self.certificate)
++        expert_class = (SingleBlockExpert
++                        if (self.config.get("task") or {}).get("type") == "single_block_place"
++                        else SortingExpert)
++        expert = expert_class(self.config, scene, self.certificate)
+         failure = None
+         executor_state = []
+         try:
+@@ -249,7 +253,7 @@
+                 recorder.frame(state, action, "stabilize", None, None, None)
+             if sink is not None:
+                 sink.frame(self.env.observe(), self.env.robot.apply_action(self.env.data, action))
+-            self.env.step(action)
++            self.env.step(action, observe=sink is None)
+             info = self.env.task.evaluate(self.env.model, self.env.data)[3]
+             if info["success"]:
+                 return {"success": True, "failure_reason": None}
+@@ -291,8 +295,8 @@
+ 
+     def _object_arrays(self):
+         positions, quaternions, velocities = [], [], []
+-        for index in range(4):
+-            name = f"cube_{index}"
++        for entry in self.scene.objects:
++            name = entry.name
+             body = self.env.model.body(name).id
+             positions.append(self.env.data.xpos[body].copy())
+             quaternions.append(self.env.data.xquat[body].copy())
+diff -ruN a/src/bimanual/recording/smoke.py b/src/bimanual/recording/smoke.py
+--- a/src/bimanual/recording/smoke.py	2026-10-02 01:52:49.000000000 -0700
++++ b/src/bimanual/recording/smoke.py	2026-10-29 02:39:17.852175497 -0700
+@@ -32,7 +32,8 @@
+             "feature_names":FEATURE_NAMES,"feature_units":FEATURE_UNITS,
+             "device":environment_report(),
+             "config":{key:value for key,value in env.config.items() if key != "root"},
+-            "recording_type":"diagnostic_sweep_not_sorting_demonstration"}
++            "recording_type":(env.config.get("collection") or {}).get(
++                "recording_type", "diagnostic_sweep_not_sorting_demonstration")}
+ 
+ 
+ def record_smoke(config, output, episodes=2, duration_s=2.0, official=True):
+diff -ruN a/src/bimanual/sim/domain_randomization.py b/src/bimanual/sim/domain_randomization.py
+--- a/src/bimanual/sim/domain_randomization.py	2026-10-04 20:22:48.000000000 -0700
++++ b/src/bimanual/sim/domain_randomization.py	2026-10-29 02:37:10.978703076 -0700
+@@ -38,11 +38,15 @@
+             cameras[name].update({"coordinate_frame":"body_local" if profile.get("parent_body") else "world",
+                                   "parent_body":profile.get("parent_body", "world")})
+     colors = {}
+-    for index in range(4):
++    object_count = len(config["sorting"].get("initial_positions_xy") or [])
++    declared = config["sorting"].get("objects") or {}
++    for index in range(object_count):
+         weak = rng.uniform(0.03, 0.15, 2)
+         dominant = float(rng.uniform(0.72, 0.95))
+-        colors[f"cube_{index}_geom"] = ([dominant, *weak, 1.0] if index % 2 == 0
+-                                         else [*weak, dominant, 1.0])
++        nominal = (declared.get(f"cube_{index}") or {}).get(
++            "color", "red" if index % 2 == 0 else "blue")
++        colors[f"cube_{index}_geom"] = ([dominant, *weak, 1.0] if nominal == "red"
++                                        else [*weak, dominant, 1.0])
+     return {"version":settings["version"], "seed":int(seed), "cameras":cameras,
+             "light_diffuse":rng.uniform(*settings["light_diffuse"], 3).tolist(),
+             "light_ambient":rng.uniform(*settings["light_ambient"], 3).tolist(),
+@@ -67,7 +71,10 @@
+             value = np.asarray(rgba, dtype=float)
+             if value.shape != (4,) or not np.isfinite(value).all() or np.any((value < 0) | (value > 1)):
+                 raise ValueError(f"Invalid appearance for {name}")
+-            self.model.geom_rgba[self.model.geom(name).id] = value
++            geom_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
++            if geom_id < 0:
++                raise ValueError(f"Appearance references missing geom {name}")
++            self.model.geom_rgba[geom_id] = value
+         for name in ("light_diffuse", "light_ambient"):
+             value = np.asarray(parameters[name], dtype=float)
+             if value.shape != (3,) or not np.isfinite(value).all() or np.any((value < 0) | (value > 1)):
+diff -ruN a/src/bimanual/sim/environment.py b/src/bimanual/sim/environment.py
+--- a/src/bimanual/sim/environment.py	2026-10-05 21:09:45.000000000 -0700
++++ b/src/bimanual/sim/environment.py	2026-10-29 03:02:39.129135374 -0700
+@@ -7,6 +7,7 @@
+ from ..config import load_config
+ from ..robots.so101 import DualSO101
+ from ..tasks.sorting import SortingTask
++from ..tasks.single_block.task import SingleBlockPlaceTask
+ from ..types import StepResult
+ from .model import build_scene
+ 
+@@ -18,7 +19,9 @@
+         self.model = mujoco.MjModel.from_xml_path(str(self.model_path))
+         self.data = mujoco.MjData(self.model)
+         self.robot = DualSO101(self.model,self.config)
+-        self.task = SortingTask(self.config)
++        task_type = (self.config.get("task") or {}).get("type", "sorting")
++        self.task = (SingleBlockPlaceTask(self.config) if task_type == "single_block_place"
++                     else SortingTask(self.config))
+         self.images = images
+         self.renderer = None
+         self.substeps = self.config["runtime"]["physics_hz"] // self.config["runtime"]["control_hz"]
+@@ -59,13 +62,17 @@
+                 result[key] = self.render(key.removeprefix("observation.images."))
+         return result
+ 
+-    def step(self, action, substep_callback=None, substeps=None):
++    def step(self, action, substep_callback=None, substeps=None, observe=True):
+         """Advance one control period.
+ 
+         ``substeps`` overrides the nominal physics-substep count for this call.
+         Replays use it to re-execute exactly the substeps an episode actually
+         ran (a safety stop can end a control frame early), so a partial frame is
+         never replayed as a full one.
++
++        ``observe=False`` skips the post-step camera render when the caller
++        already captured the pre-action observation (the LeRobot sink does).
++        The state field is still returned; no training frame changes.
+         """
+         self.last_action = self.robot.apply_action(self.data,action)
+         for _ in range(self.substeps if substeps is None else int(substeps)):
+@@ -79,7 +86,9 @@
+         reward,terminated,truncated,info = self.task.evaluate(self.model,self.data)
+         info["applied_action"] = self.last_action.copy()
+         info["time"] = self.elapsed_steps/self.config["runtime"]["control_hz"]
+-        return StepResult(self.observe(),reward,terminated,truncated,info)
++        observation = self.observe() if observe else {
++            "observation.state": self.robot.state(self.data)}
++        return StepResult(observation,reward,terminated,truncated,info)
+ 
+     def render(self, camera="central", depth=False):
+         if self.renderer is None:
+@@ -110,8 +119,13 @@
+         self.task.stable_since = None
+ 
+     def diagnostics(self):
++        names = [name for name in (self.config["sorting"].get("objects") or {})
++                 if mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, name) >= 0]
++        if not names:
++            names = [self.model.body(index).name for index in range(self.model.nbody)
++                     if self.model.body(index).name.startswith("cube_")]
+         return {"qpos_rad":self.data.qpos.copy(), "qvel":self.data.qvel.copy(),
+-                "objects":{f"cube_{i}":self.data.body(f"cube_{i}").xpos.copy() for i in range(4)},
++                "objects":{name:self.data.body(name).xpos.copy() for name in names},
+                 "tcp":{arm:self.robot.tcp(self.data,arm)[0] for arm in ("left","right")},
+                 "contacts":self.data.ncon,"time":float(self.data.time)}
+ 
+diff -ruN a/src/bimanual/sim/model.py b/src/bimanual/sim/model.py
+--- a/src/bimanual/sim/model.py	2026-10-04 20:22:48.000000000 -0700
++++ b/src/bimanual/sim/model.py	2026-10-29 02:37:02.017531346 -0700
+@@ -260,11 +260,14 @@
+             ET.SubElement(tray, "geom", name=f"{color}_tray_{index}", type="box", pos=fmt(position), size=fmt(size),
+                           rgba=fmt(colors[color]), contype="1", conaffinity="3")
+     transfer = config["scene"]["transfer"]
+-    ET.SubElement(world, "geom", name="transfer_marker", type="box", pos=fmt([*transfer["center_xy"],z+.0003]),
+-                  size=fmt([*transfer["half_size_xy"],.0003]), rgba="0.15 0.65 0.30 1", contype="0", conaffinity="0")
++    if transfer.get("marker", True):
++        ET.SubElement(world, "geom", name="transfer_marker", type="box", pos=fmt([*transfer["center_xy"],z+.0003]),
++                      size=fmt([*transfer["half_size_xy"],.0003]), rgba="0.15 0.65 0.30 1", contype="0", conaffinity="0")
+     task = config["sorting"]
++    declared = task.get("objects") or {}
+     for index, xy in enumerate(task["initial_positions_xy"]):
+-        color = "red" if index % 2 == 0 else "blue"
++        color = (declared.get(f"cube_{index}") or {}).get(
++            "color", "red" if index % 2 == 0 else "blue")
+         body = ET.SubElement(world, "body", name=f"cube_{index}", pos=fmt([*xy,z+task["cube_size_m"]/2+.001]))
+         ET.SubElement(body, "freejoint", name=f"cube_{index}_free")
+         ET.SubElement(body, "geom", name=f"cube_{index}_geom", type="box", size=fmt([task["cube_size_m"]/2]*3),
+diff -ruN a/src/bimanual/tasks/single_block/__init__.py b/src/bimanual/tasks/single_block/__init__.py
+--- a/src/bimanual/tasks/single_block/__init__.py	1969-12-31 16:00:00.000000000 -0800
++++ b/src/bimanual/tasks/single_block/__init__.py	2026-10-29 02:36:26.117433807 -0700
+@@ -0,0 +1 @@
++"""Single-block, two-tray scene and physical task (workstream B)."""
+diff -ruN a/src/bimanual/tasks/single_block/scene_sampling.py b/src/bimanual/tasks/single_block/scene_sampling.py
+--- a/src/bimanual/tasks/single_block/scene_sampling.py	1969-12-31 16:00:00.000000000 -0800
++++ b/src/bimanual/tasks/single_block/scene_sampling.py	2026-10-29 03:05:49.357687849 -0700
+@@ -0,0 +1,336 @@
++"""Single-block random scene construction with per-scene physical screening.
++
++The frozen sorting sampler is not reused: it samples four cubes and fixed
++trays.  This module samples one cube, one of two colours, continuous yaw on the
++square symmetry domain, and both tray positions.  Every admitted scene carries
++its own IK and collision verdicts.  The certificate still supplies the
++certified pick-point envelope; it is not treated as a per-scene place
++certificate.
++"""
++from __future__ import annotations
++
++import copy
++import math
++from contextlib import contextmanager
++
++import mujoco
++import numpy as np
++
++from ...control.ik import PoseIK
++from ...control.motion import rotation_z
++from ...control.trajectory import joint_trajectory
++from ...tasks.sorting import regions
++from ...tasks.sorting import certification
++from ...tasks.sorting.scene_sampling import (ObjectSpec, SceneGenerationError, SceneSpec)
++
++DEFAULT_MAX_ATTEMPTS = 400
++
++
++def _now_color_rgba(color):
++    return [0.85, 0.08, 0.06, 1.0] if color == "red" else [0.08, 0.25, 0.90, 1.0]
++
++
++def tray_outer_half(config):
++    inner = np.asarray(config["scene"]["trays"]["inner_half_size"], dtype=float)
++    return inner + 0.006
++
++
++def _tray_fits_table(config, xy):
++    table = config["scene"]["table"]
++    center = np.asarray(table["center_xy"], dtype=float)
++    half = np.asarray(table["half_size_xy"], dtype=float)
++    outer = tray_outer_half(config)
++    margin = float(config["sorting"].get("tray_table_margin_m", 0.02))
++    delta = np.abs(np.asarray(xy, dtype=float) - center)
++    return bool(np.all(delta + outer <= half - margin))
++
++
++def _tray_gap(config, first, second):
++    outer = tray_outer_half(config)
++    dx = max(0.0, abs(float(first[0]) - float(second[0])) - 2.0 * outer[0])
++    dy = max(0.0, abs(float(first[1]) - float(second[1])) - 2.0 * outer[1])
++    return float(math.hypot(dx, dy))
++
++
++def sample_trays(config, rng):
++    settings = config["sorting"]["tray_sampling"]
++    trays = {}
++    for color in ("red", "blue"):
++        entry = settings[color]
++        chosen = None
++        for _ in range(2000):
++            xy = (float(rng.uniform(*entry["x_m"])), float(rng.uniform(*entry["y_m"])))
++            if _tray_fits_table(config, xy):
++                chosen = xy
++                break
++        if chosen is None:
++            raise SceneGenerationError(f"no table-legal position for the {color} tray")
++        trays[color] = chosen
++    gap = _tray_gap(config, trays["red"], trays["blue"])
++    minimum = float(config["sorting"].get("tray_tray_gap_m", 0.03))
++    if gap < minimum:
++        raise SceneGenerationError(f"tray gap {gap:.4f} m below {minimum:.4f} m")
++    return trays
++
++
++def _tray_keepout_boxes(config):
++    clearance = float(config["sorting"].get("block_tray_clearance_m", 0.01))
++    half = regions.tray_inner_half(config) + 0.02 + clearance
++    boxes = []
++    for color in ("red", "blue"):
++        center = regions.tray_center(config, color)
++        boxes.append(regions.RegionSpec(f"{color}_tray_keepout",
++                                        float(center[0] - half[0]), float(center[0] + half[0]),
++                                        float(center[1] - half[1]), float(center[1] + half[1])))
++    return boxes
++
++
++def block_position_valid(config, arm, xy):
++    table = config["scene"]["table"]
++    center = np.asarray(table["center_xy"], dtype=float)
++    half = np.asarray(table["half_size_xy"], dtype=float)
++    if np.any(np.abs(np.asarray(xy, dtype=float) - center) > half - 0.06):
++        return False, "table_bounds"
++    if not regions.pick_region(config, arm).contains(xy):
++        return False, "pick_region"
++    for box in _tray_keepout_boxes(config):
++        if box.contains(xy):
++            return False, "tray_keepout"
++    return True, None
++
++
++@contextmanager
++def trays_at(env, trays):
++    bodies = {color: env.model.body(f"{color}_tray").id for color in ("red", "blue")}
++    previous = {color: env.model.body_pos[index].copy() for color, index in bodies.items()}
++    z = float(env.config["scene"]["table"]["surface_z"])
++    try:
++        for color, index in bodies.items():
++            env.model.body_pos[index] = [float(trays[color][0]), float(trays[color][1]), z]
++        mujoco.mj_forward(env.model, env.data)
++        yield
++    finally:
++        for color, index in bodies.items():
++            env.model.body_pos[index] = previous[color]
++        mujoco.mj_forward(env.model, env.data)
++
++
++def _arm_target(base, arm, joints, gripper):
++    result = np.asarray(base, dtype=float).copy()
++    offset = 0 if arm == "left" else 6
++    result[offset:offset + 5] = np.rad2deg(joints)
++    result[offset + 5] = gripper
++    return result
++
++
++def _interpolate(env, start, target, seconds):
++    frames = max(2, round(seconds * env.config["runtime"]["control_hz"]))
++    return list(joint_trajectory(start, target, seconds, env.config["runtime"]["control_hz"])), frames
++
++
++def _screen(env, arm, actions, tolerance, other_action):
++    return certification._screen(env, arm, actions, tolerance, other_action=other_action)
++
++
++def _pick_verdict(env, config, arm, xy, yaw, other_action):
++    profile = config["grasp"]
++    z = regions.resting_z(config)
++    rotation = rotation_z(yaw)
++    offset = 0 if arm == "left" else 6
++    seed = env.data.qpos[env.robot.qpos_ids[offset:offset + 5]].copy()
++    ik = PoseIK(env)
++    grasp = ik.solve(arm, [xy[0], xy[1], z], rotation, seed_rad=seed,
++                     tolerance=0.0002, rotation_tolerance=0.01)
++    if not grasp.converged:
++        return {"passed": False, "reason": "grasp_ik",
++                "position_error_m": grasp.position_error_m}
++    hover = ik.solve(arm, [xy[0], xy[1], z + profile["hover_height_m"]], rotation,
++                     seed_rad=grasp.joints_rad, tolerance=0.0002, rotation_tolerance=0.01)
++    if not hover.converged:
++        return {"passed": False, "reason": "hover_ik",
++                "position_error_m": hover.position_error_m}
++    base = env.robot.home()
++    opened = profile["open_percent"]
++    start = _arm_target(base, arm, grasp.joints_rad, opened)
++    end = _arm_target(base, arm, hover.joints_rad, opened)
++    approach, _ = _interpolate(env, start, end, profile["stage_durations_s"]["descend"])
++    lift, _ = _interpolate(env, end, start, profile["stage_durations_s"]["lift"])
++    approach_screen = _screen(env, arm, approach, profile["robot_penetration_tolerance_m"],
++                              other_action)
++    lift_screen = _screen(env, arm, lift, profile["robot_penetration_tolerance_m"], other_action)
++    return {"passed": bool(approach_screen["passed"] and lift_screen["passed"]),
++            "reason": None if approach_screen["passed"] and lift_screen["passed"] else "pick_path",
++            "approach": approach_screen, "lift": lift_screen}
++
++
++def _place_verdict(env, config, arm, slot, yaw, other_action):
++    profile = config["grasp"]
++    cube_half = regions.cube_half(config)
++    support_z = float(slot.support_z)
++    release_z = support_z + cube_half + profile["release_clearance_m"]
++    hover_height = profile.get("place_hover_height_m", profile["hover_height_m"])
++    rotation = rotation_z(yaw)
++    ik = PoseIK(env)
++    offset = 0 if arm == "left" else 6
++    seed = env.data.qpos[env.robot.qpos_ids[offset:offset + 5]].copy()
++    release = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z], rotation, seed_rad=seed,
++                       tolerance=0.0002, rotation_tolerance=0.01)
++    if not release.converged:
++        return {"passed": False, "reason": "release_ik", "position_error_m": release.position_error_m}
++    hover = ik.solve(arm, [slot.xy[0], slot.xy[1], release_z + hover_height], rotation,
++                     seed_rad=release.joints_rad, tolerance=0.0002, rotation_tolerance=0.01)
++    if not hover.converged:
++        return {"passed": False, "reason": "place_hover_ik", "position_error_m": hover.position_error_m}
++    center = regions.tray_center(config, slot.color)
++    inner = regions.tray_inner_half(config)
++    extents = np.abs(rotation) @ np.full(3, cube_half)
++    contained = bool(np.all(np.abs(np.asarray(slot.xy) - center) + extents[:2] <= inner))
++    if not contained:
++        return {"passed": False, "reason": "slot_containment", "extents": extents.tolist()}
++    base = env.robot.home()
++    closed = profile["closed_percent"]
++    opened = profile["open_percent"]
++    low = _arm_target(base, arm, release.joints_rad, closed)
++    high = _arm_target(base, arm, hover.joints_rad, closed)
++    descent, _ = _interpolate(env, high, low, profile["stage_durations_s"]["lower"])
++    descent_screen = _screen(env, arm, descent, profile["robot_penetration_tolerance_m"],
++                             other_action)
++    withdraw = []
++    for sign in (-1.0, 1.0):
++        sideways_xy = np.asarray(slot.xy, dtype=float) + rotation[:, 0][:2] * profile["retreat_clearance_x_m"] * sign
++        sideways = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z], rotation,
++                            seed_rad=release.joints_rad, tolerance=0.0005, rotation_tolerance=0.02)
++        lifted = None
++        if sideways.converged:
++            lifted = ik.solve(arm, [sideways_xy[0], sideways_xy[1], release_z + hover_height], rotation,
++                              seed_rad=sideways.joints_rad, tolerance=0.0008, rotation_tolerance=0.03)
++        if not (sideways.converged and lifted.converged):
++            withdraw.append({"sign": sign, "passed": False, "reason": "withdraw_ik"})
++            continue
++        out = _arm_target(base, arm, sideways.joints_rad, opened)
++        up = _arm_target(base, arm, lifted.joints_rad, opened)
++        release_path, _ = _interpolate(env, low, out, profile["stage_durations_s"]["release"] / 2)
++        retreat_path, _ = _interpolate(env, out, up, profile["stage_durations_s"]["release"] / 2)
++        release_screen = _screen(env, arm, release_path, profile["robot_penetration_tolerance_m"],
++                                 other_action)
++        retreat_screen = _screen(env, arm, retreat_path, profile["robot_penetration_tolerance_m"],
++                                 other_action)
++        passed = bool(release_screen["passed"] and retreat_screen["passed"])
++        withdraw.append({"sign": sign, "passed": passed,
++                         "release": release_screen, "retreat": retreat_screen})
++    passed = bool(descent_screen["passed"] and any(entry["passed"] for entry in withdraw))
++    return {"passed": passed,
++            "reason": None if passed else ("place_path" if not descent_screen["passed"] else "withdraw_path"),
++            "descent": descent_screen, "withdraw": withdraw,
++            "release_z_m": release_z, "hover_z_m": release_z + hover_height,
++            "contained": contained}
++
++
++def generate_single_scene(config, certificate, seed, color, *, env, max_attempts=DEFAULT_MAX_ATTEMPTS,
++                          trace=None):
++    if color not in ("red", "blue"):
++        raise ValueError(f"unknown colour {color!r}")
++    if env is None:
++        raise ValueError("single-block scene generation needs an environment for IK screening")
++    arm = config["sorting"]["active_arm_by_color"][color]
++    other_arm = "right" if arm == "left" else "left"
++    points = certificate.points(arm)
++    if not points:
++        raise SceneGenerationError(f"certificate has no pick points for {arm}")
++    rng = np.random.default_rng(np.random.SeedSequence([int(seed), 0x5CE1, 0 if color == "red" else 1]))
++    trays = sample_trays(config, rng)
++    effective = copy.deepcopy(config)
++    effective["scene"]["trays"] = {"red": list(trays["red"]), "blue": list(trays["blue"]),
++                                   "inner_half_size": list(config["scene"]["trays"]["inner_half_size"])}
++    other_action = regions.park_pose(config, other_arm)[0]
++    yaw_domain = config["sorting"].get("yaw_domain_degrees", [0.0, 90.0])
++    rejected = {}
++    attempts = 0
++    local_trace = []
++    with trays_at(env, trays):
++        for _ in range(int(max_attempts)):
++            attempts += 1
++            point = points[int(rng.integers(0, len(points)))]
++            jitter = float(config["sorting"].get("block_jitter_m", 0.004))
++            xy = (float(point[0]) + float(rng.uniform(-jitter, jitter)),
++                  float(point[1]) + float(rng.uniform(-jitter, jitter)))
++            yaw = float(rng.uniform(float(yaw_domain[0]), float(yaw_domain[1])))
++            entry = {"attempt": attempts, "xy": [round(xy[0], 6), round(xy[1], 6)],
++                     "yaw": round(yaw, 6), "result": None}
++            valid, reason = block_position_valid(effective, arm, xy)
++            if not valid:
++                rejected[reason] = rejected.get(reason, 0) + 1
++                entry["result"] = reason
++                local_trace.append(entry)
++                continue
++            pick = _pick_verdict(env, effective, arm, xy, yaw, other_action)
++            if not pick["passed"]:
++                rejected[pick["reason"]] = rejected.get(pick["reason"], 0) + 1
++                entry["result"] = pick["reason"]
++                local_trace.append(entry)
++                continue
++            # A single block does not need the two-cube slot offset.  The tray
++            # centre maximises clearance from all four walls for both the cube
++            # footprint and the opened gripper.
++            center = regions.tray_center(effective, color)
++            slot = regions.TraySlot(name=f"{color}_center", color=color,
++                                    xy=(float(center[0]), float(center[1])),
++                                    support_z=regions.tray_floor_top_z(effective))
++            verdict = _place_verdict(env, effective, arm, slot, yaw, other_action)
++            slot_verdicts = [{"slot": slot.name, **{key: value for key, value in verdict.items()
++                                                    if key not in ("descent", "withdraw")}}]
++            if not verdict["passed"]:
++                rejected["place_checks"] = rejected.get("place_checks", 0) + 1
++                entry["result"] = "place_checks"
++                local_trace.append(entry)
++                continue
++            chosen = slot
++            entry["result"] = "accepted"
++            entry["slot"] = chosen.name
++            local_trace.append(entry)
++            instruction = config["sorting"]["instruction_template"].format(color=color)
++            entry = ObjectSpec(name="cube_0", color=color,
++                               xy=(round(xy[0], 6), round(xy[1], 6)),
++                               yaw_degrees=round(yaw, 6), route="direct",
++                               supply_arm=arm, destination_arm=arm,
++                               orientation_degrees=round(yaw, 6),
++                               source_region=f"{arm}_source")
++            scene = SceneSpec(schema_version=1, profile="single_block_place",
++                              seed=int(seed), objects=[entry], shared_xy=(0.0, 0.0),
++                              shared_orientation_degrees=0.0, expected_transfers=[],
++                              summary=instruction, extra={
++                                  "task_type": "single_block_place",
++                                  "color": color,
++                                  "active_arm": arm,
++                                  "instruction": instruction,
++                                  "trays": {"red": [round(trays["red"][0], 6), round(trays["red"][1], 6)],
++                                            "blue": [round(trays["blue"][0], 6), round(trays["blue"][1], 6)]},
++                                  "slot_name": chosen.name,
++                                  "slot_xy": [round(float(chosen.xy[0]), 6), round(float(chosen.xy[1]), 6)],
++                                  "support_z": float(chosen.support_z),
++                                  "block_xy": [round(xy[0], 6), round(xy[1], 6)],
++                                  "yaw_degrees": round(yaw, 6),
++                                  "checks": {
++                                      "sampler_attempts": attempts,
++                                      "pick": {key: value for key, value in pick.items()
++                                               if key not in ("approach", "lift")},
++                                      "slots": slot_verdicts,
++                                      "tray_gap_m": round(_tray_gap(config, trays["red"], trays["blue"]), 6),
++                                  },
++                              })
++            scene.sha256 = scene.digest()
++            if trace is not None:
++                trace.extend(local_trace)
++            return scene
++    if trace is not None:
++        trace.extend(local_trace)
++    raise SceneGenerationError(
++        f"no legal single-block scene for seed {seed} colour {color} after {attempts} attempts; "
++        f"rejections {rejected}")
++
++
++def scene_certificate_digest(certificate):
++    import hashlib
++    import json
++    payload = json.dumps(certificate.data, sort_keys=True, separators=(",", ":"), default=str).encode()
++    return hashlib.sha256(payload).hexdigest()
+diff -ruN a/src/bimanual/tasks/single_block/task.py b/src/bimanual/tasks/single_block/task.py
+--- a/src/bimanual/tasks/single_block/task.py	1969-12-31 16:00:00.000000000 -0800
++++ b/src/bimanual/tasks/single_block/task.py	2026-10-29 03:13:08.070013709 -0700
+@@ -0,0 +1,180 @@
++"""Physical success rule for one block placed into its matching colour tray."""
++from __future__ import annotations
++
++import math
++
++import numpy as np
++
++from ...control import contacts
++from ...types import JOINT_NAMES
++from ..base import BaseTask
++from ..sorting import regions
++
++
++class SingleBlockPlaceTask(BaseTask):
++    """No expert return code or visual verdict is accepted as success."""
++
++    def __init__(self, config):
++        self.config = config
++        self.scene = None
++        self.start_time = 0.0
++        self.stable_since = None
++        self.instruction = config["sorting"]["instruction"]
++        self.color = None
++        self.active_arm = None
++        self.name = "cube_0"
++        self.names = [self.name]
++
++    def reset(self, model, data, rng, scene=None):
++        if scene is None or scene.extra.get("task_type") != "single_block_place":
++            raise ValueError("SingleBlockPlaceTask requires a single_block_place SceneSpec")
++        self.scene = scene
++        self.color = scene.extra["color"]
++        self.active_arm = scene.extra["active_arm"]
++        self.instruction = scene.extra["instruction"]
++        self.config["sorting"]["instruction"] = self.instruction
++        self.stable_since = None
++        table_z = float(self.config["scene"]["table"]["surface_z"])
++        for color in ("red", "blue"):
++            x, y = scene.extra["trays"][color]
++            body_id = model.body(f"{color}_tray").id
++            model.body_pos[body_id] = np.array([float(x), float(y), table_z], dtype=float)
++        entry = scene.objects[0]
++        address = model.jnt_qposadr[model.joint(f"{self.name}_free").id]
++        yaw = math.radians(float(entry.yaw_degrees)) / 2.0
++        data.qpos[address:address + 3] = [
++            float(entry.xy[0]), float(entry.xy[1]),
++            table_z + regions.cube_half(self.config) + 0.001,
++        ]
++        data.qpos[address + 3:address + 7] = [math.cos(yaw), 0.0, 0.0, math.sin(yaw)]
++        data.qvel[address:address + 6] = 0.0
++        rgba = ([0.85, 0.08, 0.06, 1.0] if self.color == "red"
++                else [0.08, 0.25, 0.90, 1.0])
++        model.geom_rgba[model.geom(f"{self.name}_geom").id] = rgba
++
++    def _tray(self, color):
++        return np.asarray(self.scene.extra["trays"][color], dtype=float)
++
++    def object_statuses(self, model, data):
++        position, rotation = contacts.object_pose(model, data, self.name)
++        half = np.full(3, regions.cube_half(self.config))
++        extents = np.abs(rotation) @ half
++        color = self.color
++        center = self._tray(color)
++        inner = regions.tray_inner_half(self.config)
++        contained = bool(np.all(np.abs(position[:2] - center) + extents[:2] <= inner)
++                         and self.config["scene"]["table"]["surface_z"] < position[2]
++                         < self.config["scene"]["table"]["surface_z"] + 0.06)
++        support_geom = {f"{color}_tray_0"}
++        supported, supports = contacts.object_support(model, data, self.name, support_geom)
++        touching = contacts.robot_contacts_with(model, data, self.name)
++        linear, angular, _, _ = contacts.object_speed(model, data, self.name)
++        linear_limit = float(self.config["sorting"].get("linear_speed_m_s", 0.02))
++        angular_limit = float(self.config["sorting"].get("angular_speed_rad_s", 0.2))
++        sorted_now = bool(contained and supported and not touching
++                          and linear <= linear_limit and angular <= angular_limit)
++        table = self.config["scene"]["table"]
++        out_of_bounds = bool(position[2] < table["surface_z"] - 0.10
++                             or np.any(np.abs(position[:2] - np.asarray(table["center_xy"]))
++                                       > np.asarray(table["half_size_xy"]) + 0.1))
++        return {self.name: {
++            "color": color, "position_xy": [float(position[0]), float(position[1])],
++            "position": position.tolist(), "contained": contained,
++            "supported_geoms": supports, "supported": bool(supported),
++            "robot_contacts": touching, "linear_speed_m_s": linear,
++            "angular_speed_rad_s": angular, "sorted": sorted_now,
++            "out_of_bounds": out_of_bounds,
++        }}
++
++    def _arm_public(self, model, data, arm):
++        values = []
++        for joint in JOINT_NAMES:
++            index = model.jnt_qposadr[model.joint(f"{arm}_{joint}").id]
++            values.append(float(data.qpos[index]))
++        degrees = np.rad2deg(np.asarray(values[:5], dtype=float))
++        closed = float(self.config["robot"]["gripper_closed_rad"])
++        opened = float(self.config["robot"]["gripper_open_rad"])
++        gripper = (values[5] - closed) / (opened - closed) * 100.0
++        return np.concatenate([degrees, [gripper]])
++
++    def arm_clearance(self, model, data):
++        tolerance_deg = float(self.config["sorting"].get("arm_park_joint_tolerance_deg", 2.0))
++        tolerance_grip = float(self.config["sorting"].get("arm_park_gripper_tolerance_percent", 5.0))
++        home_deg = np.asarray(self.config["robot"]["home_degrees"], dtype=float)
++        home_grip = float(self.config["robot"]["home_gripper_percent"])
++        parked = {}
++        for arm in ("left", "right"):
++            state = self._arm_public(model, data, arm)
++            joint_error = float(np.max(np.abs(state[:5] - home_deg)))
++            grip_error = float(abs(state[5] - home_grip))
++            parked[arm] = {"joint_error_deg": joint_error, "gripper_error_percent": grip_error,
++                           "parked": bool(joint_error <= tolerance_deg and grip_error <= tolerance_grip)}
++        margin = float(self.config["sorting"].get("arm_clearance_m", 0.01))
++        position = contacts.object_pose(model, data, self.name)[0]
++        inner = regions.tray_inner_half(self.config)
++        outer = inner + 0.006
++        table_z = float(self.config["scene"]["table"]["surface_z"])
++        tray_top = table_z + 0.038
++        tray_contacts = []
++        for contact in data.contact:
++            names = [model.geom(int(index)).name for index in (contact.geom1, contact.geom2)]
++            robot = any(name.startswith(("left_", "right_")) for name in names)
++            tray = any(name.startswith(("red_tray_", "blue_tray_")) for name in names)
++            if robot and tray:
++                tray_contacts.append({"geoms": names, "penetration_m": float(-contact.dist)})
++        clearances = {}
++        for arm in ("left", "right"):
++            tcp = data.site_xpos[model.site(f"{arm}_tcp").id]
++            block_distance = float(np.linalg.norm(tcp - position))
++            tray_distance = float("inf")
++            for color in ("red", "blue"):
++                center = self._tray(color)
++                dx = max(0.0, abs(float(tcp[0]) - center[0]) - outer[0])
++                dy = max(0.0, abs(float(tcp[1]) - center[1]) - outer[1])
++                dz = max(table_z - float(tcp[2]), float(tcp[2]) - tray_top, 0.0)
++                tray_distance = min(tray_distance, math.sqrt(dx * dx + dy * dy + dz * dz))
++            clearances[arm] = {"block_m": block_distance, "tray_m": tray_distance,
++                               "clear": bool(block_distance >= margin and tray_distance >= margin)}
++        return {"parked": parked, "clearances": clearances, "tray_contacts": tray_contacts,
++                "clear": bool(all(item["parked"] for item in parked.values())
++                              and all(item["clear"] for item in clearances.values())
++                              and not tray_contacts)}
++
++    def evaluate(self, model, data):
++        status = self.object_statuses(model, data)[self.name]
++        clearance = self.arm_clearance(model, data)
++        stable_now = bool(status["sorted"] and clearance["clear"])
++        if stable_now:
++            if self.stable_since is None:
++                self.stable_since = float(data.time)
++        else:
++            self.stable_since = None
++        stable_seconds = float(self.config["sorting"]["stable_success_s"])
++        stable = bool(self.stable_since is not None
++                      and data.time - self.stable_since >= stable_seconds)
++        timeout = bool(data.time - self.start_time >= float(self.config["sorting"]["timeout_s"]))
++        success = bool(stable)
++        reason = None
++        if status["out_of_bounds"]:
++            reason = "object_out_of_bounds"
++        elif not status["contained"]:
++            reason = "wrong_tray"
++        elif not status["supported"]:
++            reason = "not_supported"
++        elif status["robot_contacts"]:
++            reason = "robot_contact"
++        elif (status["linear_speed_m_s"] > float(self.config["sorting"].get("linear_speed_m_s", 0.02))
++              or status["angular_speed_rad_s"] > float(self.config["sorting"].get("angular_speed_rad_s", 0.2))):
++            reason = "not_stable"
++        elif not clearance["clear"]:
++            reason = "arm_not_clear"
++        elif status["sorted"] and not success:
++            reason = "not_stable"
++        if timeout and not success:
++            reason = reason or "timeout"
++        info = {"success": success, "sorted_count": int(status["sorted"]),
++                "objects": {self.name: status}, "arm_clearance": clearance,
++                "stable_seconds": (None if self.stable_since is None
++                                   else round(float(data.time - self.stable_since), 6)),
++                "failure_reason": reason, "timeout": timeout}
++        return float(status["sorted"]), success, bool(timeout and not success), info

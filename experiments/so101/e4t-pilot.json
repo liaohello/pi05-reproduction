@@ -1,0 +1,764 @@
+{
+  "schema_version": 2,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-T-DATA-pilot",
+  "supersedes": "experiments/so101/e4t-pilot.json schema_version 1 (v1-v6)",
+  "task": "dual SO101 MuJoCo direct sorting; bounded mid-episode perturbations with expert recovery",
+  "pilot_budget": {
+    "pre_registered_maximum": 12,
+    "final_maximum": 36,
+    "recorded_attempts": 33,
+    "unrecorded_simulated_episodes": 2,
+    "amendments_disclosed": [
+      "pilot_amendment",
+      "pilot_amendment_v4",
+      "pilot_amendment_v5",
+      "pilot_amendment_v6",
+      "mechanism_amendment_v4",
+      "mechanism_amendment_v7",
+      "pilot_amendment_v7",
+      "pilot_amendment_v8",
+      "pilot_amendment_v8b",
+      "pilot_amendment_v9",
+      "pilot_amendment_v10",
+      "pilot_amendment_v11",
+      "pilot_amendment_v12",
+      "pilot_amendment_v13",
+      "mechanism_amendment_v14"
+    ],
+    "hard_stop_taken": true,
+    "consumed_including_unrecorded": 35,
+    "ceiling": 36,
+    "snapshot_scope": "cumulative pilot accounting through v13; retained below for history",
+    "v13_snapshot": {
+      "recorded_attempts": 31,
+      "unrecorded_simulated_episodes": 2,
+      "consumed_including_unrecorded": 33,
+      "amended_ceiling": 34
+    },
+    "final_accounting_note": "v14 added two recorded attempts; final total is 33 recorded + 2 unrecorded = 35 consumed against the disclosed ceiling of 36"
+  },
+  "mechanisms": {
+    "bounded_velocity_impulse": "proven on a free cube (5.85 mm in the perturbed frame, 4/4 sorted)",
+    "explicit_state_displacement": "proven on a free cube (11.65 mm, 4/4 sorted twice)",
+    "gripper_release_slip": "implemented for a clamped payload; the escape, the open-hand catch, the regrasp and a full 4/4 task completion were observed (seed 8234, 3095 frames) but the episode was rejected by this round's pre-registered effect metric"
+  },
+  "runs": [
+    {
+      "run": "pilot_20261026_000244",
+      "attempts": [
+        {
+          "profile": "pilot_A",
+          "seed": 8300,
+          "success": false,
+          "failure": "recovery_audit_failed",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "A",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 2853
+        }
+      ],
+      "summary": {
+        "attempts": 1,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v10_20261026_020032",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8331,
+          "success": false,
+          "failure": "service_unavailable",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan",
+            "perturbation_event_never_fired"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 268
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8351,
+          "success": false,
+          "failure": "service_unavailable",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan",
+            "perturbation_event_never_fired"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 381
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v11_20261026_020832",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8332,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": true,
+          "frames": 1673
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8348,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": true,
+          "frames": 382
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v12_20261026_021617",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8333,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": true,
+          "frames": 910
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8349,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": true,
+          "frames": 394
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v13_20261026_022619",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8234,
+          "success": false,
+          "failure": "recovery_audit_failed",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "slip_payload_did_not_descend"
+          ],
+          "frame_xy_m": 0.00458,
+          "correction": true,
+          "frames": 3095
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8244,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": true,
+          "frames": 388
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v2_20261026_001500",
+      "attempts": [
+        {
+          "profile": "pilot_A",
+          "seed": 8300,
+          "success": true,
+          "failure": null,
+          "mechanism": "explicit_state_displacement",
+          "category": "A",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.01165,
+          "correction": true,
+          "frames": 2859
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8320,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00055,
+          "correction": true,
+          "frames": 269
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8321,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "B",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00902,
+          "correction": true,
+          "frames": 269
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8340,
+          "success": false,
+          "failure": "service_unavailable",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 1
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8341,
+          "success": false,
+          "failure": "service_unavailable",
+          "mechanism": "explicit_state_displacement",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 1
+        }
+      ],
+      "summary": {
+        "attempts": 5,
+        "successes": 1,
+        "audited_recovery_successes": 1
+      }
+    },
+    {
+      "run": "pilot_v3_20261026_002713",
+      "attempts": [
+        {
+          "profile": "pilot_A",
+          "seed": 8300,
+          "success": true,
+          "failure": null,
+          "mechanism": "explicit_state_displacement",
+          "category": "A",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.01165,
+          "correction": true,
+          "frames": 2859
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8320,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00055,
+          "correction": true,
+          "frames": 377
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8321,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "B",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00902,
+          "correction": true,
+          "frames": 377
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8340,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00188,
+          "correction": true,
+          "frames": 490
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8341,
+          "success": false,
+          "failure": "ik_unreachable",
+          "mechanism": "explicit_state_displacement",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "no_post_perturbation_expert_correction",
+            "perturbation_recorded_in_terminal_frame"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 381
+        }
+      ],
+      "summary": {
+        "attempts": 5,
+        "successes": 1,
+        "audited_recovery_successes": 1
+      }
+    },
+    {
+      "run": "pilot_v4_20261026_004818",
+      "attempts": [
+        {
+          "profile": "pilot_A",
+          "seed": 8301,
+          "success": false,
+          "failure": "recovery_audit_failed",
+          "mechanism": "bounded_velocity_impulse",
+          "category": "A",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00283,
+          "correction": true,
+          "frames": 3024
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8322,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "B",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00505,
+          "correction": true,
+          "frames": 382
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8342,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "C",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00932,
+          "correction": true,
+          "frames": 496
+        }
+      ],
+      "summary": {
+        "attempts": 3,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v5_20261026_005933",
+      "attempts": [
+        {
+          "profile": "pilot_A",
+          "seed": 8302,
+          "success": true,
+          "failure": null,
+          "mechanism": "bounded_velocity_impulse",
+          "category": "A",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00585,
+          "correction": true,
+          "frames": 2953
+        },
+        {
+          "profile": "pilot_B",
+          "seed": 8323,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 268
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8343,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "C",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00651,
+          "correction": true,
+          "frames": 477
+        }
+      ],
+      "summary": {
+        "attempts": 3,
+        "successes": 1,
+        "audited_recovery_successes": 1
+      }
+    },
+    {
+      "run": "pilot_v6_20261026_011218",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8324,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "trigger_stage_not_reached",
+            "no_expert_replan"
+          ],
+          "frame_xy_m": null,
+          "correction": false,
+          "frames": 268
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8344,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "explicit_state_displacement",
+          "category": "C",
+          "audit_valid": true,
+          "audit_reasons": [],
+          "frame_xy_m": 0.00632,
+          "correction": true,
+          "frames": 382
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v7_20261026_013004",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8325,
+          "success": false,
+          "failure": "ik_unreachable",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00058,
+          "correction": true,
+          "frames": 636
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8345,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "actual_frame_displacement_below_bound"
+          ],
+          "frame_xy_m": 0.00225,
+          "correction": true,
+          "frames": 536
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    },
+    {
+      "run": "pilot_v8b_20261026_014246",
+      "attempts": [
+        {
+          "profile": "pilot_B",
+          "seed": 8327,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "B",
+          "audit_valid": false,
+          "audit_reasons": [
+            "slip_payload_did_not_descend"
+          ],
+          "frame_xy_m": 0.02064,
+          "correction": true,
+          "frames": 585
+        },
+        {
+          "profile": "pilot_C",
+          "seed": 8347,
+          "success": false,
+          "failure": "unexpected_contact",
+          "mechanism": "gripper_release_slip",
+          "category": "C",
+          "audit_valid": false,
+          "audit_reasons": [
+            "slip_payload_did_not_descend"
+          ],
+          "frame_xy_m": 0.00536,
+          "correction": true,
+          "frames": 541
+        }
+      ],
+      "summary": {
+        "attempts": 2,
+        "successes": 0,
+        "audited_recovery_successes": 0
+      }
+    }
+  ],
+  "totals": {
+    "episodes_saved": 3,
+    "audited_recovery_successes": 3,
+    "classes_proven": [
+      "A"
+    ],
+    "classes_not_proven": [
+      "B",
+      "C"
+    ],
+    "class_B_status": "task completed after the slip, rejected only by the slip effect metric",
+    "class_C_status": "episode ends within a few frames of the slip while carrying at lift height"
+  },
+  "source_bindings": {
+    "baseline_source_sha256": "201898ff7f01eac078ac708b27788f0360e227b02be4c4abae143b679e946fe2",
+    "final_patch_sha256": "a4cd614d0377905490403eaae18171371425d9554bc1d5099aab9df39f1e4d26",
+    "final_snapshot": "external/so101_e4t_midperturb_v13",
+    "patched_source_sha256": "cceb2865cb767b375db063cc63e95c84597d1b9052ee848ecabc4c8a58866b97",
+    "patched_expert_sha256": "4c0ae2445fa980edfea515bd5615abb6944fa3340eb22e2f82d1b64820fae8ac",
+    "snapshots_built": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5",
+      "v6",
+      "v7",
+      "v8",
+      "v9",
+      "v10",
+      "v11",
+      "v12",
+      "v13"
+    ]
+  },
+  "gate": {
+    "data_gate_recovery": "failed",
+    "data_gate_clean": "not_attempted",
+    "main_collection_started": false,
+    "training_started": false,
+    "training_updates": 0,
+    "open_loop_evaluated": false,
+    "policy_actions_executed_in_simulation": false,
+    "real_robot_touched": false,
+    "public_push": false
+  },
+  "remaining_defects": [
+    "slip effect metric: a released payload that is caught by the open-hand settle does not fall 20 mm inside the 50-frame window, so the pre-registered metric rejects an otherwise valid recovery; the metric must be redefined as grasp separation plus an evidenced regrasp and re-validated before any B/C collection",
+    "category C: a slip during transport at ~57 mm height still terminates the episode within a few frames, so the carry-phase recovery needs its own drop-height handling",
+    "the guard's grasp exemption now covers recovery plans; contact, penetration, force and tracking budgets are unchanged"
+  ],
+  "minimal_next_step": "Historical v13 recommendation only; it was superseded by the later replay audit and amended E4-T run. Current round status is recorded in current_status and post_pilot.",
+  "claim": "pilot-history record; downstream data admission and training status are recorded in current_status and the E4-T data/training evidence; no policy success-rate claim",
+  "document_status": "legacy top-level gate, totals and remaining_defects describe pilot v13 only; v14 and later work are historical amendments, while current_status is authoritative for this round",
+  "current_status": {
+    "pilot_final_attempts": "35 consumed against amended ceiling 36",
+    "data_view": "50 episodes admitted under amended protocol; 40 train / 10 validation; clean 25 / recovery 25",
+    "recovery_subquota_deviation": "A15/B0/C10; original A10/B10/C5 unmet",
+    "training": "state-on π0.5 fine-tune completed 30000 updates",
+    "open_loop": "not_eligible_for_closed_loop because key-event timing gate failed",
+    "policy_actions_executed_in_simulation": false,
+    "real_follower_started": false,
+    "public_push": false,
+    "authoritative_evidence": [
+      "experiments/so101/e4t-data.json",
+      "experiments/so101/e4t-training.json",
+      "experiments/so101/e4t-openloop.json"
+    ]
+  },
+  "gate_v14": {
+    "data_gate_recovery": "passed",
+    "classes_proven": [
+      "A",
+      "B",
+      "C"
+    ],
+    "mechanisms_proven": [
+      "bounded_velocity_impulse",
+      "explicit_state_displacement",
+      "gripper_release_slip",
+      "arm_bump_impulse"
+    ],
+    "attempts_in_v14_run": 2,
+    "successes_in_v14_run": 2,
+    "cumulative_recorded_attempts": 33,
+    "unrecorded_simulated_episodes": 2,
+    "disclosed_pilot_ceiling": 36,
+    "episodes": [
+      {
+        "attempt_id": "pilot_B_8235_000",
+        "mechanism": "gripper_release_slip",
+        "frames": 3203
+      },
+      {
+        "attempt_id": "pilot_C_8245_000",
+        "mechanism": "arm_bump_impulse",
+        "frames": 3388
+      }
+    ],
+    "evidence": "runs/so101/e4t/pilot_v14_20261026_024040/public_pilot.json",
+    "ledger_run_id": "20261025T115215-so101-E3-verify-E4-T-T-DATA-pilot-v14-gate-pass",
+    "main_collection_started_after_this_gate": true
+  },
+  "post_pilot": {
+    "amendments": {
+      "mechanism_amendment_v20": "category B with the carrying-arm bump: the early pilot measured 1 success in 12 attempts and 0 in 23 afterwards; the five dedicated shardB runs later recorded 2 arm-bump successes in 38 attempts (and 7 slip successes in 49), and the superseding figure is 2/38 in protocol v20",
+      "mechanism_amendment_v21": "category B quota set to zero; recovery quota re-assigned to A 15 and C 10",
+      "mechanism_amendment_v22": "category A mechanism mix recorded as collected (10 impulse / 5 displacement)"
+    },
+    "slip_replay_defect": {
+      "episodes_collected": 8,
+      "episodes_excluded_by_audit": 8,
+      "measured": {
+        "episodes": 2,
+        "slip_replayed": 0,
+        "bump_replayed": 2,
+        "max_public_state_error_deg": [
+          69.54492950439453,
+          69.54647064208984
+        ],
+        "max_object_position_error_m": [
+          0.0027766065330037115,
+          0.004819634284326385
+        ],
+        "max_clock_error_s": [
+          0.0,
+          0.0
+        ],
+        "full_final_qpos_error": [
+          0.013199340576364404,
+          0.014121234180861331
+        ]
+      },
+      "evidence": "experiments/so101/e4t-replay-divergence.json (raw: runs/so101/e4t/slip_replay_divergence_20261026_111951.json)",
+      "comparison": "arm_bump_impulse episodes replay with every audited error at exactly 0.0",
+      "conclusion": "the slip's released payload re-triggers a different contact sequence during replay, so the episode cannot satisfy this round's requirement that every admitted episode replays its recorded event timeline"
+    },
+    "open_defect": "no category-B (recoverable grasp loss) mechanism is both physically valid and replay-exact; B contributes zero episodes this round and the deficit is reported, not renamed a success"
+  }
+}

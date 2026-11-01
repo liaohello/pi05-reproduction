@@ -1,0 +1,67 @@
+schema_version: 1
+extends: configs/profiles/collection_50hz_three_camera.yaml
+evaluation:
+  certificate: configs/certification/scene2_dual_random_certificate_v4.json
+task:
+  type: dual_block_select_place
+sorting:
+  instruction: Put the red block into the red tray.
+  instruction_template: Put the {color} block into the {color} tray.
+  initial_positions_xy:
+  - - 0.25
+    - 0.1
+  - - 0.25
+    - -0.1
+  objects:
+    cube_0:
+      color: red
+    cube_1:
+      color: blue
+  timeout_s: 60.0
+  stable_success_s: 0.5
+  linear_speed_m_s: 0.02
+  angular_speed_rad_s: 0.2
+  block_jitter_m: 0.004
+  yaw_domain_degrees:
+  - 33.0
+  - 67.0
+  tray_sampling_positive:
+    x_m:
+    - 0.214
+    - 0.27
+    y_m:
+    - 0.263
+    - 0.274
+  tray_sampling_negative:
+    x_m:
+    - 0.214
+    - 0.27
+    y_m:
+    - -0.274
+    - -0.235
+  tray_table_margin_m: 0.02
+  tray_tray_gap_m: 0.03
+  block_tray_clearance_m: 0.01
+  block_block_min_distance_m: 0.06
+  arm_park_joint_tolerance_deg: 2.0
+  arm_park_gripper_tolerance_percent: 5.0
+  arm_clearance_m: 0.01
+  distractor_max_displacement_m: 0.002
+  distractor_max_speed_m_s: 0.02
+  distractor_max_angular_speed_rad_s: 0.2
+  scene2_block_tray_outer_clearance_m: 0.105
+  scene2_slot_mode: external
+grasp:
+  open_percent: 70.0
+  closed_percent: 0.0
+  hover_height_m: 0.06
+  place_hover_height_m: 0.04
+  release_clearance_m: 0.006
+  retreat_clearance_x_m: 0.012
+scene:
+  transfer:
+    marker: false
+domain_randomization:
+  enabled: false
+collection:
+  recording_type: scripted_dual_block_select_place_demonstration

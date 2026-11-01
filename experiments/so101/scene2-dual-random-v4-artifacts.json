@@ -1,0 +1,77 @@
+{
+  "adapter_sha256": "a6b9867b00dc6105927b077b59ee56a8c0e4777d40690a4aa7005f423222ead3",
+  "certificate_sha256": "1c004f2451f9d713486a2a9d0fde9c920890edcbc276a10d5c0a0e4a61aaf3ad",
+  "claim": "v4 12 layouts x 2 instructions = 24 condition episodes; 19/24; 7 layouts both; gate 20/24 not met by one; pilot-only; no formal collection",
+  "ignored_artifacts": {
+    "certificate": "ignored external certificate; bytes not redistributed; hash recorded above",
+    "frozen_scenes_file_sha256": "c32b2759918a2fb1777b707fa6a9a041c7bd9684a503f688a7a4a0e5aa2f1417",
+    "raw_run_directories": "ignored; traces, three camera MP4s, events, applied actions and initial states are not redistributed"
+  },
+  "ledger_sha256": "521adc3358676ca398b2706273799e412856fe81e7b242234c8f627c4ee192fe",
+  "patch": {
+    "path": "patches/so101/scene2-dual-random-scene-v4.patch",
+    "sha256": "da975a12e8d1713d0a69bf0da72b20a173e8d0ce0e3cd987c2cbec7695680e43"
+  },
+  "phase": "scene2_v4_artifact_manifest",
+  "profile_sha256": "5d9073db6799f152dea3ac76282be7a50e65a594ba1327b01f86e5ca11644845",
+  "protocol_id": "scene2_dual_random_v4",
+  "protocol_sha256": "be908cb2d7aaaf8c9d97ae4d201d0ea787d11e76c8c0739984404b78fc313a57",
+  "report_assets": {
+    "reports/assets/so101-scene2-dual-random-v4/layout_00_red_vs_blue.png": "87ade8622eab8b245bfcd0db34bf16262d8804b1193b16e2b7eb22b3e371ee71",
+    "reports/assets/so101-scene2-dual-random-v4/layout_01_red_vs_blue.png": "b915379b77cbb14539a8e18e59c1c4931bb45507e87368e4c47af4e9e390d8f1",
+    "reports/assets/so101-scene2-dual-random-v4/layout_02_red_vs_blue.png": "33de9ebb880ab3e1a79ddb102cd25d1cdc20791cb72e078e18da1d178c614f76",
+    "reports/assets/so101-scene2-dual-random-v4/layout_03_red_vs_blue.png": "befedfde2bdf4dc2b6f48c3d5e1aded7d1f04e5338583378ceadc18769a847d5",
+    "reports/assets/so101-scene2-dual-random-v4/layout_04_red_vs_blue.png": "176dae4f0b335e6a561f057f66ae3650fb4940d935d6857567e2b3ca7c23fefd",
+    "reports/assets/so101-scene2-dual-random-v4/layout_05_red_vs_blue.png": "5399f30265d58a5ab9196bff28624952d8f736394a87eaf42c85bc4f76b21ef4",
+    "reports/assets/so101-scene2-dual-random-v4/layout_06_red_vs_blue.png": "2229cfaec0e1aed0337db2955db1cac802547094a6dfff1870cffc36008e37f7",
+    "reports/assets/so101-scene2-dual-random-v4/layout_07_red_vs_blue.png": "8aa0179aa47093c983426a5949b21b27dd5c5ddd377b01d1c7e3fa22dc185b72",
+    "reports/assets/so101-scene2-dual-random-v4/layout_08_red_vs_blue.png": "3bcd6ede5567dff291a3e2718df94b0208afac52c9123b3b0db8f842d2ce8854",
+    "reports/assets/so101-scene2-dual-random-v4/layout_09_red_vs_blue.png": "b766b743429a5a8a6a142a263f9a4da7dafb4b00bfbedaa349238b4593f8515d",
+    "reports/assets/so101-scene2-dual-random-v4/layout_10_red_vs_blue.png": "b9fa80b26280aa55a6cb2cc2c46cfa57a14f7c3cd2aede978b403213074d8da9",
+    "reports/assets/so101-scene2-dual-random-v4/layout_11_red_vs_blue.png": "40a5a290e0b5739befac35e1c2d13638e66a11f4be45e85af6d69d004053abc0"
+  },
+  "reproducibility": "R3 local; external snapshot pinned by hash and not redistributed; reproduce-pending from a clean clone",
+  "schema_version": 1,
+  "source_fingerprint": {
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "source_files": 113,
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d"
+  },
+  "tracked_files": {
+    "configs/so101/scene2_dual_random_profile_v4.yaml": "5d9073db6799f152dea3ac76282be7a50e65a594ba1327b01f86e5ca11644845",
+    "configs/so101/scene2_dual_random_protocol_v4.json": "be908cb2d7aaaf8c9d97ae4d201d0ea787d11e76c8c0739984404b78fc313a57",
+    "docs/so101-scene2-dual-random-v4.md": "d2c906038c5b134c89d6cc4b175a851c1c08eb18b22832d2e5466db49ab89fc5",
+    "experiments/so101/scene2-dual-random-v4-audit.json": "51aa20e23fbec2dd8e85e5a4fa2d05cb0c482ef07cc440684ff5f3eff58e38ae",
+    "experiments/so101/scene2-dual-random-v4-baseline.json": "5c2cd09dd4d1b2a436e43177f8b7bf86fd745fe2fd3a31b809c36d0f067940b9",
+    "experiments/so101/scene2-dual-random-v4-layout-pilot.json": "6ac09df2507dde98a5525c913498d684e08e1a2468bc1a70739858cd0ed32031",
+    "experiments/so101/scene2-dual-random-v4-pilot-scenes.json": "54c8d8c70b462739e5780b2087934018acdd3e6b7e780f2335038415dc61782a",
+    "experiments/so101/scene2-dual-random-v4-pilot.json": "4139e0b5bd8354eb1df72078e6813a02cd95225547d9d4798ead55af6a3e7f9d",
+    "reports/so101-scene2-dual-random-v4-data.md": "6c07ac3e85a09a89de7497bb0cd05be4fdfaf7625f02f9f071790304318556ec",
+    "reports/so101-scene2-dual-random-v4-engineering.md": "e6edcd68fb8df3b54074e77c15d00c40a1f4d30d6b01d3be2e834acf9b5d911c",
+    "reports/so101-scene2-dual-random-v4-scene.md": "80b642599053686fa8f707335d238608d334f8538c18e80961cc01cc996c3389",
+    "scripts/so101/scene2_audit_v4.py": "dc33f89ceb27090f93191d0de66499c82b209a4d01dd3d210565627cd7fd1a4f",
+    "scripts/so101/scene2_certify_v4.py": "cc38bccd79b3232f965bdb74840efaee74cabcd3f400868f82422603bfa65371",
+    "scripts/so101/scene2_collect_v4.py": "c2f89f545bf3ca74495cd28aa92fb2e3d50f7f091d96e0f91e5bdadba4888a4c",
+    "scripts/so101/scene2_common_v4.py": "a6b9867b00dc6105927b077b59ee56a8c0e4777d40690a4aa7005f423222ead3",
+    "scripts/so101/scene2_layout_pilot_v4.py": "fe0543c3ace3a5abede702d50933d2b9cfe159f3a9974ec2b037670bb11e0e2b",
+    "scripts/so101/scene2_pregenerate_v4.py": "0cebb400e6e81d33839d1e95d21d9cca32fb42b6a358ff81ce62cc1ff1157cad",
+    "scripts/so101/scene2_settle_baseline_v4.py": "44cf9d4b663e2ef9a2646fabe24d70f53abe120d3b5328c44bc9b152637e9322",
+    "tests/test_scene2_v4_contracts.py": "086d833e54a3be6e2ea557ffcea6f952986c4d4fd6595705a862a1f4dd048eba"
+  },
+  "v1_v2_v3_reference": {
+    "note": "scene sets differ; v4 is the best observed but the gate is not met",
+    "v1_protocol_sha256": "5a1b72c45bc84e1c9c84941207d0fa55a70bad9c7905d100a2cc19d49c65affc",
+    "v1_successes": 4,
+    "v2_protocol_sha256": "ae7dbd06fb2a0b7226ccaa151b6dfd869541bc29a69533936ae28ba53d4dcaa5",
+    "v2_successes": 2,
+    "v3_protocol_sha256": "48117757fc1c52fa09fd2707a3bc0489907e36e80730873e919a304f251db2c9",
+    "v3_successes": 3
+  },
+  "v4_gate": {
+    "achieved": 19,
+    "met": false,
+    "required": 20
+  }
+}

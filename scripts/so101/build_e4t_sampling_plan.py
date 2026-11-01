@@ -27,7 +27,23 @@ def main() -> int:
     training = common.load_json(args.training_config)
     plan = dict(training["sampling_plan"])
     meta = common.load_json(args.view / "meta.json")
-    train_groups = sorted({row.get("subgroup") for row in meta["episodes"] if row["split"] == "train"})
+    train_rows = [row for row in meta["episodes"] if row["split"] == "train"]
+    if meta.get("clean_profile") is not None:
+        missing_provenance = [
+            row.get("episode_index") for row in train_rows
+            if row.get("category") != "clean" or row.get("subgroup") != "clean"
+            or "perturbation_frame" not in row or row.get("perturbation_frame") is not None
+        ]
+        if missing_provenance:
+            raise SystemExit(
+                "clean view contains rows without explicit clean provenance: "
+                f"{missing_provenance[:10]}")
+        train_groups = ["clean"]
+    else:
+        # Historical recovery views predate the explicit clean profile.  Never
+        # apply this fallback to a view that claims clean provenance.
+        train_groups = sorted({row.get("subgroup") or row.get("category") or "clean"
+                               for row in train_rows})
     configured = sorted(plan["group_weights"])
     missing = [group for group in train_groups if group not in configured]
     absent = [group for group in configured if group not in train_groups]

@@ -1,0 +1,998 @@
+{
+  "schema_version": 1,
+  "branch": "so101",
+  "phase": "E3",
+  "substage": "E4-T-T2-window-coverage",
+  "created": "2026-10-26T15:19:00+08:00",
+  "question": "how many recorded gripper close/release transitions can the frozen open-loop window plan actually see",
+  "method": "scripts/so101/e4t_window_coverage.py counts every transition in the recorded expert actions of each split and checks whether at least one planned 10-step window contains the change; the plan and the view are read as delivered and never modified",
+  "view_sha256": "66faffa6d7186ab905e4b8402f1fc45faf27d4f308a865984985ee382a08557e",
+  "windows_sha256": "ae3fa43fbfb2c472572b0c07fcf130eb58952882c10f1a159d2e5ae3e3378d54",
+  "window_plan_definition": "per episode: the pre-registered fixed windows (16 train / 64 validation, evenly spaced over the legal starts) union the pre-registered key-phase and perturbation windows",
+  "splits": {
+    "validation": {
+      "episodes": 10,
+      "planned_windows": 2948,
+      "events": 82,
+      "events_inside_a_planned_window": 15,
+      "coverage": 0.18292682926829268,
+      "view_sha256": "66faffa6d7186ab905e4b8402f1fc45faf27d4f308a865984985ee382a08557e",
+      "windows_sha256": "ae3fa43fbfb2c472572b0c07fcf130eb58952882c10f1a159d2e5ae3e3378d54",
+      "per_episode": [
+        {
+          "episode": 16,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 64,
+          "frames": 2703,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 17,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 64,
+          "frames": 2723,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 18,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 64,
+          "frames": 2679,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 19,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 64,
+          "frames": 2699,
+          "events": 8,
+          "covered": 3,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 2
+            }
+          }
+        },
+        {
+          "episode": 24,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 396,
+          "frames": 2646,
+          "events": 8,
+          "covered": 3,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 2
+            }
+          }
+        },
+        {
+          "episode": 37,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 439,
+          "frames": 3028,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 38,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 440,
+          "frames": 2952,
+          "events": 8,
+          "covered": 2,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 2
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 39,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 436,
+          "frames": 2969,
+          "events": 8,
+          "covered": 2,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 2
+            }
+          }
+        },
+        {
+          "episode": 48,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 493,
+          "frames": 3579,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 49,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 488,
+          "frames": 3484,
+          "events": 9,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        }
+      ],
+      "reading": "the key-event timing gate can only be measured on the covered transitions; the rest are reported as unmeasurable rather than as a pass"
+    },
+    "train": {
+      "episodes": 40,
+      "planned_windows": 10022,
+      "events": 328,
+      "events_inside_a_planned_window": 10,
+      "coverage": 0.03048780487804878,
+      "view_sha256": "66faffa6d7186ab905e4b8402f1fc45faf27d4f308a865984985ee382a08557e",
+      "windows_sha256": "ae3fa43fbfb2c472572b0c07fcf130eb58952882c10f1a159d2e5ae3e3378d54",
+      "per_episode": [
+        {
+          "episode": 0,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2717,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 1,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2767,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 2,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2770,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 3,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2811,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 4,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2763,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 5,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2653,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 6,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2583,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 7,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2707,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 8,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2762,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 9,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2682,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 10,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2625,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 11,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2656,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 12,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2655,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 13,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2702,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 14,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2787,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 15,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 16,
+          "frames": 2697,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 20,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 352,
+          "frames": 2603,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 21,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 354,
+          "frames": 2697,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 22,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 349,
+          "frames": 2650,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 23,
+          "category": "clean",
+          "mechanism": null,
+          "planned_windows": 353,
+          "frames": 2665,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 25,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 397,
+          "frames": 2985,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 26,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 399,
+          "frames": 3043,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 27,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 398,
+          "frames": 2934,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 28,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 397,
+          "frames": 2986,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 29,
+          "category": "A",
+          "mechanism": "explicit_state_displacement",
+          "planned_windows": 396,
+          "frames": 2974,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 30,
+          "category": "A",
+          "mechanism": "explicit_state_displacement",
+          "planned_windows": 398,
+          "frames": 3006,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 31,
+          "category": "A",
+          "mechanism": "explicit_state_displacement",
+          "planned_windows": 396,
+          "frames": 3055,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 32,
+          "category": "A",
+          "mechanism": "explicit_state_displacement",
+          "planned_windows": 396,
+          "frames": 2973,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 33,
+          "category": "A",
+          "mechanism": "explicit_state_displacement",
+          "planned_windows": 391,
+          "frames": 2991,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 34,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 397,
+          "frames": 2998,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 35,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 399,
+          "frames": 3021,
+          "events": 8,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 36,
+          "category": "A",
+          "mechanism": "bounded_velocity_impulse",
+          "planned_windows": 398,
+          "frames": 2984,
+          "events": 8,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 4,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 40,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 452,
+          "frames": 3503,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 41,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 451,
+          "frames": 3389,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 42,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 447,
+          "frames": 3437,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 43,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 450,
+          "frames": 3350,
+          "events": 9,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 1
+            }
+          }
+        },
+        {
+          "episode": 44,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 448,
+          "frames": 3393,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 45,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 449,
+          "frames": 3288,
+          "events": 9,
+          "covered": 1,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 1
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 46,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 451,
+          "frames": 3430,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        },
+        {
+          "episode": 47,
+          "category": "C",
+          "mechanism": "arm_bump_impulse",
+          "planned_windows": 448,
+          "frames": 3409,
+          "events": 9,
+          "covered": 0,
+          "by_kind": {
+            "close": {
+              "events": 5,
+              "covered": 0
+            },
+            "release": {
+              "events": 4,
+              "covered": 0
+            }
+          }
+        }
+      ],
+      "reading": "the key-event timing gate can only be measured on the covered transitions; the rest are reported as unmeasurable rather than as a pass"
+    }
+  },
+  "consequence": "the pre-registered key-event timing gate is measured on the transitions a planned window can see (15 of 82 on validation); the remaining transitions are reported as unmeasurable, and an event-anchored supplementary pass is run beside the gate rather than inside it",
+  "gate_uses_frozen_plan_only": true,
+  "claim": "window-plan coverage audit of recorded expert data; no learned policy action was executed in simulation",
+  "boundaries": {
+    "policy_actions_executed_in_simulation": false,
+    "plan_modified": false,
+    "view_rewritten": false,
+    "real_robot_touched": false,
+    "public_push": false
+  }
+}

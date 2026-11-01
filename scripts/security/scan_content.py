@@ -8,8 +8,10 @@ from datetime import datetime, timezone
 import ipaddress
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = ROOT / "security-reports"
@@ -96,6 +98,7 @@ def main() -> int:
     report = REPORT_DIR / f"scan-{stamp}.txt"
     findings: set[tuple[str, str, int]] = set()
     scanned_blobs: set[str] = set()
+    public_paths: list[str] = []
     try:
         in_git = subprocess.run(["git", "rev-parse", "--git-dir"], cwd=ROOT,
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
@@ -106,6 +109,7 @@ def main() -> int:
                 if not raw_path:
                     continue
                 rel = raw_path.decode("utf-8", errors="replace")
+                public_paths.append(rel)
                 if rel in {"scripts/security/scan.sh", "scripts/security/scan_content.py"} \
                         or Path(rel).suffix.lower() in SKIP_MEDIA:
                     continue
@@ -144,9 +148,29 @@ def main() -> int:
                 if path.is_file() and ".git" not in path.parts:
                     inspect(path.read_bytes(), path.relative_to(ROOT).as_posix(), findings)
 
-        gitleaks = subprocess.run(["gitleaks", "dir", "--redact", "--no-banner", "--exit-code", "7", "."],
-                                  cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) \
-            if shutil_which("gitleaks") else None
+        gitleaks = None
+        if shutil_which("gitleaks"):
+            # `gitleaks dir` does not honour .gitignore. Materialize only the
+            # files that Git would publish so ignored raw evidence stays private.
+            with tempfile.TemporaryDirectory(prefix="pi05-gitleaks-public-") as temporary:
+                target = Path(temporary)
+                if in_git:
+                    for rel in public_paths:
+                        if rel in {"scripts/security/scan.sh", "scripts/security/scan_content.py"} \
+                                or Path(rel).suffix.lower() in SKIP_MEDIA:
+                            continue
+                        source = ROOT / rel
+                        if not source.is_file():
+                            continue
+                        destination = target / rel
+                        destination.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copyfile(source, destination)
+                else:
+                    target = ROOT
+                gitleaks = subprocess.run(
+                    ["gitleaks", "dir", "--redact", "--no-banner", "--exit-code", "7",
+                     str(target)],
+                    cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if gitleaks is not None and gitleaks.returncode == 7:
             findings.add(("gitleaks", "redacted scan", 0))
         elif gitleaks is not None and gitleaks.returncode != 0:

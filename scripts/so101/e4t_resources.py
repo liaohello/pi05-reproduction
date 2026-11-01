@@ -93,13 +93,24 @@ def _entry_matches(entry: dict, inspected: dict) -> list[str]:
     return problems
 
 
-def _gpu_info(gpu_index: int | None) -> dict:
+def _gpu_info(gpu_index) -> dict:
+    """Record identity and free memory for every device the container will see."""
     if gpu_index is None:
         return {"gpu_uuid": None, "memory_free_mib": None}
-    raw = _run(["nvidia-smi", "-i", str(gpu_index),
-                "--query-gpu=uuid,memory.free", "--format=csv,noheader,nounits"])
-    gpu_uuid, free = [part.strip() for part in raw.split(",", 1)]
-    return {"gpu_uuid": gpu_uuid, "memory_free_mib": int(free)}
+    indices = [int(value) for value in str(gpu_index).split(",") if value.strip() != ""]
+    if not indices:
+        return {"gpu_uuid": None, "memory_free_mib": None}
+    uuids, free = [], []
+    for index in indices:
+        raw = _run(["nvidia-smi", "-i", str(index),
+                    "--query-gpu=uuid,memory.free", "--format=csv,noheader,nounits"])
+        gpu_uuid, value = [part.strip() for part in raw.split(",", 1)]
+        uuids.append(gpu_uuid)
+        free.append(int(value))
+    if len(uuids) == 1:
+        return {"gpu_uuid": uuids[0], "memory_free_mib": free[0]}
+    return {"gpu_uuid": uuids, "gpu_uuids": uuids, "memory_free_mib": min(free),
+            "memory_free_mib_per_device": free}
 
 
 def allocate(args) -> int:
@@ -115,14 +126,16 @@ def allocate(args) -> int:
             raise
     owner = f"pid-{os.getpid()}-uuid-{uuid.uuid4()}"
     command = json.loads(args.command_json)
-    gpu = _gpu_info(None if args.gpu_index is None else int(args.gpu_index))
+    gpu = _gpu_info(None if args.gpu_index is None else str(args.gpu_index))
     argv = ["docker", "run", "-d", "--name", args.exact_name,
             "--label", f"pi05.e4t.project={PROJECT}",
             "--label", f"pi05.e4t.run_id={args.run_id}",
             "--label", f"pi05.e4t.owner={owner}",
             "--label", f"pi05.e4t.exact_name={args.exact_name}"]
     if args.gpu_index is not None:
-        argv += ["--gpus", f"device={args.gpu_index}"]
+        devices = [value for value in str(args.gpu_index).split(",") if value.strip()]
+        spec = f"device={devices[0]}" if len(devices) == 1 else f'"device={args.gpu_index}"'
+        argv += ["--gpus", spec]
     for item in json.loads(args.docker_arg_json):
         argv.append(item)
     argv += [args.image, *command]

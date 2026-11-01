@@ -1,0 +1,499 @@
+{
+  "schema_version": 1,
+  "branch": "so101-scene2-dual-random-scene-v3",
+  "experiment_prefix": "so101-scene2-dual-random-scene-v3-",
+  "protocol_id": "scene2_dual_random_v3",
+  "status": "v3_per_scene_search_rules_frozen",
+  "task": {
+    "name": "dual_block_select_place",
+    "instruction_template": "Put the {color} block into the {color} tray.",
+    "instruction_values": {
+      "red": "Put the red block into the red tray.",
+      "blue": "Put the blue block into the blue tray."
+    },
+    "objects_per_episode": 2,
+    "target": "the instructed colour; placed into its same-colour tray",
+    "distractor": "the other colour; never grasped and never moved by the expert",
+    "source": "external dual-SO101 MuJoCo project, scripted physical expert through this branch adapter",
+    "transfer_protocol": false,
+    "handover_between_arms": false,
+    "external_force_perturbation": false,
+    "visual_randomization": false
+  },
+  "record_conflicts": [
+    {
+      "source": "model-line prototype experiment_state.json (ignored; not tracked here)",
+      "recorded_instructions": [
+        "Place the red block in the tray.",
+        "Place the blue block in the tray."
+      ],
+      "recorded_tray_rule": "one tray, position random; the recorded text does not bind tray colour to target colour",
+      "this_branch": "two coloured trays; target goes into the same-colour tray; instructions name the tray colour",
+      "resolution": "the later confirmed rule in this protocol governs scene2 data; the model-line prototype file is ignored and was not modified"
+    }
+  ],
+  "source_binding": {
+    "external_root_env": "SO101_SOURCE_ROOT",
+    "external_python_env": "SO101_PYTHON",
+    "profile": "configs/so101/scene2_dual_random_profile_v3.yaml",
+    "certificate": "configs/certification/scene2_dual_random_certificate_v3.json",
+    "snapshot_policy": "independent ignored snapshot under the cache root; the shared checkout, the scene1 snapshot and other workstreams' files are never modified",
+    "source_sha256": "908d940d4626e95186b81edb8d0a4d81c55ee8010120751b8b8f0eb16b00ac3d",
+    "source_files": 113,
+    "expert_sha256": "113847db35ca21bb7d293038096ba0a0926c17307e7f9f17b9b5c79a96059561",
+    "expert_files": 37,
+    "config_sha256": "3cca1ad659f2c3f110366fc16dffcba06626c4d243cadcbedd49d2c5e5afbd85",
+    "model_sha256": "6d18dad52363423314dde71d1e87d05d43e4ad5b71e9a723c6e766cd44bbb1c8",
+    "provenance_note": "the scene1 protocol records source_sha256 201898ff... with 109 files; the current shared snapshot measured here has 113 files and 908d940d... The difference is not silently adopted: this branch pins and records the tree it actually executes.; v2 reuses the same measured source tree and adds only adapter/config keys; v3 reuses the same source and certificate logic and adds per-scene release/withdraw search keys"
+  },
+  "control": {
+    "physics_hz": 500,
+    "control_hz": 50,
+    "recording_fps": 50,
+    "settle_s": 0.4,
+    "timeout_s": 60.0,
+    "nominal_realtime_claim": false
+  },
+  "grasp": {
+    "open_percent": 70.0,
+    "closed_percent": 0.0,
+    "hover_height_m": 0.06,
+    "place_hover_height_m": 0.04,
+    "release_clearance_m": 0.006,
+    "retreat_clearance_x_m": 0.012,
+    "target_band_contact_in_descend": "allowed only for the target block's CAD collision bands (index <= 1); the distractor, trays, table and arm-arm contacts stay hard",
+    "basis": "engineering scan: the centre grasp descend grazes the target fixed finger by 0.6-1.3 mm; the grasp is intended, so the target band contact is admitted while every non-target contact keeps the 0.5 mm guard",
+    "release_open_percent": 50.0,
+    "vertical_withdraw": true,
+    "close_screen": true,
+    "v2_basis": "v1 pilot failures: pick_close tray wall 0.61/0.74 mm; place_release 0.83 mm; place_withdraw no collision-free direction. v2 adds an outer-rectangle block keepout, a central slot, a 50 percent release opening, a vertical-first withdraw and a closed-gripper close screen; the success predicate and 0.5 mm guard are unchanged.",
+    "release_open_candidates": [
+      40.0,
+      50.0,
+      30.0
+    ],
+    "withdraw_directions": [
+      "gripper_x_neg",
+      "gripper_x_pos",
+      "world_x_neg",
+      "world_x_pos"
+    ],
+    "withdraw_retreat_m": 0.06,
+    "v3_basis": "v2 reductions to 0.50-0.59 mm release contacts and one fixed-direction IK failure; v3 searches the release opening and withdraw direction per scene at the actual pose. The success predicate and 0.5 mm guard are unchanged."
+  },
+  "pre_pilot_engineering_scan": {
+    "status": "engineering_only_not_pilot_data",
+    "fixed_layout": "one candidate layout, both arms, open 50/70/90, yaw 0/15/30/45/60/68/75",
+    "findings": [
+      "pick descend target-band contact was 0.6-1.3 mm at every open percentage; open width did not remove it",
+      "place withdraw passed at open=70 for yaw 30-75 and failed at 0/15 on the tray wall",
+      "one full runtime smoke episode succeeded (blue target); the red-target smoke placed the target but failed withdraw with 0.7-0.9 mm tray/cube contact"
+    ],
+    "decisions": [
+      "open_percent 70",
+      "yaw candidate [30,75]",
+      "target-band contact admitted in the grasp descend only",
+      "no guard relaxation for trays, table, arm-arm or the distractor"
+    ],
+    "v2_changes": [
+      "central slot",
+      "block outer-rectangle clearance 0.07 m",
+      "release open 50 percent",
+      "vertical-first withdraw",
+      "closed-gripper close screen"
+    ],
+    "v3_changes": [
+      "block outer clearance 0.10 m",
+      "per-scene release open 40/50/30",
+      "per-scene vertical withdraw direction",
+      "dynamic choice at the actual release pose"
+    ]
+  },
+  "observation": {
+    "cameras": [
+      "observation.images.central",
+      "observation.images.left_wrist",
+      "observation.images.right_wrist"
+    ],
+    "rgb": {
+      "dtype": "uint8",
+      "layout": "HWC",
+      "height": 480,
+      "width": 640,
+      "policy_resize": [
+        224,
+        224
+      ],
+      "resize_rule": "OpenPI ResizeImages (pad to square, then 224x224)"
+    },
+    "state": {
+      "key": "observation.state",
+      "shape": [
+        12
+      ],
+      "order": [
+        "left_shoulder_pan.pos",
+        "left_shoulder_lift.pos",
+        "left_elbow_flex.pos",
+        "left_wrist_flex.pos",
+        "left_wrist_roll.pos",
+        "left_gripper.pos",
+        "right_shoulder_pan.pos",
+        "right_shoulder_lift.pos",
+        "right_elbow_flex.pos",
+        "right_wrist_flex.pos",
+        "right_wrist_roll.pos",
+        "right_gripper.pos"
+      ],
+      "units": [
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "degree",
+        "percent"
+      ],
+      "timing": "measured joint state immediately before the action is issued"
+    }
+  },
+  "action": {
+    "key": "action",
+    "shape": [
+      12
+    ],
+    "semantics": "absolute joint-position target, left six then right six",
+    "units": [
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "degree",
+      "percent"
+    ],
+    "label_rule": "the clamped actuator target actually applied at that control frame; never the next measured state",
+    "chunk_horizon": "left to the model line; no chunk length is frozen by this protocol",
+    "replan_steps": "left to the model line"
+  },
+  "scene_layout": {
+    "object_count": 2,
+    "cube_edge_m": 0.025,
+    "cube_mass_kg": 0.012,
+    "arrangements": {
+      "values": [
+        "red_positive_y",
+        "red_negative_y"
+      ],
+      "rule": "the red tray occupies one side and the blue tray the other; the arrangement is sampled independently of the instruction",
+      "balance": "formal collection must split evenly; the 4-scene pilot uses 2 of each"
+    },
+    "trays": {
+      "count": 2,
+      "orientation": "axis-aligned; positions random, orientation fixed",
+      "positive_y_sampling": {
+        "x_m": [
+          0.21,
+          0.27
+        ],
+        "y_m": [
+          0.22,
+          0.28
+        ]
+      },
+      "negative_y_sampling": {
+        "x_m": [
+          0.21,
+          0.27
+        ],
+        "y_m": [
+          -0.28,
+          -0.22
+        ]
+      },
+      "constraints": [
+        "tray footprint inside the table by at least 0.02 m",
+        "tray-tray outer-edge gap at least 0.03 m",
+        "each block outside both tray keepouts plus 0.01 m",
+        "chosen slot release, hover, descent and withdrawal IK and collision screening"
+      ],
+      "candidate_region_status": "v3_probe_rules_frozen",
+      "frozen_sampling": {
+        "positive_y": {
+          "x_m": [
+            0.21,
+            0.27
+          ],
+          "y_m": [
+            0.22,
+            0.28
+          ]
+        },
+        "negative_y": {
+          "x_m": [
+            0.21,
+            0.27
+          ],
+          "y_m": [
+            -0.28,
+            -0.22
+          ]
+        }
+      },
+      "slot_rule": "one central slot per tray at the tray centre; the second offset slot is not used because the task places one block; the v1 two-slot rule is kept in the v1 record"
+    },
+    "blocks": {
+      "target_xy_source": "certified pick points of the arm on the target tray's side; jitter 0.004 m",
+      "distractor_xy_source": "certified pick points of the arm on the other tray's side; jitter 0.004 m",
+      "minimum_pairwise_distance_m": 0.06,
+      "yaw": {
+        "distribution": "continuous uniform",
+        "domain_degrees": [
+          30.0,
+          75.0
+        ],
+        "domain_status": "v3_candidate_from_v2_failures",
+        "domain_basis": "the engineering scan found place-withdraw clearance at open=70 percent for 30-75 degrees and hard tray-wall rejection at 0/15 degrees; the scan is not pilot data and the accepted distribution is still reported separately from the draw distribution; v2 keeps the same [30,75] probe domain and changes the clearance/withdraw instead; v3 keeps [30,75] and searches release/withdraw per scene",
+        "applies_to": [
+          "target",
+          "distractor"
+        ]
+      },
+      "per_scene_checks": [
+        "target grasp IK and hover IK at the sampled yaw",
+        "target approach and lift path screening with the distractor present and the other arm parked",
+        "target place release and hover IK at the sampled yaw",
+        "target descent and withdrawal screening with the distractor present",
+        "containment of the rotated cube footprint in the same-colour tray",
+        "initial settling: no robot contact with either block, no block-block contact, speeds below limits",
+        "block centre at least 0.07 m from each tray outer rectangle",
+        "close-stage static screen with the gripper closed",
+        "per-scene release opening search 40/50/30 percent",
+        "per-scene vertical withdraw direction search"
+      ],
+      "block_tray_outer_clearance_m": 0.1
+    },
+    "colour_decoupling": {
+      "rule": "the instruction colour and the tray arrangement are sampled independently; the active arm is the arm on the target tray's side",
+      "consequence": "across scenes each colour is executed by both arms and placed on both table sides; no colour is bound to one arm or one position",
+      "within_scene": "the two counterfactual instructions of one layout necessarily use different arms because the trays are on opposite sides"
+    },
+    "active_arm_rule": {
+      "selection": "left if the target tray centre has y > 0, right if y < 0",
+      "other_arm": "home park pose [0, -25, 40, -15, 0] degrees, gripper 40 percent; certified park; no handover and no second-arm motion",
+      "safety": "the parked TCP is about 0.22 m above the table surface; initial settling and the success predicate both check no robot-block or robot-tray contact"
+    },
+    "perturbations_enabled": false,
+    "visual_randomization_enabled": false,
+    "vary_positions_between_episodes": true,
+    "reuse_previous_episodes": false,
+    "duplicate_scene_policy": "a layout SHA-256 may appear once; the two target conditions of one layout are a registered counterfactual pair, not duplicates"
+  },
+  "success_predicate": {
+    "id": "dual_block_select_place_physical_v1",
+    "requires_all_target": [
+      "the target block is inside its same-colour tray using the rotated footprint against the tray inner half-size",
+      "the target block is supported by that tray's floor geom ({colour}_tray_0)",
+      "no contact between the target block and either arm (released)",
+      "target linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
+      "both arms are at the registered home park pose within 2.0 degrees and 5.0 gripper percent",
+      "no contact between either arm and either tray",
+      "both TCP sites are at least 0.01 m from the target block centre and from the outer rectangle of both trays",
+      "all of the above hold continuously for at least 0.5 s"
+    ],
+    "requires_all_distractor": [
+      "no contact between the distractor block and either arm",
+      "no bilateral gripper grasp of the distractor by either arm",
+      "distractor supported by the table (or a tray floor, never outside the table)",
+      "distractor linear speed <= 0.02 m/s and angular speed <= 0.2 rad/s",
+      "distractor displacement from its post-settle initial pose <= the registered baseline threshold",
+      "distractor not out of bounds",
+      "distractor checks hold over the same 0.5 s success window"
+    ],
+    "distractor_baseline": {
+      "status": "v3_recheck_threshold_0.002",
+      "method": "12 independent layouts from the same sampler, both arms parked at home, 0.4 s settle then 2.0 s hold; post-settle displacement, speed, robot contact and false grasp measured every physics step",
+      "seed_range": [
+        20800,
+        20854
+      ],
+      "scenes_measured": 12,
+      "measured_max_hold_displacement_m": 2e-09,
+      "measured_any_robot_contact": false,
+      "measured_any_false_grasp": false,
+      "threshold_m": 0.002,
+      "threshold_rule": "max(0.002, measured_max + 0.001); the 2 mm floor governs because the measured drift is below 1 mm",
+      "scope_note": "the baseline has no arm motion; arm-induced table vibration is not included and is reported in the physical pilot",
+      "record": "tracked summary in experiments/so101/scene2-dual-random-baseline.json; full record in the ignored run directory",
+      "v2_recheck": "12-scene v2 baseline uses the same threshold 0.002; the measured value is in the tracked v2 baseline summary",
+      "v3_recheck": "12-scene v3 baseline uses threshold 0.002; measured value in the tracked v3 baseline summary"
+    },
+    "not_sufficient": [
+      "expert return code",
+      "visual appearance in a camera",
+      "target tray state alone without the distractor checks",
+      "a single frame of support or containment"
+    ],
+    "failure_reasons": [
+      "object_out_of_bounds",
+      "wrong_tray",
+      "not_supported",
+      "robot_contact",
+      "not_stable",
+      "arm_not_clear",
+      "grasp_failed",
+      "payload_lost",
+      "ik_unreachable",
+      "path_collision",
+      "placement_failed",
+      "timeout",
+      "distractor_contact",
+      "distractor_grasped",
+      "distractor_displaced",
+      "distractor_unstable",
+      "distractor_out_of_bounds",
+      "replay_mismatch"
+    ]
+  },
+  "scene_family": {
+    "definition": "family_key = layout_sha256 over both blocks (names, colours, XY, yaw), both tray poses, arrangement, seed, model and certificate hashes",
+    "rule": "the red-target and blue-target episodes of one layout are a counterfactual pair and never cross train/validation",
+    "split_algorithm": "to be registered with the formal collection; whole layout families only",
+    "frozen_before": "any normalisation statistic or training update",
+    "pilot_is_not_validation": true
+  },
+  "collection": {
+    "seed_registry": {
+      "layout_pilot": [
+        23200,
+        23439
+      ],
+      "physical_pilot_layouts": [
+        23440,
+        23479
+      ],
+      "distractor_baseline": [
+        23800,
+        23899
+      ],
+      "engineering_smoke": [
+        23990,
+        23999
+      ],
+      "evaluation_reserved": [
+        24100,
+        24199
+      ],
+      "superseded_seed_use": {
+        "v1_all": "20000-20279,20800-20899,20990-20999,21100-21199",
+        "v2_all": "22000-22279,22800-22899,22990-22999,23100-23199"
+      },
+      "disjoint_from": {
+        "e1": "8100-8199 and 9100-9119",
+        "e4t": "8220-8779 and 9300-9349",
+        "clean60": "12000-13199 and 14000-14199",
+        "clean100": "13200-13999",
+        "scene1": "15050-16099",
+        "v1_scene2": "20000-20279, 20800-20899, 20990-20999, 21100-21199",
+        "v2_scene2": "22000-22279, 22800-22899, 22990-22999, 23100-23199"
+      },
+      "pilot_policy": "a pilot layout is never reused as a demonstration; every candidate and every executed episode is recorded"
+    },
+    "layout_pilot": {
+      "status": "v3_probe_running",
+      "seeds": 240,
+      "seed_start": 23200,
+      "maximum_attempts_per_layout": 400,
+      "wall_clock_limit_s": 10800,
+      "acceptance_gate_value": 0.5,
+      "acceptance_gate": "at least 0.50 of attempted seeds produce a fully checked layout with both target conditions feasible; otherwise narrow the yaw or tray domain, record the amendment and rerun",
+      "record": "per-seed tray poses, both block XY/yaw, per-target IK and collision verdicts, initial-settling metrics, sampler draws and rejection reasons"
+    },
+    "physical_pilot": {
+      "status": "pending_v3_pregeneration",
+      "layouts": 4,
+      "episodes": 8,
+      "max_layout_candidates": 40,
+      "layout_wall_clock_limit_s": 3600,
+      "episode_wall_clock_limit_s": 14400,
+      "episode_attempt_cap": 8,
+      "rule": "each layout is executed once with the red instruction and once with the blue instruction; no episode is retried after a physical failure",
+      "success_gate": "report the exact count out of 8; do not relax a check to reach 8",
+      "initial_state_fingerprint": "the two conditions must reproduce the same post-settle state fingerprint; a mismatch invalidates the pair",
+      "pilot_is_not_formal_validation": true
+    },
+    "formal": {
+      "status": "not_started",
+      "target_episodes": null,
+      "train": null,
+      "validation": null,
+      "maximum_attempts": null,
+      "normalisation": "not computed in this phase; only frozen-split train data may supply it",
+      "forbidden": [
+        "clean60 norm",
+        "clean60 checkpoint",
+        "clean100 norm",
+        "clean100 checkpoint"
+      ]
+    }
+  },
+  "data_interface": {
+    "raw_control_tick": "one row per control frame at 50 Hz; 10 physics substeps per row when complete",
+    "timestamps": "simulation time from the environment; wall-clock start/end per episode; no synthetic index is treated as proof of no dropped frames",
+    "three_cameras": "central, left_wrist, right_wrist at 640x480 RGB, captured before the action is applied",
+    "state_action_order": "left six then right six; degrees for joints and percent for grippers",
+    "action_label": "clamped absolute target actually applied that frame",
+    "objects": "both blocks: position, quaternion, linear and angular velocity per control frame",
+    "events": "stage start/end, contact-monitor facts, failures, initial/final state",
+    "chunk_length": "model line decides; this branch supplies contiguous raw trajectories",
+    "pilot_dataset": "if written, labelled pilot_only and excluded from training and validation"
+  },
+  "claims": {
+    "engineering_chain": "v3 per-scene release/withdraw search; 4 layouts x 2 instructions = 8 condition episodes; not eight independent scenes; v1/v2 evidence retained",
+    "explicitly_not": [
+      "a benchmark success rate",
+      "a formal training or validation split",
+      "policy language-conditioning evidence",
+      "a dual-arm handover result",
+      "real-robot validation",
+      "a v2 benchmark success rate",
+      "a v3 benchmark success rate"
+    ]
+  },
+  "pilot_amendments": [
+    {
+      "id": "baseline_seed_conflict",
+      "date": "2026-10-29",
+      "change": "the first baseline attempt consumed seeds 21000-21004 inside the original evaluation reservation; that run was discarded, the clean baseline used 20800-20899, and evaluation is reserved on 21100-21199",
+      "effect": "no pilot or training data used the superseded seeds; the threshold comes only from the clean run"
+    },
+    {
+      "id": "pre_pilot_open_yaw_scan",
+      "date": "2026-10-29",
+      "change": "engineering scan set open_percent=70 and candidate yaw [30,75], and admitted target CAD-band contact only in the grasp descend",
+      "effect": "registered before the layout pilot; the layout pilot still measures the accepted distribution and the physical pilot judges success with the unchanged predicate"
+    },
+    {
+      "id": "v2_clearance_probe",
+      "date": "2026-10-29",
+      "change": "v2 adds a central slot, a 0.07 m block-to-tray outer clearance, release open 50 percent, vertical-first withdraw and close-gripper screening",
+      "effect": "new v2 scenes and pilot; v1 protocol/scenes/reports are unchanged; the success predicate and guard are unchanged"
+    },
+    {
+      "id": "v3_per_scene_search",
+      "date": "2026-10-29",
+      "change": "v3 adds a 0.10 m outer clearance and searches release opening 40/50/30 and four withdraw directions at the actual release pose",
+      "effect": "new v3 scenes/pilot; v1/v2 unchanged; success predicate/guard unchanged"
+    }
+  ]
+}

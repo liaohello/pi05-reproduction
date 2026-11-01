@@ -19,6 +19,8 @@ def main() -> int:
                         default=common.REPO_ROOT / "configs/so101/protocol.json")
     parser.add_argument("--collection", type=Path, required=True)
     parser.add_argument("--public-output", type=Path, default=None)
+    parser.add_argument("--report-output", type=Path, default=None,
+                        help="write the complete collection verification report")
     parser.add_argument("--no-replay", action="store_true")
     args = parser.parse_args()
 
@@ -34,7 +36,7 @@ def main() -> int:
     from bimanual.tasks.sorting import regions
 
     certificate = regions.load_certificate(root / config["evaluation"]["certificate"])
-    report = verify_collection(collection, config, repo_id=common.COLLECTION_REPO_ID,
+    report = verify_collection(collection, config, repo_id=config["collection"]["repo_id"],
                                collection=config["collection"], replay=not args.no_replay)
     official = report.get("official", {})
     replay = report.get("replay", {})
@@ -67,6 +69,8 @@ def main() -> int:
                         and checks["action_chunk_problems"] == 0
                         and checks["image_problems"] == 0
                         and (args.no_replay or checks["replay_all_passed"]))
+    if args.report_output:
+        common.write_json(args.report_output, report)
     if args.public_output:
         common.write_json(args.public_output, {
             "schema_version": 1, "phase": "E1-audit",
