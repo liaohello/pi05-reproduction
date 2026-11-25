@@ -1,0 +1,277 @@
+{
+  "schema": "fineart-jax-contract/v1",
+  "profile": "fp32-default-semantics",
+  "status": "locked_at_G0",
+  "note": "Thresholds are transcribed from the hand-off TEST_PROTOCOL.md and must not be widened. A change requires an explicit scope decision, a changelog entry, a re-freeze and invalidation of every downstream PASS.",
+
+  "device_profile": {
+    "role": "sole numerical target for G0..G7",
+    "gpu": "Tesla V100S-PCIE-32GB",
+    "vram_bytes": 34359738368,
+    "compute_capability": "7.0",
+    "driver_version": "535.104.05",
+    "dtype": "float32",
+    "devices": 1,
+    "cpu_fallback": "forbidden",
+    "bf16_fp16": "unsupported_in_this_profile",
+    "distributed": "unsupported_in_this_profile",
+    "rtc_mem": "off_by_default"
+  },
+
+  "thresholds": {
+    "exact": {
+      "classes": [
+        "token_ids", "labels", "attention_mask", "position_ids", "shapes",
+        "parameter_name_shape_dtype_axis", "routing_decision", "tokenizer_reload_output"
+      ],
+      "rule": "elementwise_identical"
+    },
+    "data_preprocessing": { "atol": 1e-06, "rtol": 1e-06 },
+    "tiny_numeric": { "atol": 1e-05, "rtol": 0.0001 },
+    "tiny_gradient": {
+      "relative_l2_max": 0.001,
+      "cosine_min": 0.9999,
+      "near_zero_max_abs": 1e-06
+    },
+    "knowledge_insulation": {
+      "flow_to_vlm_max_abs": 1e-10,
+      "ki_off_positive_control_min_abs": 1e-07
+    },
+    "optimizer_single_step": { "atol": 1e-07, "rtol": 0.0001 },
+    "trajectory_20_steps": { "atol": 1e-05, "rtol": 0.001 },
+    "resume": { "rule": "elementwise_identical" },
+    "real_prefix_velocity_logits": { "relative_l2_max": 0.005, "max_abs": 0.01 },
+    "real_losses": { "atol": 1e-05, "rtol": 0.005 },
+    "denoised_actions": { "mae_max": 0.001, "max_abs": 0.01 },
+    "text_greedy_generation": { "rule": "identical_ids_eos_and_suppression; cache_path_equals_recompute_per_token" },
+    "relative_l2_denominator": "max(||reference||_2, 1e-12)",
+    "near_zero_rule": "reference_norm < 1e-6 => judge by absolute error, never by cosine",
+    "invalid_outputs": "NaN, Inf, shape mismatch, mean-only comparison, implicit dtype downgrade all FAIL"
+  },
+
+  "defaults": {
+    "paligemma_variant": "gemma_2b",
+    "action_expert_variant": "gemma_300m",
+    "dtype": "float32",
+    "chunk_size": 50,
+    "n_action_steps": 50,
+    "n_obs_steps": 1,
+    "max_state_dim": 32,
+    "max_action_dim": 32,
+    "num_inference_steps": 10,
+    "tokenizer_max_length": 200,
+    "max_action_tokens": 256,
+    "image_resolution": [224, 224],
+    "text_tokenizer_name": "google/paligemma-3b-pt-224",
+    "action_tokenizer_name": "physical-intelligence/fast",
+    "fast_skip_tokens": 1152,
+    "knowledge_insulation": true,
+    "flow_num_repeats": 5,
+    "text_loss_weight": 1.0,
+    "flow_loss_weight": 10.0,
+    "fast_action_loss_weight": 1.0,
+    "enable_fast_action_loss": true,
+    "text_ce_z_loss_weight": 0.0001,
+    "loss_weight_triplet": [10.0, 1.0, 1.0],
+    "time_sampling_beta_alpha": 1.5,
+    "time_sampling_beta_beta": 1.0,
+    "time_sampling_scale": 0.999,
+    "time_sampling_offset": 0.001,
+    "min_period": 0.004,
+    "max_period": 4.0,
+    "optimizer_lr": 2.5e-05,
+    "optimizer_betas": [0.9, 0.95],
+    "optimizer_eps": 1e-08,
+    "optimizer_weight_decay": 0.01,
+    "optimizer_grad_clip_norm": 1.0,
+    "optimizer_foreach": false,
+    "optimizer_fused": true,
+    "scheduler_warmup_steps": 1000,
+    "scheduler_decay_steps": 30000,
+    "scheduler_decay_lr": 2.5e-06,
+    "lm_head_lr_scale": 1.0,
+    "backbone_lr_scale": 1.0,
+    "action_expert_lr_scale": 1.0,
+    "conditioning_lr_scale": 1.0,
+    "use_relative_actions": false,
+    "relative_exclude_joints": ["gripper"],
+    "normalization_mapping": { "VISUAL": "IDENTITY", "STATE": "QUANTILES", "ACTION": "QUANTILES" },
+    "freeze_vision_encoder": false,
+    "train_expert_only": false,
+    "memory_scratchpad": false,
+    "use_visual_memory": false,
+    "use_proprioceptive_memory": false,
+    "recipe_blend": { "high_level_subtask": 0.3, "low_level_execution": 0.7 }
+  },
+
+  "recipe_contract": {
+    "high_level_subtask": {
+      "weight": 0.3,
+      "streams": ["high_level"],
+      "messages": [
+        { "role": "user", "content": "${task}", "stream": "high_level" },
+        { "role": "assistant", "content": "${subtask}", "stream": "high_level", "target": true, "if_present": "subtask" }
+      ]
+    },
+    "low_level_execution": {
+      "weight": 0.7,
+      "streams": ["low_level"],
+      "messages": [
+        { "role": "user", "content": "${subtask}", "stream": "low_level", "if_present": "subtask" }
+      ]
+    },
+    "recipe_none_fallback": "plain PI0.5 prompt; FAST loss rejected while recipe is None",
+    "blend_selection": "replay the reference selection mechanism, do not re-derive weights"
+  },
+
+  "config_matrix": {
+    "action_dims": [6, 12, 14, 32],
+    "action_dim_padding": 32,
+    "camera_counts": [1, 2, 3],
+    "flow_draws": [1, 5],
+    "flow_repeats_default": 5,
+    "times": [0.001, 0.5, 1.0],
+    "real_transfer_times": [0.001, 0.5, 1.0],
+    "fast_skip_offsets_under_test": [1152, 128],
+    "fast_offset_note": "1152 is the default; a checkpoint declaring 128 keeps its own declared mapping. Neither may be silently remapped, and the 2048 residual table used by the Scene1 policy is not part of this contract.",
+    "text_target_lengths": [1, 2, 7],
+    "fast_target_lengths": [1, 2, 7],
+    "reduction_modes": ["mean", "none"],
+    "z_loss_weights": [0.0, 0.0001],
+    "loss_weight_sets": [[10.0, 1.0, 1.0], [3.0, 0.5, 0.25]],
+    "routing_cases": [
+      "text_only", "flow_only", "flow_plus_fast", "all_three",
+      "text_all_ignored", "no_action_batch", "missing_fast_fields", "all_targets_disabled",
+      "recipe_none_fallback"
+    ]
+  },
+
+  "shapes": {
+    "tiny_model": {
+      "paligemma_variant": "gemma_2b",
+      "action_expert_variant": "gemma_300m",
+      "text_hidden_size": 2048,
+      "text_layers": 18,
+      "text_mlp_dim": 16384,
+      "text_heads": 8,
+      "text_kv_heads": 1,
+      "head_dim": 256,
+      "vision_intermediate_size": 4304,
+      "vision_projection_dim": 2048,
+      "vocab_size": 257152,
+      "image_token_index": 257152,
+      "note": "The reference hardcodes the SigLIP projection to 2048 and only matches a gemma_2b language tower. Using gemma_300m as the VLM raises 'Sizes of tensors must match ... Expected size 2048 but got size 1024' in `embed_prefix`, so the smallest valid pairing is the default 2b + 300m pair. Numerical gates reduce the batch, never the architecture.",
+      "reference_variant_table": {
+        "gemma_300m": {"width": 1024, "depth": 18, "mlp_dim": 4096, "num_heads": 8, "num_kv_heads": 1, "head_dim": 256},
+        "gemma_2b": {"width": 2048, "depth": 18, "mlp_dim": 16384, "num_heads": 8, "num_kv_heads": 1, "head_dim": 256}
+      }
+    },
+    "tiny_batch": {
+      "batch_size": 2,
+      "prompt_tokens": 16,
+      "text_target_tokens": 8,
+      "fast_target_tokens": 8,
+      "state_dim": 32,
+      "action_dim": 32,
+      "chunk_size": 50,
+      "cameras": 1
+    },
+    "real_batch": {
+      "batch_size": 1,
+      "text_tokens_max": 200,
+      "fast_tokens_max": 256,
+      "chunk_size": 50,
+      "state_dim": 32,
+      "action_dim": 32
+    }
+  },
+
+  "loss_semantics": {
+    "text_ce": {
+      "shift": "next-token",
+      "ignore_index": -100,
+      "eos": "supervised",
+      "reduction": "mean over all valid target tokens in the batch, then as configured",
+      "z_loss": "PaLM-style, weight 1e-4 default, 0 disables"
+    },
+    "fast_ce": {
+      "supervised_positions": "action code tokens only",
+      "reduction": "mean within each valid sample, then mean across samples",
+      "difference_from_text": "text averages over tokens globally; FAST averages per sample first",
+      "non_code_positions": "Action:/BOS/terminator retained but excluded from CE",
+      "padding": "excluded from CE and from the denominator"
+    },
+    "flow": {
+      "loss_dims": "actual action dimensions only; padded dimensions excluded",
+      "routing": "follows predict_actions",
+      "draws": "mean over K draws",
+      "target": "noise - action",
+      "interpolation": "x_t = t * noise + (1 - t) * action",
+      "reduction_none": "per-sample result available and compared independently"
+    },
+    "combined": "default 10 * flow + 1 * text + 1 * fast with KI isolating only the flow path"
+  },
+
+  "head_sharing": {
+    "policy": "read from the actual checkpoint at G0 and preserved exactly",
+    "tied_embedding_sqrt_hidden_scale": "applied exactly once",
+    "requirement": "an independently trained language head must never be dropped; a tied head must never be duplicated",
+    "enforcement": "strict load fails on any missing or unexpected tensor"
+  },
+
+  "optimizer_semantics": {
+    "none_gradient_rule": "a PyTorch group whose grad is None must not update parameters, momentum or group counters on that step; JAX zero-gradient + AdamW is not automatically equivalent",
+    "groups": ["backbone", "action_expert", "conditioning", "lm_head"],
+    "clip": "global norm 1.0",
+    "schedule": "cosine decay with warmup; auto-scales warmup/decay when total steps are shorter than the configured decay steps",
+    "dtype": "float32 parameters, gradients and optimizer state"
+  },
+
+  "training_contract": {
+    "batch_size": 1,
+    "optimizer_updates_g7": 100,
+    "scheduler_short_run_scaling": "verified against the reference, not assumed",
+    "resume": "parameters, optimizer state, RNG, step, sampling cursor/order, scheduler and EMA-if-enabled are identical after resume",
+    "ema": "disabled by default; if enabled, resume must restore it too"
+  },
+
+  "rejection_table": {
+    "unsupported_in_fp32_default_profile": [
+      "bfloat16", "float16", "multi_device", "distributed_sharding",
+      "rtc_enabled_training", "custom_cuda_kernels", "cpu_fallback"
+    ],
+    "rejected_config_combinations": [
+      "enable_fast_action_loss=true with recipe=None",
+      "train_expert_only=true with text_loss_weight>0 or enable_fast_action_loss",
+      "flow_num_repeats<1",
+      "manual_attention_scope not in {all, action}",
+      "use_flex_attention and use_manual_attention together",
+      "use_flex_attention with flow_num_repeats==1",
+      "knowledge_insulation=false with flex/manual attention or flashrt adarms",
+      "conditioning_lr_scale negative or non-finite"
+    ],
+    "behaviour": "raise a clear error; never silently change default behaviour",
+    "reference_limitations": [
+      "paligemma_variant=gemma_300m is accepted by the config validator but fails in `embed_prefix`: the SigLIP projection is fixed at 2048 and a 300m language tower embeds at 1024. The candidate must replicate the failure rather than invent a working 300m VLM."
+    ]
+  },
+
+  "g7_resource_eligibility": {
+    "rule": "record actual measurements; a shortfall keeps G7 BLOCKED and must never be worked around by freezing the VLM, LoRA, fewer draws or lower precision",
+    "accounting": "16 * N bytes for FP32 params, grads and two AdamW moments, excluding activations, KV cache and temporaries",
+    "verdict": "measured at G0 and re-measured at G7"
+  },
+
+  "anti_cheat": {
+    "per_stage_negative_controls": {
+      "G1": "swap action dimension order and FAST offset",
+      "G2": "drop a parameter and transpose an axis",
+      "G3": "remove stop_gradient, expose FAST to the action block, corrupt RoPE",
+      "G4": "change reduction and disable a loss",
+      "G5": "skip optimizer restore and decay an inactive group",
+      "G6": "use the wrong normalization and select a padding position",
+      "G7": "change input identity and drop state"
+    },
+    "rule": "each control must make the corresponding test fail; zero-output equality is not a pass"
+  }
+}

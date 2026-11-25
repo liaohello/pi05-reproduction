@@ -1,0 +1,16 @@
+# Gate receipts and run evidence are local only.
+.gate-state/
+
+# Environments and caches never belong to the source tree.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Private configuration and fetched assets stay outside version control.
+*.private.env
+assets/
+fixtures/
